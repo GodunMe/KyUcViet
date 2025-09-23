@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart NFC - Vietnamese Memories</title>
+  <link rel="icon" type="image/png" href="logo.PNG" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div id="header" class="header-img">
+      <div id="headerLabel" class="header-overlay">Bảo tàng gần bạn</div>
+    </div>
+
+    <!-- Điểm số -->
+    <div class="score-section">
+      <h2>Điểm của bạn: <span id="userScore">189</span></h2>
+      <p id="userAddress" class="small-muted">Đang lấy vị trí… (hãy cho phép vị trí)</p>
+    </div>
+
+    <!-- Map -->
+    <div id="map"></div>
+    <div id="routeInfo" style="padding:0.5rem; font-size:0.9em; color:#333;"></div>
+
+    <!-- Danh sách bảo tàng -->
+    <div id="museumList" class="museum-list"></div>
+
+    <!-- Login -->
+    <button class="login-btn">🔑 Đăng nhập</button>
+  </div>
+
+  <script>
+    let map, userMarker, directionsService, directionsRenderer, userLocation;
+
+    // --- Haversine ---
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const toRad = v => v * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // --- Highlight marker ---
+    function highlightMarker(selectedMarker, museums) {
+      const defaultIcon = {
+        url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+        scaledSize: new google.maps.Size(32, 32)
+      };
+      const highlightedIcon = {
+        url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
+        scaledSize: new google.maps.Size(40, 40)
+      };
+
+      museums.forEach(m => {
+        if (m.marker) {
+          m.marker.setIcon(m.marker === selectedMarker ? highlightedIcon : defaultIcon);
+        }
+      });
+    }
+
+    // --- Render danh sách ---
+    function renderMuseumList(sorted) {
+      const container = document.getElementById('museumList');
+      if (!container) return;
+
+      container.innerHTML = '';
+      sorted.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'museum-card';
+        card.innerHTML = `
+        <div class="museum-row">
+          <img class="museum-thumb" src="${m.Image}" alt="${m.MuseumName}">
+          <div>
+            <h3>${m.MuseumName}</h3>
+            <div class="small-muted">${m.distanceText || ''}</div>
+          </div>
+        </div>
+      `;
+        card.addEventListener('click', () => {
+          setHeaderMuseum(m);
+          showRoute(m);
+          highlightMarker(m.marker, sorted);
+          // 👉 Di chuyển bản đồ đến vị trí bảo tàng
+          if (m.marker) {
+            map.panTo(m.marker.getPosition());
+          }
+        });
+        container.appendChild(card);
+      });
+    }
+
+    // --- Header ---
+    function setHeaderMuseum(m) {
+      const header = document.getElementById('header');
+      const label = document.getElementById('headerLabel');
+      if (!m) {
+        header.style.backgroundImage = '';
+        label.textContent = 'Bảo tàng gần bạn';
+        return;
+      }
+      header.style.backgroundImage = `url('${m.Image}')`;
+      header.style.backgroundSize = 'cover';
+      header.style.backgroundPosition = 'center';
+      label.textContent = m.MuseumName;
+    }
+
+    // --- Reverse geocode ---
+    async function reverseGeocode(lat, lon) {
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const json = await res.json();
+        return json.display_name || null;
+      } catch (e) {
+        console.warn('Reverse geocode failed', e);
+        return null;
+      }
+    }
+
+    // --- Vẽ tuyến đường ---
+    function showRoute(museum) {
+      if (!userLocation) {
+        alert("Chưa xác định vị trí của bạn.");
+        return;
+      }
+
+      const request = {
+        origin: userLocation,
+        destination: { lat: museum.Latitude, lng: museum.Longitude },
+        travelMode: 'DRIVING'
+      };
+
+      directionsService.route(request, (result, status) => {
+        if (status === 'OK') {
+          directionsRenderer.setDirections(result);
+
+          const route = result.routes[0].legs[0];
+          document.getElementById("routeInfo").textContent =
+            `Khoảng cách: ${route.distance.text}, Thời gian: ${route.duration.text}`;
+        }
+      });
+    }
+
+    // --- Lấy vị trí và map ---
+    async function locateAndUpdate(museums) {
+      const addressEl = document.getElementById('userAddress');
+      if (!navigator.geolocation) {
+        addressEl.textContent = 'Trình duyệt không hỗ trợ vị trí.';
+        renderMuseumList(museums);
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        userLocation = { lat, lng: lon };
+
+        const addr = await reverseGeocode(lat, lon);
+        if (addr && addressEl) {
+          addressEl.textContent = 'Địa chỉ (gần): ' + addr;
+        } else if (addressEl) {
+          addressEl.textContent = `Vị trí: ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+        }
+
+        // --- Khởi tạo bản đồ ---
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: userLocation,
+          zoom: 14
+        });
+
+        // Khi click bất kỳ đâu trên bản đồ -> mở rộng
+        map.addListener("click", () => {
+          document.getElementById("map").classList.add("expanded");
+        });
+
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer();
+        directionsRenderer.setMap(map);
+
+        // --- Marker user ---
+        userMarker = new google.maps.Marker({
+          position: userLocation,
+          map: map,
+          title: "Vị trí của bạn",
+          icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+        });
+
+        const withDist = museums.map(m => {
+          if (m.Latitude && m.Longitude) {
+            const d = haversineDistance(lat, lon, m.Latitude, m.Longitude);
+            const marker = new google.maps.Marker({
+              position: { lat: m.Latitude, lng: m.Longitude },
+              map: map,
+              title: m.MuseumName,
+              icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
+            });
+
+            m.marker = marker;
+
+            marker.addListener("click", () => {
+              setHeaderMuseum(m);
+              highlightMarker(marker, museums);
+
+            });
+            window.addEventListener("scroll", () => {
+              document.getElementById("map").classList.remove("expanded");
+            });
+
+
+            return {
+              ...m,
+              distance: d,
+              distanceText: (d >= 1000) ? ((d / 1000).toFixed(2) + ' km') : (Math.round(d) + ' m'),
+              marker: marker
+            };
+          }
+          return m;
+        });
+
+        withDist.sort((a, b) => (a.distance || 9999999) - (b.distance || 9999999));
+        setHeaderMuseum(withDist[0]);
+        renderMuseumList(withDist);
+
+      }, (err) => {
+        console.warn('Geolocation error', err);
+        addressEl.textContent = 'Không lấy được vị trí.';
+        renderMuseumList(museums);
+      });
+    }
+
+    // --- Load JSON ---
+    async function init() {
+      const res = await fetch('data.json');
+      const museums = await res.json();
+      renderMuseumList(museums);
+      locateAndUpdate(museums);
+    }
+  </script>
+
+  <!-- Google Maps API -->
+  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&callback=init">
+  </script>
+</body>
+
+</html>

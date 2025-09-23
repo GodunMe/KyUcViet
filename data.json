@@ -1,0 +1,23 @@
+[
+  {
+    "MuseumID": 1,
+    "MuseumName": "Bảo tàng Lịch sử Quân sự Việt Nam",
+    "Latitude": 21.0086136,
+    "Longitude": 105.7556136,
+    "Image": "museums/Bao tang Lich su Quan su Viet Nam.png"
+  },
+  {
+    "MuseumID": 2,
+    "MuseumName": "Bảo tàng Dân tộc học Việt Nam",
+    "Latitude": 21.041824193805624, 
+    "Longitude": 105.79826332914259,
+    "Image": "museums/bao tang dan toc hoc.png"
+  },
+  {
+    "MuseumID": 3,
+    "MuseumName": "Bảo tàng Hồ Chí Minh",
+    "Latitude": 21.036882610676066, 
+    "Longitude": 105.83236269051007, 
+    "Image": "museums/bao tang ho chi minh.png"
+  }
+]
