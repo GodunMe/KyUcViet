@@ -1,0 +1,120 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f4f6f9;
+  color: #333;
+}
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  background: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.header-img {
+  position: relative;
+  width: 100%;
+  height: 250px; /* hoặc auto */
+  background-size: cover;
+  background-position: center;
+}
+
+.header-overlay {
+  position: absolute;
+  bottom: 10px;
+  left: 20px;
+  background: rgba(0,0,0,0.4);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+
+.score-section {
+  padding: 16px;
+  text-align: center;
+  background: #fafafa;
+  border-bottom: 1px solid #eee;
+}
+.score-section h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #e63946;
+}
+.map-section { padding: 16px; }
+#map {
+  width: 100%;
+  height: 200px;
+  transition: height 0.5s ease;
+}
+#map.expanded {
+  height: 400px;
+}
+.museum-list {
+  padding: 16px;
+  flex-grow: 1;
+}
+.museum-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  cursor:pointer;
+}
+.museum-card h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.museum-thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  object-fit: cover;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+.museum-row {
+  display: flex;
+  align-items: center;
+  gap:10px;
+}
+.small-muted {
+  color: #777;
+  font-size: 13px;
+  margin-top: 6px;
+}
+.login-btn {
+  margin: 20px 16px;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: #e63946;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: center;
+}
+.login-btn:hover {
+  background: #d62828;
+}
+@media (max-width: 420px) {
+  .header-img { height: 170px; }
+  .score-section h2 { font-size: 20px; }
+}
+
+#map {
+  width: 100%;
+  height: 200px; /* mặc định nhỏ */
+  transition: height 0.5s ease;
+}
+
+#map.expanded {
+  height: 400px; /* mở rộng khi có class expanded */
+}
