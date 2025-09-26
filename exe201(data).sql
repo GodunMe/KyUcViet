@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Sep 26, 2025 at 04:06 AM
+-- Generation Time: Sep 26, 2025 at 04:40 AM
 -- Server version: 8.4.3
 -- PHP Version: 8.3.16
 
@@ -79,11 +79,11 @@ CREATE TABLE `museum_media` (
 --
 
 INSERT INTO `museum_media` (`id`, `MuseumId`, `file_name`, `mime_type`, `file_path`) VALUES
-(1, 3, 'Bao tang Lich su Quan su Viẹt Nam', 'image/png', '/EXEProject/KyUcViet/uploads/museums/Bao_tang_Lich_su_Quan_su_Viet_Nam.png'),
-(2, 3, 'Bao tang Lich su Quan su Viet Nam', 'image/png', '/EXEProject/KyUcViet/uploads/museums/17327143207601.png'),
-(3, 4, 'Bao tang Ho Chi Minh', 'image/png', '/EXEProject/KyUcViet/uploads/museums/bao_tang_ho_chi_minh.png'),
-(4, 5, 'Bao tang Dan toc hoc', 'image/png', '/EXEProject/KyUcViet/uploads/museums/bao_tang_dan_toc_hoc.png'),
-(5, 3, 'Bao tang Lich su Quan su Viet Nam', 'video/mp4', '/EXEProject/KyUcViet/uploads/museums/Một_vòng_Bảo_tàng_Lịch_sử_Quân_sự_Việt_Nam.mp4');
+(1, 3, 'Bao tang Lich su Quan su Viẹt Nam', 'image/png', '/uploads/museums/Bao_tang_Lich_su_Quan_su_Viet_Nam.png'),
+(2, 3, 'Bao tang Lich su Quan su Viet Nam', 'image/png', '/uploads/museums/17327143207601.png'),
+(3, 4, 'Bao tang Ho Chi Minh', 'image/png', '/uploads/museums/bao_tang_ho_chi_minh.png'),
+(4, 5, 'Bao tang Dan toc hoc', 'image/png', '/uploads/museums/bao_tang_dan_toc_hoc.png'),
+(5, 3, 'Bao tang Lich su Quan su Viet Nam', 'video/mp4', '/uploads/museums/Một_vòng_Bảo_tàng_Lịch_sử_Quân_sự_Việt_Nam.mp4');
 
 -- --------------------------------------------------------
 
