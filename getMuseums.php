@@ -12,9 +12,10 @@ if ($result && $result->num_rows > 0) {
         $museumId = $row['MuseumID'];
 
         // Lấy danh sách media cho từng bảo tàng
-        $sqlMedia = "SELECT id, file_name, mime_type 
-                     FROM museum_media 
-                     WHERE MuseumId = $museumId";
+        $sqlMedia = "SELECT id, file_name, mime_type, file_path 
+             FROM museum_media 
+             WHERE MuseumId = $museumId";
+
         $resMedia = $conn->query($sqlMedia);
 
         $media = [];
@@ -25,7 +26,7 @@ if ($result && $result->num_rows > 0) {
                     "id" => $m["id"],
                     "file_name" => $m["file_name"],
                     "mime_type" => $m["mime_type"],
-                    "url" => "showMedia.php?id=" . $m["id"]
+                    "file_path" => $m["file_path"] 
                 ];
             }
         }

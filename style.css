@@ -4,6 +4,7 @@ body {
   background: #f4f6f9;
   color: #333;
 }
+
 .container {
   max-width: 480px;
   margin: 0 auto;
@@ -12,24 +13,160 @@ body {
   display: flex;
   flex-direction: column;
 }
+
 .header-img {
   position: relative;
+  overflow: hidden;
+  width: 90%;
+  /* giảm chiều rộng một chút */
+  height: 250px;
+  /* giảm chiều cao một chút */
+  margin: auto;
+  /* căn giữa */
+  border-radius: 16px;
+  /* bo góc */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  /* tạo bóng nhẹ giống thẻ */
+}
+
+#headerMedia img {
   width: 100%;
-  height: 250px; /* hoặc auto */
-  background-size: cover;
-  background-position: center;
+  object-fit: contain;
+  border-radius: 16px;
 }
 
 .header-overlay {
   position: absolute;
   bottom: 10px;
-  left: 20px;
-  background: rgba(0,0,0,0.4);
-  color: #fff;
+  left: 10px;
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
   padding: 5px 10px;
-  border-radius: 4px;
+  border-radius: 8px;
+  z-index: 10;
 }
 
+.header-prev,
+.header-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 10;
+  padding: 6px 12px;
+  border-radius: 50%;
+}
+
+.header-prev {
+  left: 10px;
+}
+
+.header-next {
+  right: 10px;
+}
+
+.museum-list {
+  margin-top: 20px;
+}
+
+.museum-card {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.museum-thumb {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-right: 10px;
+}
+
+.museum-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.small-muted {
+  font-size: 0.85em;
+  color: #666;
+}
+
+/* CSS */
+.user-header {
+  padding: 0 25px;
+  margin: 20px 0;
+  position: relative;
+  display: inline-block;
+  /* để user-box căn theo avatar */
+}
+
+.user-info {
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.user-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ccc;
+}
+
+.user-name {
+  font-weight: 500;
+}
+
+/* box ẩn mặc định */
+.user-box {
+  display: none;
+  /* ẩn ban đầu */
+  position: absolute;
+  top: 100%;
+  /* ngay dưới user-info */
+  left: 0;
+  /* canh trái với avatar */
+  margin-top: 8px;
+  /* khoảng cách nhẹ */
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 10px;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 150px;
+  z-index: 100;
+  /* nổi trên các phần khác */
+}
+
+.user-box button {
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.user-box button:hover {
+  background-color: #e0e0e0;
+}
+
+/* class hiện box */
+.user-box.active {
+  display: flex;
+}
 
 .score-section {
   padding: 16px;
@@ -37,24 +174,32 @@ body {
   background: #fafafa;
   border-bottom: 1px solid #eee;
 }
+
 .score-section h2 {
   margin: 0;
   font-size: 24px;
   color: #e63946;
 }
-.map-section { padding: 16px; }
+
+.map-section {
+  padding: 0 16px;
+}
+
 #map {
   width: 100%;
   height: 200px;
   transition: height 0.5s ease;
 }
+
 #map.expanded {
   height: 400px;
 }
+
 .museum-list {
   padding: 16px;
   flex-grow: 1;
 }
+
 .museum-card {
   background: #fff;
   border: 1px solid #eee;
@@ -64,13 +209,15 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  cursor:pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
 }
+
 .museum-card h3 {
   margin: 0;
   font-size: 16px;
 }
+
 .museum-thumb {
   width: 60px;
   height: 60px;
@@ -79,16 +226,19 @@ body {
   margin-right: 12px;
   flex-shrink: 0;
 }
+
 .museum-row {
   display: flex;
   align-items: center;
-  gap:10px;
+  gap: 10px;
 }
+
 .small-muted {
   color: #777;
   font-size: 13px;
   margin-top: 6px;
 }
+
 .login-btn {
   margin: 20px 16px;
   padding: 14px;
@@ -101,20 +251,29 @@ body {
   cursor: pointer;
   text-align: center;
 }
+
 .login-btn:hover {
   background: #d62828;
 }
+
 @media (max-width: 420px) {
-  .header-img { height: 170px; }
-  .score-section h2 { font-size: 20px; }
+  .header-img {
+    height: 170px;
+  }
+
+  .score-section h2 {
+    font-size: 20px;
+  }
 }
 
 #map {
   width: 100%;
-  height: 200px; /* mặc định nhỏ */
+  height: 200px;
+  /* mặc định nhỏ */
   transition: height 0.5s ease;
 }
 
 #map.expanded {
-  height: 400px; /* mở rộng khi có class expanded */
+  height: 400px;
+  /* mở rộng khi có class expanded */
 }
