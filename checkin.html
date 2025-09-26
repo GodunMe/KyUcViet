@@ -101,11 +101,11 @@
     }
 
     function editProfile() {
-      window.location.href = '/KyUcViet/editProfile.html';
+      window.location.href = '/EXEProject/editProfile.html';
     }
 
     function logout() {
-      window.location.href = '/KyUcViet/login.html';
+      window.location.href = '/EXEProject/login.php?token=1';
     }
 
     function navigateToPage(page) {
@@ -117,19 +117,19 @@
       
       switch(page) {
         case 'home':
-          window.location.href = '/KyUcViet/index.php';
+          window.location.href = '/EXEProject/index.php';
           break;
         case 'map':
-          window.location.href = '/KyUcViet/map.html';
+          window.location.href = '/EXEProject/map.html';
           break;
         case 'checkin':
           // Already on checkin page
           break;
         case 'leaderboard':
-          window.location.href = '/KyUcViet/leaderboard.html';
+          window.location.href = '/EXEProject/leaderboard.html';
           break;
         case 'profile':
-          window.location.href = '/KyUcViet/profile.html';
+          window.location.href = '/EXEProject/profile.html';
           break;
       }
     }

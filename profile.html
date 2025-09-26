@@ -9,6 +9,30 @@
 </head>
 <body>
   <div class="container">
+    <!-- User Header -->
+    <div class="user-header" id="userHeader">
+      <!-- User logged in state -->
+      <div id="userLoggedIn" class="user-logged-in" style="display: none;">
+        <div class="user-info">
+          <img id="userAvatar" src="avatar/default.png" alt="User" class="user-icon">
+          <span id="userName" class="user-name">Loading...</span>
+        </div>
+        <div class="user-points">
+          <span id="userPoints">0đ</span>
+        </div>
+      </div>
+      
+      <!-- User not logged in state -->
+      <div id="usernotLoggedIn" class="user-not-logged-in" style="display: none;">
+        <div class="login-prompt">
+          <span class="login-text">Đăng nhập để xem thông tin cá nhân</span>
+        </div>
+        <button class="login-btn" onclick="goToLogin()">
+          🔑 Đăng nhập
+        </button>
+      </div>
+    </div>
+
     <!-- Profile Header -->
     <div class="profile-header">
       <div class="profile-avatar">
@@ -171,6 +195,69 @@
   </div>
 
   <script>
+    // Load user info on page load
+    async function loadUserInfo() {
+      try {
+        const response = await fetch('getUserInfo.php');
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.loggedIn) {
+            showUserLoggedInState(data);
+          } else {
+            showUserNotLoggedInState();
+          }
+        } else {
+          showUserNotLoggedInState();
+        }
+      } catch (error) {
+        console.error('Error loading user info:', error);
+        showUserNotLoggedInState();
+      }
+    }
+
+    function showUserLoggedInState(userData) {
+      const loggedInDiv = document.getElementById('userLoggedIn');
+      const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+      
+      // Show logged in state, hide not logged in state
+      loggedInDiv.style.display = 'flex';
+      notLoggedInDiv.style.display = 'none';
+      
+      // Update user avatar
+      const avatarElement = document.getElementById('userAvatar');
+      avatarElement.src = userData.avatarRelative || 'avatar/default.png';
+      
+      // Update user name
+      const nameElement = document.getElementById('userName');
+      nameElement.textContent = userData.username || 'Guest User';
+      
+      // Update user points
+      const pointsElement = document.getElementById('userPoints');
+      pointsElement.textContent = (userData.score || 0) + 'đ';
+      
+      // Update profile information
+      const profileName = document.getElementById('profileName');
+      if (profileName) profileName.textContent = userData.username || 'Guest User';
+      
+      const profileAvatar = document.getElementById('profileAvatar');
+      if (profileAvatar) profileAvatar.src = userData.avatarRelative || 'avatar/default.png';
+    }
+
+    function showUserNotLoggedInState() {
+      const loggedInDiv = document.getElementById('userLoggedIn');
+      const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+      
+      // Show not logged in state, hide logged in state
+      loggedInDiv.style.display = 'none';
+      notLoggedInDiv.style.display = 'flex';
+    }
+
+    function goToLogin() {
+      // Redirect to login page
+      window.location.href = 'login.php?token=1';
+    }
+
     // Navigation functions
     function navigateToPage(page) {
       document.querySelectorAll('.nav-item').forEach(item => {
@@ -181,16 +268,16 @@
       
       switch(page) {
         case 'home':
-          window.location.href = '/KyUcViet/index.php';
+          window.location.href = '/EXEProject/index.php';
           break;
         case 'map':
-          window.location.href = '/KyUcViet/map.html';
+          window.location.href = '/EXEProject/map.html';
           break;
         case 'checkin':
-          window.location.href = '/KyUcViet/checkin.html';
+          window.location.href = '/EXEProject/checkin.html';
           break;
         case 'leaderboard':
-          window.location.href = '/KyUcViet/leaderboard.html';
+          window.location.href = '/EXEProject/leaderboard.html';
           break;
         case 'profile':
           // Already on profile page
@@ -293,6 +380,7 @@
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
+      loadUserInfo();
       console.log('Profile page loaded');
     });
   </script>

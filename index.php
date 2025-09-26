@@ -10,14 +10,26 @@
 <body>
   <div class="container">
     <!-- HTML -->
-<div class="user-header">
-  <div class="user-info" onclick="toggleUserBox()">
-    <img src="avatar.png" alt="User" class="user-icon">
-    <span class="user-name">Nguyen Van A</span>
+<div class="user-header" id="userHeader">
+  <!-- User logged in state -->
+  <div id="userLoggedIn" class="user-logged-in" style="display: none;">
+    <div class="user-info">
+      <img id="userAvatar" src="avatar/default.png" alt="User" class="user-icon">
+      <span id="userName" class="user-name">Loading...</span>
+    </div>
+    <div class="user-points">
+      <span id="userPoints">0đ</span>
+    </div>
   </div>
-  <div class="user-box" id="userBox">
-    <button onclick="editProfile()">Chỉnh sửa thông tin</button>
-    <button onclick="logout()">Logout</button>
+  
+  <!-- User not logged in state -->
+  <div id="usernotLoggedIn" class="user-not-logged-in" style="display: none;">
+    <div class="login-prompt">
+      <span class="login-text">Khám phá bảo tàng cùng chúng tôi</span>
+    </div>
+    <button class="login-btn" onclick="goToLogin()">
+      🔑 Đăng nhập
+    </button>
   </div>
 </div>
 
@@ -27,17 +39,6 @@
       <button class="header-prev" onclick="prevImage()">&#10094;</button>
       <button class="header-next" onclick="nextImage()">&#10095;</button>
       <div id="headerLabel" class="header-overlay">Bảo tàng gần bạn</div>
-    </div>
-
-    <!-- Điểm số -->
-    <div class="score-section">
-      <h2>Điểm của bạn: <span id="userScore">189</span></h2>
-      <p id="userAddress" class="small-muted">Đang lấy vị trí… (hãy cho phép vị trí)</p>
-    </div>
-
-    <!-- Map -->
-    <div class="map-section">
-      <div id="map"></div>
     </div>
 
     <!-- Danh sách bảo tàng -->
@@ -71,36 +72,56 @@
   <script>
     const BASE_URL = "/EXEProject";
     // JS
-const userBox = document.getElementById('userBox');
-const userInfo = document.querySelector('.user-info');
-
-// Quản lý toggle box
-document.addEventListener('click', (e) => {
-  // Click vào avatar → toggle
-  if (userInfo.contains(e.target)) {
-    userBox.classList.toggle('active');
-    return;
+// Load user info on page load
+async function loadUserInfo() {
+  try {
+    const response = await fetch('getUserInfo.php');
+    if (response.ok) {
+      const data = await response.json();
+      
+      if (data.loggedIn) {
+        // User is logged in - show user info
+        showUserLoggedInState(data);
+      } else {
+        // User not logged in - show login button
+        showUserNotLoggedInState();
+      }
+    } else {
+      showUserNotLoggedInState();
+    }
+  } catch (error) {
+    console.error('Error loading user info:', error);
+    showUserNotLoggedInState();
   }
-
-  // Click vào box → ẩn
-  if (userBox.contains(e.target)) {
-    userBox.classList.remove('active');
-    return;
-  }
-
-  // Click ngoài → ẩn
-  if (userBox.classList.contains('active')) {
-    userBox.classList.remove('active');
-  }
-});
-
-
-function editProfile() {
-  window.location.href = '/KyUcViet/editProfile.html';
 }
 
-function logout() {
-  window.location.href = '/KyUcViet/login.html';
+// Show user logged in state
+function showUserLoggedInState(data) {
+  document.getElementById('userLoggedIn').style.display = 'flex';
+  document.getElementById('usernotLoggedIn').style.display = 'none';
+  
+  // Update user avatar
+  const avatarElement = document.getElementById('userAvatar');
+  avatarElement.src = data.avatarRelative || 'avatar/default.png';
+  
+  // Update user name
+  const nameElement = document.getElementById('userName');
+  nameElement.textContent = data.username || 'Guest User';
+  
+  // Update user points
+  const pointsElement = document.getElementById('userPoints');
+  pointsElement.textContent = (data.score || 0) + 'đ';
+}
+
+// Show user not logged in state
+function showUserNotLoggedInState() {
+  document.getElementById('userLoggedIn').style.display = 'none';
+  document.getElementById('usernotLoggedIn').style.display = 'flex';
+}
+
+// Go to login page
+function goToLogin() {
+  window.location.href = '/EXEProject/login.php?token=1';
 }
 
 // --- Navigation ---
@@ -120,23 +141,23 @@ function navigateToPage(page) {
       window.scrollTo(0, 0);
       break;
     case 'map':
-      window.location.href = '/KyUcViet/map.html';
+      window.location.href = '/EXEProject/map.html';
       break;
     case 'checkin':
-      window.location.href = '/KyUcViet/checkin.html';
+      window.location.href = '/EXEProject/checkin.html';
       break;
     case 'leaderboard':
-      window.location.href = '/KyUcViet/leaderboard.html';
+      window.location.href = '/EXEProject/leaderboard.html';
       break;
     case 'profile':
-      window.location.href = '/KyUcViet/profile.html';
+      window.location.href = '/EXEProject/profile.html';
       break;
     default:
       console.log('Unknown page:', page);
   }
 }
 
-let map, userMarker, directionsService, directionsRenderer, userLocation;
+let userLocation;
 let currentIndex = 0;
 let headerImages = [];
 
@@ -210,28 +231,13 @@ function setHeaderMuseum(m) {
   document.getElementById('headerLabel').innerText = m.MuseumName;
 }
 
-// --- Highlight marker ---
-function highlightMarker(selectedMarker, museums) {
-  const defaultIcon = {
-    url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-    scaledSize: new google.maps.Size(32, 32)
-  };
-  const highlightedIcon = {
-    url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
-    scaledSize: new google.maps.Size(40, 40)
-  };
-  museums.forEach(m => {
-    if (m.marker) {
-      m.marker.setIcon(m.marker === selectedMarker ? highlightedIcon : defaultIcon);
-    }
-  });
-}
+
 
 // --- Render danh sách ---
 function renderMuseumList(museums) {
   const container = document.getElementById('museumList');
   container.innerHTML = '';
-  museums.forEach(m => {
+  museums.forEach((m, index) => {
     const card = document.createElement('div');
     card.className = 'museum-card';
     let mediaHTML = '';
@@ -247,19 +253,31 @@ function renderMuseumList(museums) {
     }
 
     card.innerHTML = `
-      <div class="museum-row">
+      <div class="museum-row" onclick="toggleMuseumCard(event, ${index})">
         ${mediaHTML}
-        <div>
+        <div class="museum-info">
           <h3>${m.MuseumName}</h3>
           <div class="small-muted">${m.distanceText || ''}</div>
+        </div>
+        <div class="expand-arrow">▼</div>
+      </div>
+      <div class="museum-details" id="museum-details-${index}">
+        <div class="action-buttons">
+          <button class="action-btn detail-btn" onclick="viewMuseumDetails(event, ${m.MuseumID})">
+            📋 Xem chi tiết
+          </button>
+          <button class="action-btn direction-btn" onclick="getDirections(event, ${m.MuseumID}, '${m.MuseumName}', ${m.Latitude}, ${m.Longitude})">
+            🧭 Chỉ đường
+          </button>
         </div>
       </div>
     `;
 
-    card.addEventListener('click', () => {
+    // Set header image when clicking on museum name (not the expand button)
+    const museumInfo = card.querySelector('.museum-info');
+    museumInfo.addEventListener('click', (e) => {
+      e.stopPropagation();
       setHeaderMuseum(m);
-      highlightMarker(m.marker, museums);
-      if (m.marker) map.panTo(m.marker.getPosition());
     });
 
     container.appendChild(card);
@@ -279,11 +297,10 @@ async function reverseGeocode(lat, lon) {
   }
 }
 
-// --- Locate user + render map ---
+// --- Locate user + calculate distances ---
 async function locateAndUpdate(museums) {
-  const addressEl = document.getElementById('userAddress');
   if (!navigator.geolocation) {
-    addressEl.textContent = 'Trình duyệt không hỗ trợ vị trí.';
+    console.warn('Geolocation not supported');
     renderMuseumList(museums);
     return;
   }
@@ -293,46 +310,11 @@ async function locateAndUpdate(museums) {
     const lon = parseFloat(pos.coords.longitude);
     userLocation = { lat, lng: lon };
 
-    const addr = await reverseGeocode(lat, lon);
-    addressEl.textContent = addr ? 'Địa chỉ (gần): ' + addr : `Vị trí: ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-
-    // --- Init map ---
-    map = new google.maps.Map(document.getElementById("map"), {
-      center: userLocation,
-      zoom: 14
-    });
-
-    directionsService = new google.maps.DirectionsService();
-    directionsRenderer = new google.maps.DirectionsRenderer({ map: map });
-
-    // --- Marker user ---
-    userMarker = new google.maps.Marker({
-      position: userLocation,
-      map: map,
-      title: "Vị trí của bạn",
-      icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
-    });
-
-    // --- Marker museums ---
+    // --- Calculate distances and sort museums ---
     const withDist = museums.map(m => {
       const latNum = parseFloat(m.Latitude);
       const lonNum = parseFloat(m.Longitude);
       if (!isNaN(latNum) && !isNaN(lonNum)) {
-        const marker = new google.maps.Marker({
-          position: { lat: latNum, lng: lonNum },
-          map: map,
-          title: m.MuseumName,
-          icon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
-        });
-
-        m.marker = marker;
-
-        marker.addListener("click", () => {
-          setHeaderMuseum(m);
-          highlightMarker(marker, withDist);
-          map.panTo(marker.getPosition());
-        });
-
         m.distance = haversineDistance(lat, lon, latNum, lonNum);
         m.distanceText = m.distance >= 1000 ? (m.distance / 1000).toFixed(2) + ' km' : Math.round(m.distance) + ' m';
       }
@@ -345,13 +327,71 @@ async function locateAndUpdate(museums) {
 
   }, err => {
     console.warn('Geolocation error', err);
-    addressEl.textContent = 'Không lấy được vị trí.';
     renderMuseumList(museums);
   });
 }
 
+// --- Toggle museum card ---
+function toggleMuseumCard(event, index) {
+  event.stopPropagation();
+  const card = event.target.closest('.museum-card');
+  const details = document.getElementById(`museum-details-${index}`);
+  
+  // Close all other cards first
+  document.querySelectorAll('.museum-card').forEach(otherCard => {
+    if (otherCard !== card) {
+      otherCard.classList.remove('expanded');
+    }
+  });
+  
+  // Toggle current card
+  card.classList.toggle('expanded');
+}
+
+// --- View museum details ---
+function viewMuseumDetails(event, museumId) {
+  event.stopPropagation();
+  
+  // Check if user is logged in first
+  fetch('getUserInfo.php')
+    .then(response => response.json())
+    .then(data => {
+      if (data.loggedIn) {
+        // User is logged in - allow access to museum details
+        window.location.href = `/EXEProject/museum.html?id=${museumId}`;
+      } else {
+        // User not logged in - show alert and redirect to login
+        alert('Bạn cần đăng nhập để xem chi tiết bảo tàng!');
+        window.location.href = '/EXEProject/login.php?token=1';
+      }
+    })
+    .catch(error => {
+      console.error('Error checking login status:', error);
+      alert('Bạn cần đăng nhập để xem chi tiết bảo tàng!');
+      window.location.href = '/EXEProject/login.php?token=1';
+    });
+}
+
+// --- Get directions ---
+function getDirections(event, museumId, museumName, lat, lng) {
+  event.stopPropagation();
+  // Navigate to map with parameters for highlighting and routing
+  const params = new URLSearchParams({
+    highlight: museumId,
+    name: museumName,
+    lat: lat,
+    lng: lng,
+    route: 'true'
+  });
+  window.location.href = `/EXEProject/map.html?${params.toString()}`;
+}
+
 // --- Init ---
 async function init() {
+  // Load user info
+  await loadUserInfo();
+  
+  // Load museums
   const res = await fetch('getMuseums.php');
   const museums = await res.json();
   locateAndUpdate(museums);
@@ -360,6 +400,9 @@ async function init() {
 </script>
 
 
-  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&callback=init"></script>
+  <script>
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
 </body>
 </html>

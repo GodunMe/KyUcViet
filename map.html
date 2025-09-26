@@ -8,6 +8,10 @@
   <link rel="stylesheet" href="style.css" />
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet Routing Machine CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+  <!-- Leaflet Geocoder CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.css" />
   <style>
     #mapContainer {
       height: calc(100vh - 160px);
@@ -196,14 +200,26 @@
 <body>
   <div class="container">
     <!-- User Header -->
-    <div class="user-header">
-      <div class="user-info" onclick="toggleUserBox()">
-        <img src="avatar.png" alt="User" class="user-icon">
-        <span class="user-name">Nguyen Van A</span>
+    <div class="user-header" id="userHeader">
+      <!-- User logged in state -->
+      <div id="userLoggedIn" class="user-logged-in" style="display: none;">
+        <div class="user-info">
+          <img id="userAvatar" src="avatar/default.png" alt="User" class="user-icon">
+          <span id="userName" class="user-name">Loading...</span>
+        </div>
+        <div class="user-points">
+          <span id="userPoints">0đ</span>
+        </div>
       </div>
-      <div class="user-box" id="userBox">
-        <button onclick="editProfile()">Chỉnh sửa thông tin</button>
-        <button onclick="logout()">Logout</button>
+      
+      <!-- User not logged in state -->
+      <div id="usernotLoggedIn" class="user-not-logged-in" style="display: none;">
+        <div class="login-prompt">
+          <span class="login-text">Đăng nhập để xem bản đồ chi tiết</span>
+        </div>
+        <button class="login-btn" onclick="goToLogin()">
+          🔑 Đăng nhập
+        </button>
       </div>
     </div>
 
@@ -302,6 +318,10 @@
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet Routing Machine JS -->
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+  <!-- Leaflet Geocoder JS -->
+  <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
   
   <script>
     let map;
@@ -312,49 +332,63 @@
     let editingMarker = null;
     let currentUserLocation = null;
 
-    // Sample data - Thay thế bằng dữ liệu từ database
-    const sampleMarkers = [
-      {
-        id: 1,
-        name: "Bảo tàng Hồ Chí Minh",
-        type: "museum",
-        description: "Bảo tàng về cuộc đời và sự nghiệp của Chủ tịch Hồ Chí Minh",
-        lat: 21.0368,
-        lng: 105.8342,
-        address: "19 Ngọc Hà, Ba Đình, Hà Nội"
-      },
-      {
-        id: 2,
-        name: "Bảo tàng Lịch sử Quân sự Việt Nam",
-        type: "museum",
-        description: "Trưng bày hiện vật về lịch sử quân sự Việt Nam",
-        lat: 21.0245,
-        lng: 105.8412,
-        address: "28A Điện Biên Phủ, Ba Đình, Hà Nội"
-      },
-      {
-        id: 3,
-        name: "Văn Miếu - Quốc Tử Giám",
-        type: "historical",
-        description: "Ngôi đền đầu tiên ở Hà Nội, được xây dựng vào năm 1070",
-        lat: 21.0267,
-        lng: 105.8356,
-        address: "58 Quốc Tử Giám, Đống Đa, Hà Nội"
+    // Museum data - loaded from database
+    let museumMarkers = [];
+
+    // Load user info on page load
+    async function loadUserInfo() {
+      try {
+        const response = await fetch('getUserInfo.php');
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.loggedIn) {
+            showUserLoggedInState(data);
+          } else {
+            showUserNotLoggedInState();
+          }
+        } else {
+          showUserNotLoggedInState();
+        }
+      } catch (error) {
+        console.error('Error loading user info:', error);
+        showUserNotLoggedInState();
       }
-    ];
-
-    // Navigation functions
-    function toggleUserBox() {
-      const box = document.getElementById('userBox');
-      box.classList.toggle('active');
     }
 
-    function editProfile() {
-      window.location.href = '/KyUcViet/editProfile.html';
+    function showUserLoggedInState(userData) {
+      const loggedInDiv = document.getElementById('userLoggedIn');
+      const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+      
+      // Show logged in state, hide not logged in state
+      loggedInDiv.style.display = 'flex';
+      notLoggedInDiv.style.display = 'none';
+      
+      // Update user avatar
+      const avatarElement = document.getElementById('userAvatar');
+      avatarElement.src = userData.avatarRelative || 'avatar/default.png';
+      
+      // Update user name
+      const nameElement = document.getElementById('userName');
+      nameElement.textContent = userData.username || 'Guest User';
+      
+      // Update user points
+      const pointsElement = document.getElementById('userPoints');
+      pointsElement.textContent = (userData.score || 0) + 'đ';
     }
 
-    function logout() {
-      window.location.href = '/KyUcViet/login.html';
+    function showUserNotLoggedInState() {
+      const loggedInDiv = document.getElementById('userLoggedIn');
+      const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+      
+      // Show not logged in state, hide logged in state
+      loggedInDiv.style.display = 'none';
+      notLoggedInDiv.style.display = 'flex';
+    }
+
+    function goToLogin() {
+      // Redirect to login page
+      window.location.href = 'login.php?token=1';
     }
 
     function navigateToPage(page) {
@@ -366,19 +400,19 @@
       
       switch(page) {
         case 'home':
-          window.location.href = '/KyUcViet/index.php';
+          window.location.href = '/EXEProject/index.php';
           break;
         case 'map':
           // Already on map page
           break;
         case 'checkin':
-          window.location.href = '/KyUcViet/checkin.html';
+          window.location.href = '/EXEProject/checkin.html';
           break;
         case 'leaderboard':
-          window.location.href = '/KyUcViet/leaderboard.html';
+          window.location.href = '/EXEProject/leaderboard.html';
           break;
         case 'profile':
-          window.location.href = '/KyUcViet/profile.html';
+          window.location.href = '/EXEProject/profile.html';
           break;
       }
     }
@@ -444,15 +478,41 @@
       map.on('click', onMapClick);
     }
 
-    function loadMarkers() {
+    async function loadMarkers() {
       // Clear existing markers
       markers.forEach(marker => map.removeLayer(marker.leafletMarker));
       markers = [];
 
-      // Add sample markers (replace with API call)
-      sampleMarkers.forEach(markerData => {
-        addMarkerToMap(markerData);
-      });
+      try {
+        // Fetch museums from database using existing API
+        const response = await fetch('getMuseums.php');
+        if (!response.ok) {
+          throw new Error('Failed to fetch museums');
+        }
+        
+        const museums = await response.json();
+        
+        // Convert getMuseums.php format to map format
+        museumMarkers = museums.map(museum => ({
+          id: museum.MuseumID,
+          name: museum.MuseumName,
+          lat: parseFloat(museum.Latitude),
+          lng: parseFloat(museum.Longitude),
+          type: 'museum',
+          description: museum.Description || 'Bảo tàng văn hóa lịch sử',
+          address: museum.Address || 'Đang cập nhật địa chỉ...'
+        }));
+        
+        // Add markers to map
+        museumMarkers.forEach(markerData => {
+          addMarkerToMap(markerData);
+        });
+        
+        console.log(`Loaded ${museumMarkers.length} museums from database`);
+      } catch (error) {
+        console.error('Error loading markers:', error);
+        alert('Không thể tải dữ liệu bảo tàng. Vui lòng thử lại sau.');
+      }
     }
 
     function addMarkerToMap(markerData) {
@@ -715,9 +775,74 @@
       }
     }
 
+    // Parse URL parameters
+    function getUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        highlight: params.get('highlight'),
+        name: params.get('name'),
+        lat: params.get('lat'),
+        lng: params.get('lng'),
+        route: params.get('route') === 'true'
+      };
+    }
+
+    // Handle directions from index.php
+    function handleDirectionsRequest(params) {
+      if (params.route && params.lat && params.lng && currentUserLocation) {
+        const destination = [parseFloat(params.lat), parseFloat(params.lng)];
+        
+        // Highlight destination marker
+        const destinationMarker = L.marker(destination, {
+          icon: L.divIcon({
+            className: 'highlight-marker',
+            html: '<div style="background: #ff4444; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4);">🏛️</div>',
+            iconSize: [40, 40],
+            iconAnchor: [20, 40]
+          })
+        }).addTo(map);
+
+        destinationMarker.bindPopup(`<b>${params.name}</b><br>Đích đến của bạn`).openPopup();
+
+        // Try to create route if routing library is available
+        if (typeof L.Routing !== 'undefined') {
+          try {
+            const routingControl = L.Routing.control({
+              waypoints: [
+                L.latLng(currentUserLocation[0], currentUserLocation[1]),
+                L.latLng(destination[0], destination[1])
+              ],
+              routeWhileDragging: false,
+              addWaypoints: false,
+              createMarker: function() { return null; }, // Hide default markers
+              lineOptions: {
+                styles: [{ color: '#007bff', weight: 6, opacity: 0.8 }]
+              }
+            }).addTo(map);
+          } catch (error) {
+            console.warn('Routing not available:', error);
+          }
+        }
+        
+        // Center map to show route
+        setTimeout(() => {
+          map.fitBounds([currentUserLocation, destination], { padding: [20, 20] });
+        }, 1000);
+      }
+    }
+
     // Initialize map when page loads
     document.addEventListener('DOMContentLoaded', function() {
+      loadUserInfo();
       initMap();
+      
+      // Handle URL parameters after map is initialized
+      setTimeout(() => {
+        const params = getUrlParams();
+        if (params.highlight || params.route) {
+          handleDirectionsRequest(params);
+        }
+      }, 2000); // Wait for geolocation to complete
     });
   </script>
 </body>

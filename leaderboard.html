@@ -10,14 +10,26 @@
 <body>
   <div class="container">
     <!-- User Header -->
-    <div class="user-header">
-      <div class="user-info" onclick="toggleUserBox()">
-        <img src="avatar.png" alt="User" class="user-icon">
-        <span class="user-name">Nguyen Van A</span>
+    <div class="user-header" id="userHeader">
+      <!-- User logged in state -->
+      <div id="userLoggedIn" class="user-logged-in" style="display: none;">
+        <div class="user-info">
+          <img id="userAvatar" src="avatar/default.png" alt="User" class="user-icon">
+          <span id="userName" class="user-name">Loading...</span>
+        </div>
+        <div class="user-points">
+          <span id="userPoints">0đ</span>
+        </div>
       </div>
-      <div class="user-box" id="userBox">
-        <button onclick="editProfile()">Chỉnh sửa thông tin</button>
-        <button onclick="logout()">Logout</button>
+      
+      <!-- User not logged in state -->
+      <div id="usernotLoggedIn" class="user-not-logged-in" style="display: none;">
+        <div class="login-prompt">
+          <span class="login-text">Đăng nhập để xem bảng xếp hạng</span>
+        </div>
+        <button class="login-btn" onclick="goToLogin()">
+          🔑 Đăng nhập
+        </button>
       </div>
     </div>
 
@@ -160,18 +172,60 @@
   </div>
 
   <script>
-    // Navigation functions
-    function toggleUserBox() {
-      const box = document.getElementById('userBox');
-      box.classList.toggle('active');
+    // Load user info on page load
+    async function loadUserInfo() {
+      try {
+        const response = await fetch('getUserInfo.php');
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.loggedIn) {
+            showUserLoggedInState(data);
+          } else {
+            showUserNotLoggedInState();
+          }
+        } else {
+          showUserNotLoggedInState();
+        }
+      } catch (error) {
+        console.error('Error loading user info:', error);
+        showUserNotLoggedInState();
+      }
     }
 
-    function editProfile() {
-      window.location.href = '/KyUcViet/editProfile.html';
+    function showUserLoggedInState(userData) {
+      const loggedInDiv = document.getElementById('userLoggedIn');
+      const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+      
+      // Show logged in state, hide not logged in state
+      loggedInDiv.style.display = 'flex';
+      notLoggedInDiv.style.display = 'none';
+      
+      // Update user avatar
+      const avatarElement = document.getElementById('userAvatar');
+      avatarElement.src = userData.avatarRelative || 'avatar/default.png';
+      
+      // Update user name
+      const nameElement = document.getElementById('userName');
+      nameElement.textContent = userData.username || 'Guest User';
+      
+      // Update user points
+      const pointsElement = document.getElementById('userPoints');
+      pointsElement.textContent = (userData.score || 0) + 'đ';
     }
 
-    function logout() {
-      window.location.href = '/KyUcViet/login.html';
+    function showUserNotLoggedInState() {
+      const loggedInDiv = document.getElementById('userLoggedIn');
+      const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+      
+      // Show not logged in state, hide logged in state
+      loggedInDiv.style.display = 'none';
+      notLoggedInDiv.style.display = 'flex';
+    }
+
+    function goToLogin() {
+      // Redirect to login page
+      window.location.href = 'login.php?token=1';
     }
 
     function navigateToPage(page) {
@@ -183,19 +237,19 @@
       
       switch(page) {
         case 'home':
-          window.location.href = '/KyUcViet/index.php';
+          window.location.href = '/EXEProject/index.php';
           break;
         case 'map':
-          window.location.href = '/KyUcViet/map.html';
+          window.location.href = '/EXEProject/map.html';
           break;
         case 'checkin':
-          window.location.href = '/KyUcViet/checkin.html';
+          window.location.href = '/EXEProject/checkin.html';
           break;
         case 'leaderboard':
           // Already on leaderboard page
           break;
         case 'profile':
-          window.location.href = '/KyUcViet/profile.html';
+          window.location.href = '/EXEProject/profile.html';
           break;
       }
     }
@@ -220,6 +274,7 @@
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
+      loadUserInfo();
       loadLeaderboard();
     });
   </script>
