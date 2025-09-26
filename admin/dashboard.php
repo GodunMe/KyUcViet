@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../auth_check.php';
 // admin/dashboard.php
 // Dashboard hiển thị chi tiết: Users, Museums, Artifacts, và Quiz theo dạng
 // Museum -> Quiz -> Question -> Options (museum ở phần quiz chỉ hiển thị tên).

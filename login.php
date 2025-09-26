@@ -7,7 +7,7 @@ if (!isset($_GET['token'])) {
 }
 $token = $_GET['token'];
 
-// 🔹 Reset tài khoản nếu hết thời gian khóa (dùng MySQL so sánh trực tiếp)
+// Reset tài khoản nếu hết thời gian khóa (dùng MySQL so sánh trực tiếp)
 $unlock = $conn->prepare("UPDATE users 
                           SET STATUS = 'Active', FailedLoginAttempts = 0, LockTimestamp = NULL
                           WHERE UserToken = ?
@@ -59,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user['STATUS'] === 'Active') {
     $_SESSION['UserToken']  = $user['UserToken'];
     $_SESSION['Username']   = $user['Username'];
     $_SESSION['Role']       = $user['Role'];
+    $_SESSION['isFirstLogin'] = $user['isFirstLogin'];
 
     // Nếu là admin → đi thẳng vào dashboard, không cần đổi mật khẩu
     if (strcasecmp($user['Role'], 'Admin') === 0) {
@@ -68,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user['STATUS'] === 'Active') {
 
     // Nếu là user thường và là lần đầu đăng nhập → bắt đổi mật khẩu
     if ($user['isFirstLogin'] == 1) {
-        header("Location: /change_password.html");
+        header("Location: change_password.php");
         exit();
     }
 
