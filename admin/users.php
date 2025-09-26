@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../auth_check.php';
+
 // admin/users.php
 // Trang quản lý user: hiển thị danh sách + form thêm mới
 
