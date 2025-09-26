@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết hiện vật - Ký Ức Việt</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <button class="back-btn" onclick="goBack()">
+        ← Quay lại
+      </button>
+      <div class="header-title">
+        <h1 id="artifactName">Chi tiết hiện vật</h1>
+      </div>
+      <div class="header-actions">
+        <button class="share-btn" onclick="shareArtifact()">
+          📤 Chia sẻ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Loading State -->
+    <div class="loading-state" id="loadingState">
+      <div class="loading-spinner"></div>
+      <p>Đang tải thông tin hiện vật...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" id="errorState" style="display: none;">
+      <div class="error-icon">⚠️</div>
+      <h3>Không thể tải thông tin</h3>
+      <p>Vui lòng thử lại sau hoặc kiểm tra kết nối mạng của bạn.</p>
+      <button class="retry-btn" onclick="loadArtifactDetail()">🔄 Thử lại</button>
+    </div>
+
+    <!-- Artifact Detail Content -->
+    <div class="artifact-detail" id="artifactDetail" style="display: none;">
+      <!-- Artifact Image -->
+      <div class="artifact-image-container">
+        <img id="artifactImage" src="" alt="Hiện vật" class="artifact-main-image">
+        <div class="artifact-badge" id="artifactBadge">
+          🏛️ Hiện vật bảo tàng
+        </div>
+      </div>
+
+      <!-- Artifact Information -->
+      <div class="artifact-info-section">
+        <div class="info-card">
+          <h2 class="artifact-title" id="artifactTitle">Tên hiện vật</h2>
+          
+          <div class="artifact-meta">
+            <div class="meta-item">
+              <span class="meta-label">🏛️ Bảo tàng:</span>
+              <span class="meta-value" id="museumName">-</span>
+            </div>
+          </div>
+
+          <div class="artifact-description-full">
+            <h3>Mô tả chi tiết</h3>
+            <div class="description-content" id="artifactDescription">
+              Đang tải thông tin...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button class="action-btn primary" onclick="goBack()">
+          ← Quay lại bảo tàng
+        </button>
+        <button class="action-btn secondary" onclick="shareArtifact()">
+          📤 Chia sẻ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = "";
+    let currentArtifactId = null;
+    let currentMuseumId = null;
+
+    // Get parameters from URL
+    function getUrlParameters() {
+      const urlParams = new URLSearchParams(window.location.search);
+      currentArtifactId = urlParams.get('id');
+      currentMuseumId = urlParams.get('museumId');
+      
+      if (!currentArtifactId || !currentMuseumId) {
+        showError('Không tìm thấy thông tin hiện vật');
+        return false;
+      }
+      return true;
+    }
+
+    // Load artifact detail
+    async function loadArtifactDetail() {
+      if (!getUrlParameters()) return;
+
+      try {
+        document.getElementById('loadingState').style.display = 'block';
+        document.getElementById('errorState').style.display = 'none';
+        document.getElementById('artifactDetail').style.display = 'none';
+
+        // Load artifact details
+        const response = await fetch(`getArtifacts.php?museumId=${currentMuseumId}`);
+        if (!response.ok) {
+          throw new Error('Failed to load artifact');
+        }
+
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error('No artifact data found');
+        }
+
+        // Find the specific artifact
+        const artifact = data.artifacts.find(a => a.ArtifactID == currentArtifactId);
+        if (!artifact) {
+          throw new Error('Artifact not found');
+        }
+
+        // Load museum info for display
+        const museumResponse = await fetch(`getMuseumDetails.php?id=${currentMuseumId}`);
+        let museumName = 'Bảo tàng';
+        if (museumResponse.ok) {
+          const museumData = await museumResponse.json();
+          if (museumData.success && museumData.museum) {
+            museumName = museumData.museum.MuseumName;
+          }
+        }
+
+        // Populate the page with artifact data
+        displayArtifactDetail(artifact, museumName);
+
+      } catch (error) {
+        console.error('Error loading artifact:', error);
+        showError('Không thể tải thông tin hiện vật. Vui lòng thử lại.');
+      }
+    }
+
+    // Display artifact detail
+    function displayArtifactDetail(artifact, museumName) {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('errorState').style.display = 'none';
+      document.getElementById('artifactDetail').style.display = 'block';
+
+      // Update page title and header
+      document.title = `${artifact.ArtifactName} - Ký Ức Việt`;
+      document.getElementById('artifactName').textContent = artifact.ArtifactName;
+      document.getElementById('artifactTitle').textContent = artifact.ArtifactName;
+
+      // Update image
+      const imageSrc = BASE_URL + (artifact.Image || '/uploads/artifacts/default.png');
+      document.getElementById('artifactImage').src = imageSrc;
+      document.getElementById('artifactImage').alt = artifact.ArtifactName;
+
+      // Update metadata
+      document.getElementById('museumName').textContent = museumName;
+
+      // Update description with proper formatting
+      const description = artifact.Description || 'Không có mô tả chi tiết.';
+      document.getElementById('artifactDescription').innerHTML = formatTextWithLineBreaks(description);
+    }
+
+    // Format text with line breaks
+    function formatTextWithLineBreaks(text) {
+      return text.replace(/\n/g, '<br>').replace(/\r/g, '');
+    }
+
+    // Show error state
+    function showError(message) {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('artifactDetail').style.display = 'none';
+      document.getElementById('errorState').style.display = 'block';
+      document.querySelector('#errorState p').textContent = message;
+    }
+
+    // Go back to museum page
+    function goBack() {
+      if (currentMuseumId) {
+        // Add a parameter to indicate we're returning from artifact detail
+        window.location.href = `/museum.html?id=${currentMuseumId}&returnFrom=artifact`;
+      } else {
+        window.history.back();
+      }
+    }
+
+    // Share artifact
+    function shareArtifact() {
+      if (navigator.share) {
+        navigator.share({
+          title: document.getElementById('artifactTitle').textContent,
+          text: 'Khám phá hiện vật này tại Ký Ức Việt!',
+          url: window.location.href
+        });
+      } else {
+        // Fallback: copy URL to clipboard
+        navigator.clipboard.writeText(window.location.href).then(() => {
+          alert('Đã sao chép liên kết vào clipboard!');
+        });
+      }
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      loadArtifactDetail();
+    });
+  </script>
+
+  <style>
+    /* Specific styles for artifact detail page */
+    .artifact-detail {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .artifact-image-container {
+      position: relative;
+      margin-bottom: 30px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .artifact-main-image {
+      width: 100%;
+      height: 400px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .artifact-badge {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      backdrop-filter: blur(10px);
+    }
+
+    .info-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .artifact-title {
+      font-size: 28px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .artifact-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .meta-label {
+      font-weight: 600;
+      color: #666;
+    }
+
+    .meta-value {
+      color: #333;
+    }
+
+    .artifact-description-full h3 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 20px;
+    }
+
+    .description-content {
+      line-height: 1.8;
+      color: #555;
+      font-size: 16px;
+      text-align: justify;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .action-btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 150px;
+    }
+
+    .action-btn.primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .action-btn.secondary {
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      border: 2px solid #ddd;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .back-btn {
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      padding: 8px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+      backdrop-filter: blur(10px);
+    }
+
+    .share-btn {
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      padding: 8px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+      backdrop-filter: blur(10px);
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+    }
+
+    .header-title h1 {
+      margin: 0;
+      font-size: 20px;
+      color: #333;
+    }
+
+    @media (max-width: 768px) {
+      .artifact-detail {
+        padding: 15px;
+      }
+
+      .artifact-main-image {
+        height: 250px;
+      }
+
+      .info-card {
+        padding: 20px;
+      }
+
+      .artifact-title {
+        font-size: 22px;
+      }
+
+      .artifact-meta {
+        grid-template-columns: 1fr;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+      }
+
+      .action-btn {
+        min-width: auto;
+      }
+    }
+  </style>
+</body>
+</html>

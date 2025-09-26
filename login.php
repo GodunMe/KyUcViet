@@ -3,7 +3,8 @@ session_start();
 require 'db.php'; // file kết nối tới MySQL
 
 if (!isset($_GET['token'])) {
-    die("Thiếu UserToken!");
+    header("Location: nfc_required.html");
+    exit();
 }
 $token = $_GET['token'];
 
