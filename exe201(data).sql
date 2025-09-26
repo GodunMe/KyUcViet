@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Sep 26, 2025 at 04:40 AM
+-- Generation Time: Sep 26, 2025 at 01:17 PM
 -- Server version: 8.4.3
 -- PHP Version: 8.3.16
 
@@ -35,6 +35,16 @@ CREATE TABLE `artifact` (
   `Image` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `MimeType` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `artifact`
+--
+
+INSERT INTO `artifact` (`ArtifactID`, `MuseumID`, `ArtifactName`, `Description`, `Image`, `MimeType`) VALUES
+(5, 3, 'Máy bay tiêm kích MiG-21 số hiệu 4324', 'Cơn ác mộng, nỗi khiếp sợ của giặc lái Mỹ\r\n\r\nChiếc tiêm kích MiG-21 số hiệu 4324 được treo trang trọng trên cao ngay giữa sảnh chính của Bảo tàng, kết hợp màn hình LED rộng trình chiếu các video clip, hình ảnh danh lam thắng cảnh khắp mọi miền Tổ quốc, tạo cảm giác như máy bay đang xuất kích bảo vệ bầu trời Tổ quốc, gây ấn tượng đặc biệt với mọi người.\r\n\r\nĐây là chiếc máy bay chiến đấu được gắn nhiều ngôi sao nhất của Không quân Nhân dân Việt Nam - 14 ngôi sao tượng trưng cho 14 chiến công bắn rơi máy bay Mỹ trên bầu trời Việt Nam. \r\n\r\nTheo hồ sơ hiện vật của BTLSQSVN, tiêm kích 4324 đã lập công lớn góp phần đánh bại chiến lược “Chiến tranh cục bộ” đánh phá miền Bắc lần thứ nhất giai đoạn 1965 - 1968 của đế quốc Mỹ. Chỉ trong năm 1967, 9 phi công thuộc Trung đoàn Không quân 921, Quân chủng PK-KQ lần lượt lái chiếc 4324 không chiến, bắn rơi 14 máy bay Mỹ. Các phi công 2 lần bắn rơi máy bay Mỹ gồm: Lê Trọng Huyên, Phạm Thanh Ngân, Nguyễn Hồng Nhị, Nguyễn Văn Cốc, Nguyễn Đăng Kính.\r\n\r\nXác suất tiêu diệt mục tiêu của chiếc 4324 được đánh giá tốt nhất trong những phi đội MiG-21 của Việt Nam khi đó: Đối đầu địch 22 lần, xạ kích 16 lần và tiêu diệt tới 14 máy bay Mỹ, nó trở thành cơn ác mộng, nỗi khiếp sợ của giặc lái Mỹ.', '/uploads/artifacts/2_BVQG.png', 'image/png'),
+(6, 3, 'Máy bay MiG-21 số hiệu 5121', 'Tiêm kích duy nhất trên thế giới hạ B-52 bằng tên lửa không đối không\r\n\r\nĐược đặt gần máy bay 4324 bên trong khu chuyên đề kháng chiến chống Mỹ, cứu nước là bảo vật quốc gia MiG-21 số hiệu 5121 với những chiến tích vô song trong lịch sử quân sự thế giới.\r\n\r\nĐây là chiếc MiG-21 do Trung tướng Phạm Tuân, Anh hùng lực lượng vũ trang nhân dân điều khiển bắn rơi máy bay B-52 của không quân Mỹ. Đêm ngày 27/12/1972, phi công Phạm Tuân lái chiếc 5121 xuất kích từ sân bay Yên Bái đến vùng trời Sơn La thì phát hiện B-52, anh liền lái máy bay vượt qua đội hình tiêm kích F-14 yểm trợ B-52, điều chỉnh đường ngắm và bắn liền hai quả tên lửa. “Pháo đài bay” được coi là bất khả xâm phạm, biểu tượng của cái gọi là “Không lực Hoa Kỳ” trúng đạn, bốc cháy ngùn ngụt rồi đâm sầm xuống đất.\r\n\r\nĐây là lần đầu tiên Không quân Việt Nam bắn rơi B-52, góp phần đập tan cuộc tập kích đường không chiến lược quy mô lớn bằng máy bay B-52 của Mỹ vào Hà Nội, Hải Phòng trong 12 ngày đêm tháng 12 năm 1972.\r\n\r\nCho đến nay, MiG-21 số hiệu 5121 là chiếc máy bay tiêm kích duy nhất trên thế giới bắn hạ được B-52 bằng tên lửa không đối không. Ngoài kỳ tích bắn rơi “siêu pháo đài bay” B-52, chiếc 5121 còn bắn rơi thêm 4 chiếc máy bay của Mỹ do hai phi công Vũ Đình Rạng và Đinh Tôn điều khiển. Chiếc MiG-21 số hiệu 5121 được Thủ tướng Chính phủ công nhận là bảo vật quốc gia ngày 01/10/2012.', '/uploads/artifacts/3_BVQG.png', 'image/png'),
+(7, 3, 'Xe tăng T-54B số hiệu 843 ', 'Xe tăng T-54B số hiệu 843 - Huyền thoại “thần tốc, táo bạo và quyết thắng”\r\n\r\nTrong hồ sơ lưu trữ tại BTLSQSVN, lịch sử, chiến công của xe tăng huyền thoại T-54B số hiệu 843 dài tới gần 10 trang giấy. Theo đó, chiếc xe thuộc Đại đội 4, Tiểu đoàn 1, Lữ đoàn Xe tăng 203, Quân đoàn 2, được lái bởi kíp lái “thép”: Trung úy Bùi Quang Thận, Đại đội trưởng kiêm trưởng xe; Hạ sĩ, lái xe Lữ Văn Hỏa; Trung sĩ, pháo thủ số 1 Thái Bá Minh và Hạ sĩ, pháo thủ số 2 Nguyễn Văn Kỷ.\r\n\r\nTừ tháng 3/1975, kíp tăng T54B số hiệu 843 được lệnh tiên phong trong các chiến dịch giải phóng Huế, Đà Nẵng, sau đó, tiến công Sài Gòn - Gia Định. Xe tăng 843 nằm trong đội hình đánh thọc sâu, phá vỡ thế phòng ngự địch, mở đường vượt cầu Sài Gòn. Tại cầu Thị Nghè, xe tăng 843 bắn cháy 2 xe thiết giáp M41 và M113 của địch, tiến thẳng đến Dinh Độc lập.\r\n\r\n11h30 ngày 30/4/1975, Trung úy Bùi Quang Thận từ xe tăng 843 lao lên cắm lá cờ Quân giải phóng tung bay trên nóc Dinh Độc lập, đặt dấu chấm hết đối với chế độ Ngụy quyền Sài Gòn, chấm dứt chia cắt, non sông thu về một mối, thỏa ước nguyện của Bác Hồ và toàn Đảng, toàn dân tộc.\r\n\r\nHồ sơ khẳng định: “Xe tăng T54B số hiệu 843 là hiện vật ghi dấu chiến công to lớn của quân và dân ta trong Chiến dịch Hồ Chí Minh - Chiến dịch có ý nghĩa quyết định, kết thúc cuộc kháng chiến chống Mỹ kéo dài 21 năm của dân tộc ta. Miền Nam giải phóng, đất nước độc lập, thống nhất, nhân dân ta bước vào thời kỳ phát triển dân giàu, nước mạnh, dân chủ, văn minh”.\r\n\r\nDù trải qua nhiều trận đánh và huấn luyện sẵn sàng chiến đấu, đến nay xe tăng 843 là một trong số ít hiện vật vẫn còn hoạt động. Ngày 01/10/2012, xe tăng 843 được Thủ trướng Chính phủ công nhận là bảo vật quốc gia.', '/uploads/artifacts/ouuroiwuroiweufh9283752387535023.png', 'image/png'),
+(8, 3, 'Bản đồ Quyết tâm Chiến dịch Hồ Chí Minh', 'Bản đồ Quyết tâm Chiến dịch Hồ Chí Minh - Kết tinh nghệ thuật quân sự Việt Nam\r\n\r\nBảo vật quốc gia tiếp theo tại BTLSQSVN là Bản đồ Quyết tâm Chiến dịch Hồ Chí Minh được tác nghiệp tại Sở chỉ huy Chiến dịch Hồ Chí Minh, đóng tại Tà Thiết, Lộc Ninh, Tây Ninh (nay thuộc tỉnh Bình Phước). Tấm bản đồ được hoàn thiện sau nhiều lần chỉnh lý, bổ sung, xin ý kiến của Bộ chỉ huy Chiến dịch, Quân ủy Trung ương và Bộ Chính trị về kế hoạch tác chiến của Chiến dịch.\r\n\r\nBản đồ hình chữ nhật, dài 185,5 cm, rộng 170 cm, can 12 mảnh, có chữ “Quyết tâm Chiến dịch Hồ Chí Minh”, được cán bộ tác chiến thể hiện trên bản đồ miền Nam Việt Nam, dưới sự chỉ đạo của các đồng chí: Đại tướng Văn Tiến Dũng, Tổng Tham mưu trưởng Quân đội Nhân dân Việt Nam, Tư lệnh Chiến dịch; Phạm Hùng, Bí thư Trung ương Cục miền Nam, Chính ủy Chiến dịch. Ngày 22/4/1975, Bộ chỉ huy Chiến dịch duyệt Quyết tâm lần cuối cùng. Đại tướng Văn Tiến Dũng và đồng chí Phạm Hùng cùng ký tên lên bản đồ. \r\n\r\nTrên bản đồ, các mũi tên màu đỏ thể hiện hướng tiến công của các cánh quân tiến về giải phóng Sài Gòn - Gia Định. Cụ thể:\r\n\r\nHướng Bắc, Quân đoàn 1 có nhiệm vụ đánh chiếm căn cứ Phú Lợi, tiêu diệt Sư đoàn 5 của địch, tiếp đó đánh chiếm Bộ Tổng tham mưu địch.\r\n\r\nHướng Đông, Quân đoàn 4 có nhiệm vụ tiêu diệt sở chỉ huy Bộ tư lệnh Quân đoàn 3 và Sư đoàn 18 của địch ở Biên Hòa, sau đó thọc sâu vào nội thành đánh chiếm Dinh Độc Lập.\r\n\r\nHướng Đông Nam, Quân đoàn 2 có nhiệm vụ đánh chiếm Bà Rịa, căn cứ Nước Trong, Long Bình, chặn đường rút chạy của địch trên sông Lòng Tàu, sau đó phát triển vào nội thành cùng Quân đoàn 4 đánh chiếm Dinh Độc Lập. \r\n\r\nHướng Tây Bắc, Quân đoàn 3 có nhiệm vụ đánh chiếm Đồng Dù, tiêu diệt Sư đoàn 25 của địch, đánh chiếm sân bay Tân Sơn Nhất và cùng Quân đoàn 1 đánh chiếm Bộ Tổng tham mưu địch.\r\n\r\nHướng Tây Nam, Đoàn 232 có nhiệm vụ tiêu diệt Sư đoàn 22 địch, cắt đường số 4, sau đó đánh thọc sâu chiếm Biệt khu Thủ đô, Tổng nha cảnh sát của địch.\r\n\r\nỞ ngoại thành, các đơn vị đặc công và lực lượng vũ trang tại chỗ có nhiệm vụ đánh và giữ các cầu quan trọng, dẫn đường cho các binh chủng chủ lực đánh chiếm các mục tiêu ở nội thành, phát động quần chúng nổi dậy giành chính quyền cơ sở.\r\n\r\nBản đồ Quyết tâm Chiến dịch Hồ Chí Minh là hiện vật thể hiện thành quả lao động sáng tạo, trí tuệ tập thể của Bộ chỉ huy Chiến dịch, kết tinh nghệ thuật quân sự Việt Nam, là một trong những yếu tố quyết định sự phát triển và thắng lợi của Chiến dịch Hồ Chí Minh lịch sử.\r\n\r\nTấm bản đồ được Đại tướng Văn Tiến Dũng lưu giữ từ năm 1975 đến năm 1990, sau đó trao tặng BTLSQSVN, nhân dịp kỷ niệm 15 năm Ngày giải phóng miền Nam, thống nhất đất nước. Bản đồ Quyết tâm Chiến dịch Hồ Chí Minh được Thủ tướng Chính phủ công nhận Bảo vật quốc gia vào ngày 14/1/2015.', '/uploads/artifacts/6_BVQG.png', 'image/png');
 
 -- --------------------------------------------------------
 
@@ -146,13 +156,23 @@ CREATE TABLE `useranswer` (
 CREATE TABLE `users` (
   `UserToken` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `Username` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `userNumber` varchar(15) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `PASSWORD` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `Role` enum('Admin','Customer','CustomerPre') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Customer',
   `Score` int DEFAULT '0',
   `FailedLoginAttempts` int DEFAULT '0',
   `STATUS` enum('Active','Locked') COLLATE utf8mb4_unicode_ci DEFAULT 'Active',
-  `LockTimestamp` datetime DEFAULT NULL
+  `isFirstLogin` tinyint(1) NOT NULL DEFAULT '1',
+  `LockTimestamp` datetime DEFAULT NULL,
+  `avatar` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`UserToken`, `Username`, `userNumber`, `PASSWORD`, `Role`, `Score`, `FailedLoginAttempts`, `STATUS`, `isFirstLogin`, `LockTimestamp`, `avatar`) VALUES
+('1', 'Phạm Xuân Dương', NULL, '$2y$10$B7a6ZAuaWD3FfAlchcU7zOLY.mbefvs1sGn61qzfun1vnCtgMjRee', 'CustomerPre', 888, 0, 'Active', 0, NULL, 'avatar/avatar.png');
 
 --
 -- Indexes for dumped tables
@@ -224,7 +244,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `artifact`
 --
 ALTER TABLE `artifact`
-  MODIFY `ArtifactID` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `ArtifactID` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `museum`

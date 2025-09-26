@@ -374,7 +374,17 @@
 
     function logout() {
       if (confirm('Bạn có chắc muốn đăng xuất?')) {
-        window.location.href = '/KyUcViet/login.html';
+        // Clear all client-side storage
+        sessionStorage.clear();
+        localStorage.clear();
+        
+        // Clear any cookies (optional, for completeness)
+        document.cookie.split(";").forEach(function(c) { 
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        // Redirect to logout.php to clear server-side session
+        window.location.href = '/logout.php';
       }
     }
 

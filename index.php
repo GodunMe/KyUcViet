@@ -121,7 +121,19 @@ function showUserNotLoggedInState() {
 
 // Go to login page
 function goToLogin() {
-  window.location.href = '/login.php?token=1';
+  // Kiểm tra xem có token không (có thể từ localStorage, sessionStorage, hoặc URL parameter)
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenFromUrl = urlParams.get('token');
+  const tokenFromStorage = localStorage.getItem('nfc_token') || sessionStorage.getItem('nfc_token');
+  
+  if (tokenFromUrl || tokenFromStorage) {
+    // Có token, chuyển đến trang login
+    const token = tokenFromUrl || tokenFromStorage;
+    window.location.href = `/login.php?token=${token}`;
+  } else {
+    // Không có token, chuyển đến trang thông báo NFC
+    window.location.href = '/nfc_required.html';
+  }
 }
 
 // --- Navigation ---
@@ -362,13 +374,13 @@ function viewMuseumDetails(event, museumId) {
       } else {
         // User not logged in - show alert and redirect to login
         alert('Bạn cần đăng nhập để xem chi tiết bảo tàng!');
-        window.location.href = '/login.php?token=1';
+        window.location.href = '/nfc_required.html';
       }
     })
     .catch(error => {
       console.error('Error checking login status:', error);
       alert('Bạn cần đăng nhập để xem chi tiết bảo tàng!');
-      window.location.href = '/login.php?token=1';
+      window.location.href = '/nfc_required.html';
     });
 }
 
