@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile - Vietnamese Memories</title>
+  <link rel="icon" type="image/png" href="logo.PNG" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-avatar">
+        <img src="avatar.png" alt="User Avatar" id="profileAvatar">
+        <button class="change-avatar-btn" onclick="changeAvatar()">📷</button>
+      </div>
+      <h2 id="profileName">Nguyen Van A</h2>
+      <p id="profileBio">Người đam mê khám phá văn hóa Việt Nam</p>
+      <button class="edit-profile-btn" onclick="toggleEditMode()">✏️ Chỉnh sửa</button>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-section">
+      <div class="stat-card">
+        <div class="stat-number">189</div>
+        <div class="stat-label">Điểm</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">8</div>
+        <div class="stat-label">Check-ins</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">5</div>
+        <div class="stat-label">Bảo tàng</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">#7</div>
+        <div class="stat-label">Xếp hạng</div>
+      </div>
+    </div>
+
+    <!-- Achievement Section -->
+    <div class="achievement-section">
+      <h3>🏅 Thành tích</h3>
+      <div class="achievement-grid">
+        <div class="achievement-card earned">
+          <div class="achievement-icon">🏛️</div>
+          <div class="achievement-name">Khám phá đầu tiên</div>
+          <div class="achievement-desc">Check-in lần đầu</div>
+        </div>
+        <div class="achievement-card earned">
+          <div class="achievement-icon">📍</div>
+          <div class="achievement-name">Thám hiểm</div>
+          <div class="achievement-desc">5 check-ins</div>
+        </div>
+        <div class="achievement-card">
+          <div class="achievement-icon">🎯</div>
+          <div class="achievement-name">Chuyên gia</div>
+          <div class="achievement-desc">10 check-ins</div>
+        </div>
+        <div class="achievement-card">
+          <div class="achievement-icon">👑</div>
+          <div class="achievement-name">Bậc thầy</div>
+          <div class="achievement-desc">Top 3 tuần</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="activity-section">
+      <h3>📋 Hoạt động gần đây</h3>
+      <div class="activity-list">
+        <div class="activity-item">
+          <div class="activity-icon">📍</div>
+          <div class="activity-info">
+            <p><strong>Check-in tại Bảo tàng Hồ Chí Minh</strong></p>
+            <p class="activity-time">Hôm nay, 14:30</p>
+          </div>
+          <div class="activity-points">+25</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon">🏆</div>
+          <div class="activity-info">
+            <p><strong>Lên hạng 7</strong></p>
+            <p class="activity-time">Hôm nay, 14:31</p>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon">📍</div>
+          <div class="activity-info">
+            <p><strong>Check-in tại Bảo tàng Lịch sử Quân sự</strong></p>
+            <p class="activity-time">Hôm qua, 10:15</p>
+          </div>
+          <div class="activity-points">+30</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon">🏅</div>
+          <div class="activity-info">
+            <p><strong>Nhận thành tích "Thám hiểm"</strong></p>
+            <p class="activity-time">Hôm qua, 10:16</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Section -->
+    <div class="settings-section">
+      <h3>⚙️ Cài đặt</h3>
+      <div class="settings-list">
+        <div class="setting-item" onclick="toggleNotifications()">
+          <div class="setting-info">
+            <div class="setting-name">Thông báo</div>
+            <div class="setting-desc">Nhận thông báo về hoạt động mới</div>
+          </div>
+          <div class="setting-toggle">
+            <input type="checkbox" id="notifications" checked>
+            <label for="notifications" class="toggle-switch"></label>
+          </div>
+        </div>
+        <div class="setting-item" onclick="toggleLocation()">
+          <div class="setting-info">
+            <div class="setting-name">Vị trí</div>
+            <div class="setting-desc">Cho phép truy cập vị trí</div>
+          </div>
+          <div class="setting-toggle">
+            <input type="checkbox" id="location" checked>
+            <label for="location" class="toggle-switch"></label>
+          </div>
+        </div>
+        <div class="setting-item" onclick="showPrivacySettings()">
+          <div class="setting-info">
+            <div class="setting-name">Quyền riêng tư</div>
+            <div class="setting-desc">Quản lý quyền riêng tư</div>
+          </div>
+          <div class="setting-arrow">▶</div>
+        </div>
+        <div class="setting-item logout-item" onclick="logout()">
+          <div class="setting-info">
+            <div class="setting-name">Đăng xuất</div>
+            <div class="setting-desc">Thoát khỏi tài khoản</div>
+          </div>
+          <div class="setting-arrow">🚪</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="navigateToPage('home')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('map')">
+      <div class="nav-icon">🗺️</div>
+      <div class="nav-label">Map</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('checkin')">
+      <div class="nav-icon">📍</div>
+      <div class="nav-label">Check-in</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('leaderboard')">
+      <div class="nav-icon">🏆</div>
+      <div class="nav-label">Bảng xếp hạng</div>
+    </div>
+    <div class="nav-item active" onclick="navigateToPage('profile')">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">Profile</div>
+    </div>
+  </div>
+
+  <script>
+    // Navigation functions
+    function navigateToPage(page) {
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      event.target.closest('.nav-item').classList.add('active');
+      
+      switch(page) {
+        case 'home':
+          window.location.href = '/KyUcViet/index.php';
+          break;
+        case 'map':
+          window.location.href = '/KyUcViet/map.html';
+          break;
+        case 'checkin':
+          window.location.href = '/KyUcViet/checkin.html';
+          break;
+        case 'leaderboard':
+          window.location.href = '/KyUcViet/leaderboard.html';
+          break;
+        case 'profile':
+          // Already on profile page
+          break;
+      }
+    }
+
+    // Profile functions
+    function toggleEditMode() {
+      const isEditing = document.querySelector('.edit-mode');
+      if (isEditing) {
+        exitEditMode();
+      } else {
+        enterEditMode();
+      }
+    }
+
+    function enterEditMode() {
+      document.body.classList.add('edit-mode');
+      const name = document.getElementById('profileName');
+      const bio = document.getElementById('profileBio');
+      const editBtn = document.querySelector('.edit-profile-btn');
+      
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = name.innerText;
+      nameInput.id = 'nameInput';
+      nameInput.className = 'profile-input';
+      
+      const bioInput = document.createElement('textarea');
+      bioInput.value = bio.innerText;
+      bioInput.id = 'bioInput';
+      bioInput.className = 'profile-input';
+      
+      name.replaceWith(nameInput);
+      bio.replaceWith(bioInput);
+      editBtn.innerHTML = '💾 Lưu';
+    }
+
+    function exitEditMode() {
+      document.body.classList.remove('edit-mode');
+      const nameInput = document.getElementById('nameInput');
+      const bioInput = document.getElementById('bioInput');
+      const editBtn = document.querySelector('.edit-profile-btn');
+      
+      const name = document.createElement('h2');
+      name.id = 'profileName';
+      name.innerText = nameInput.value;
+      
+      const bio = document.createElement('p');
+      bio.id = 'profileBio';
+      bio.innerText = bioInput.value;
+      
+      nameInput.replaceWith(name);
+      bioInput.replaceWith(bio);
+      editBtn.innerHTML = '✏️ Chỉnh sửa';
+      
+      // Here you would save to server
+      console.log('Profile saved:', { name: name.innerText, bio: bio.innerText });
+    }
+
+    function changeAvatar() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            document.getElementById('profileAvatar').src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      input.click();
+    }
+
+    function toggleNotifications() {
+      const checkbox = document.getElementById('notifications');
+      checkbox.checked = !checkbox.checked;
+      console.log('Notifications:', checkbox.checked);
+    }
+
+    function toggleLocation() {
+      const checkbox = document.getElementById('location');
+      checkbox.checked = !checkbox.checked;
+      console.log('Location:', checkbox.checked);
+    }
+
+    function showPrivacySettings() {
+      alert('Cài đặt quyền riêng tư sẽ được phát triển trong phiên bản tiếp theo');
+    }
+
+    function logout() {
+      if (confirm('Bạn có chắc muốn đăng xuất?')) {
+        window.location.href = '/KyUcViet/login.html';
+      }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Profile page loaded');
+    });
+  </script>
+</body>
+</html>

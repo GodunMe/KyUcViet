@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bảng xếp hạng - Vietnamese Memories</title>
+  <link rel="icon" type="image/png" href="logo.PNG" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- User Header -->
+    <div class="user-header">
+      <div class="user-info" onclick="toggleUserBox()">
+        <img src="avatar.png" alt="User" class="user-icon">
+        <span class="user-name">Nguyen Van A</span>
+      </div>
+      <div class="user-box" id="userBox">
+        <button onclick="editProfile()">Chỉnh sửa thông tin</button>
+        <button onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1>🏆 Bảng xếp hạng</h1>
+      <p>Xem thứ hạng của bạn và cạnh tranh với những người khám phá khác</p>
+    </div>
+
+    <!-- User Rank Card -->
+    <div class="user-rank-card">
+      <div class="rank-badge">#7</div>
+      <div class="user-info-rank">
+        <img src="avatar.png" alt="User" class="rank-avatar">
+        <div>
+          <h3>Nguyen Van A</h3>
+          <p>189 điểm • 8 check-ins</p>
+        </div>
+      </div>
+      <div class="rank-progress">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 65%;"></div>
+        </div>
+        <p>Còn 61 điểm để lên hạng 6</p>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+      <button class="tab-btn active" onclick="switchTab('all')">Tất cả</button>
+      <button class="tab-btn" onclick="switchTab('friends')">Bạn bè</button>
+      <button class="tab-btn" onclick="switchTab('week')">Tuần này</button>
+    </div>
+
+    <!-- Leaderboard List -->
+    <div class="leaderboard-section">
+      <div id="leaderboardList" class="leaderboard-list">
+        <!-- Top 3 Podium -->
+        <div class="podium">
+          <div class="podium-item second">
+            <div class="podium-avatar">
+              <img src="avatar.png" alt="User 2">
+              <div class="rank-number">2</div>
+            </div>
+            <h4>Trần Thị B</h4>
+            <p>298 điểm</p>
+          </div>
+          <div class="podium-item first">
+            <div class="podium-avatar">
+              <img src="avatar.png" alt="User 1">
+              <div class="rank-number crown">👑</div>
+            </div>
+            <h4>Lê Văn C</h4>
+            <p>342 điểm</p>
+          </div>
+          <div class="podium-item third">
+            <div class="podium-avatar">
+              <img src="avatar.png" alt="User 3">
+              <div class="rank-number">3</div>
+            </div>
+            <h4>Phạm Minh D</h4>
+            <p>276 điểm</p>
+          </div>
+        </div>
+
+        <!-- Regular Rankings -->
+        <div class="ranking-list">
+          <div class="ranking-item">
+            <div class="rank-number">4</div>
+            <img src="avatar.png" alt="User" class="rank-avatar">
+            <div class="rank-info">
+              <h4>Hoàng Thị E</h4>
+              <p>245 điểm • 12 check-ins</p>
+            </div>
+            <div class="rank-badge trending-up">📈</div>
+          </div>
+          <div class="ranking-item">
+            <div class="rank-number">5</div>
+            <img src="avatar.png" alt="User" class="rank-avatar">
+            <div class="rank-info">
+              <h4>Nguyễn Văn F</h4>
+              <p>223 điểm • 9 check-ins</p>
+            </div>
+            <div class="rank-badge">-</div>
+          </div>
+          <div class="ranking-item">
+            <div class="rank-number">6</div>
+            <img src="avatar.png" alt="User" class="rank-avatar">
+            <div class="rank-info">
+              <h4>Lý Thị G</h4>
+              <p>201 điểm • 11 check-ins</p>
+            </div>
+            <div class="rank-badge trending-down">📉</div>
+          </div>
+          <div class="ranking-item current-user">
+            <div class="rank-number highlight">7</div>
+            <img src="avatar.png" alt="User" class="rank-avatar">
+            <div class="rank-info">
+              <h4>Nguyen Van A (Bạn)</h4>
+              <p>189 điểm • 8 check-ins</p>
+            </div>
+            <div class="rank-badge">-</div>
+          </div>
+          <div class="ranking-item">
+            <div class="rank-number">8</div>
+            <img src="avatar.png" alt="User" class="rank-avatar">
+            <div class="rank-info">
+              <h4>Đặng Văn H</h4>
+              <p>165 điểm • 7 check-ins</p>
+            </div>
+            <div class="rank-badge trending-up">📈</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="navigateToPage('home')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('map')">
+      <div class="nav-icon">🗺️</div>
+      <div class="nav-label">Map</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('checkin')">
+      <div class="nav-icon">📍</div>
+      <div class="nav-label">Check-in</div>
+    </div>
+    <div class="nav-item active" onclick="navigateToPage('leaderboard')">
+      <div class="nav-icon">🏆</div>
+      <div class="nav-label">Bảng xếp hạng</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('profile')">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">Profile</div>
+    </div>
+  </div>
+
+  <script>
+    // Navigation functions
+    function toggleUserBox() {
+      const box = document.getElementById('userBox');
+      box.classList.toggle('active');
+    }
+
+    function editProfile() {
+      window.location.href = '/KyUcViet/editProfile.html';
+    }
+
+    function logout() {
+      window.location.href = '/KyUcViet/login.html';
+    }
+
+    function navigateToPage(page) {
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      event.target.closest('.nav-item').classList.add('active');
+      
+      switch(page) {
+        case 'home':
+          window.location.href = '/KyUcViet/index.php';
+          break;
+        case 'map':
+          window.location.href = '/KyUcViet/map.html';
+          break;
+        case 'checkin':
+          window.location.href = '/KyUcViet/checkin.html';
+          break;
+        case 'leaderboard':
+          // Already on leaderboard page
+          break;
+        case 'profile':
+          window.location.href = '/KyUcViet/profile.html';
+          break;
+      }
+    }
+
+    // Tab switching
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      event.target.classList.add('active');
+      
+      // Here you would normally load different data based on the tab
+      console.log('Switched to tab:', tab);
+    }
+
+    // Load leaderboard data
+    function loadLeaderboard() {
+      // This would normally fetch from API
+      console.log('Loading leaderboard data...');
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      loadLeaderboard();
+    });
+  </script>
+</body>
+</html>

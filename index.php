@@ -42,9 +42,30 @@
 
     <!-- Danh sách bảo tàng -->
     <div id="museumList" class="museum-list"></div>
+  </div>
 
-    <!-- Login -->
-    <button class="login-btn">🔑 Đăng nhập</button>
+  <!-- Bottom Navigation Bar -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="navigateToPage('home')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('map')">
+      <div class="nav-icon">🗺️</div>
+      <div class="nav-label">Map</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('checkin')">
+      <div class="nav-icon">�</div>
+      <div class="nav-label">Check-in</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('leaderboard')">
+      <div class="nav-icon">🏆</div>
+      <div class="nav-label">Bảng xếp hạng</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('profile')">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">Profile</div>
+    </div>
   </div>
 
   <script>
@@ -75,11 +96,44 @@ document.addEventListener('click', (e) => {
 
 
 function editProfile() {
-  window.location.href = BASE_URL + '/editProfile.html';
+  window.location.href = '/KyUcViet/editProfile.html';
 }
 
 function logout() {
-  window.location.href = BASE_URL + '/login.html';
+  window.location.href = '/KyUcViet/login.html';
+}
+
+// --- Navigation ---
+function navigateToPage(page) {
+  // Remove active class from all nav items
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  
+  // Add active class to clicked item
+  event.target.closest('.nav-item').classList.add('active');
+  
+  // Navigate to different pages
+  switch(page) {
+    case 'home':
+      // Already on home page, just refresh or scroll to top
+      window.scrollTo(0, 0);
+      break;
+    case 'map':
+      window.location.href = '/KyUcViet/map.html';
+      break;
+    case 'checkin':
+      window.location.href = '/KyUcViet/checkin.html';
+      break;
+    case 'leaderboard':
+      window.location.href = '/KyUcViet/leaderboard.html';
+      break;
+    case 'profile':
+      window.location.href = '/KyUcViet/profile.html';
+      break;
+    default:
+      console.log('Unknown page:', page);
+  }
 }
 
 let map, userMarker, directionsService, directionsRenderer, userLocation;
