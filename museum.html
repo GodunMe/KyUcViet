@@ -69,6 +69,14 @@
       <div class="artifacts-grid" id="artifactsGrid">
         <!-- Artifacts will be loaded here -->
       </div>
+      <!-- Pagination -->
+      <div class="pagination" id="artifactsPagination" style="display: none;">
+        <button class="pagination-btn" id="prevBtn" onclick="changePage(-1)">‹ Trước</button>
+        <div class="pagination-info">
+          <span id="currentPage">1</span> / <span id="totalPages">1</span>
+        </div>
+        <button class="pagination-btn" id="nextBtn" onclick="changePage(1)">Sau ›</button>
+      </div>
     </div>
 
     <!-- Loading State -->
@@ -113,6 +121,11 @@
   <script>
     const BASE_URL = "";
     let currentMuseumId = null;
+    
+    // Pagination variables
+    let allArtifacts = [];
+    let currentPage = 1;
+    const artifactsPerPage = 5;
 
     // Get museum ID from URL parameters
     function getMuseumIdFromUrl() {
@@ -198,6 +211,9 @@
         // Load artifacts
         await loadArtifacts(currentMuseumId);
         
+        // Restore previous state if available
+        restorePreviousState();
+        
         hideLoading();
       } catch (error) {
         console.error('Error loading museum data:', error);
@@ -276,7 +292,7 @@
       mediaSection.style.display = 'block';
     }
 
-    // Load artifacts
+    // Load all artifacts
     async function loadArtifacts(museumId) {
       const response = await fetch(`getArtifacts.php?museumId=${museumId}`);
       if (!response.ok) {
@@ -285,49 +301,151 @@
       
       const data = await response.json();
       
+      if (data.success && data.artifacts.length > 0) {
+        allArtifacts = data.artifacts;
+        currentPage = 1;
+        displayArtifactsPage();
+        setupPagination();
+      } else {
+        const artifactsGrid = document.getElementById('artifactsGrid');
+        artifactsGrid.innerHTML = '<div class="no-artifacts">Chưa có hiện vật nào được thêm vào bảo tàng này.</div>';
+        document.getElementById('artifactsPagination').style.display = 'none';
+      }
+    }
+
+    // Display artifacts for current page
+    function displayArtifactsPage() {
       const artifactsGrid = document.getElementById('artifactsGrid');
       artifactsGrid.innerHTML = '';
       
-      if (data.success && data.artifacts.length > 0) {
-        data.artifacts.forEach((artifact, index) => {
-          const artifactCard = document.createElement('div');
-          artifactCard.className = 'artifact-card';
-          
-          // Format description to preserve line breaks
-          const rawDescription = artifact.Description || 'Không có mô tả';
-          const description = formatTextWithLineBreaks(rawDescription);
-          const isLongDescription = rawDescription.length > 120;
-          const shortDescription = isLongDescription ? formatTextWithLineBreaks(rawDescription.substring(0, 120)) + '...' : description;
-          
-          artifactCard.innerHTML = `
-            <div class="artifact-image">
-              <img src="${BASE_URL + (artifact.Image || '/uploads/artifacts/default.png')}" alt="${artifact.ArtifactName}">
+      const startIndex = (currentPage - 1) * artifactsPerPage;
+      const endIndex = startIndex + artifactsPerPage;
+      const pageArtifacts = allArtifacts.slice(startIndex, endIndex);
+      
+      pageArtifacts.forEach((artifact, index) => {
+        const globalIndex = startIndex + index;
+        const artifactCard = document.createElement('div');
+        artifactCard.className = 'artifact-card';
+        
+        // Format description to show only first 80 characters
+        const rawDescription = artifact.Description || 'Không có mô tả';
+        const shortDescription = rawDescription.length > 80 ? 
+          rawDescription.substring(0, 80) + '...' : rawDescription;
+        
+        artifactCard.innerHTML = `
+          <div class="artifact-image">
+            <img src="${BASE_URL + (artifact.Image || '/uploads/artifacts/default.png')}" alt="${artifact.ArtifactName}">
+          </div>
+          <div class="artifact-info">
+            <h3>${artifact.ArtifactName}</h3>
+            <div class="artifact-description">
+              <p class="description-text">${formatTextWithLineBreaks(shortDescription)}</p>
             </div>
-            <div class="artifact-info">
-              <h3>${artifact.ArtifactName}</h3>
-              <div class="artifact-description">
-                <p class="description-text" id="desc-${index}">
-                  <span class="short-text">${shortDescription}</span>
-                  ${isLongDescription ? `<span class="full-text" style="display: none;">${description}</span>` : ''}
-                </p>
-                ${isLongDescription ? `
-                  <button class="expand-btn" onclick="toggleDescription(${index})">
-                    <span class="expand-text">
-                      <span>Xem thêm</span> <span class="expand-icon">▼</span>
-                    </span>
-                    <span class="collapse-text" style="display: none;">
-                      <span>Thu gọn</span> <span class="collapse-icon">▲</span>
-                    </span>
-                  </button>
-                ` : ''}
-              </div>
+            <div class="artifact-actions">
+              <button class="detail-btn" onclick="viewArtifactDetail(${globalIndex})">
+                📖 Xem chi tiết
+              </button>
             </div>
-          `;
-          
-          artifactsGrid.appendChild(artifactCard);
-        });
+          </div>
+        `;
+        
+        artifactsGrid.appendChild(artifactCard);
+      });
+    }
+
+    // Setup pagination controls
+    function setupPagination() {
+      const totalPages = Math.ceil(allArtifacts.length / artifactsPerPage);
+      
+      if (totalPages > 1) {
+        document.getElementById('artifactsPagination').style.display = 'flex';
+        document.getElementById('currentPage').textContent = currentPage;
+        document.getElementById('totalPages').textContent = totalPages;
+        
+        // Update button states
+        document.getElementById('prevBtn').disabled = currentPage === 1;
+        document.getElementById('nextBtn').disabled = currentPage === totalPages;
       } else {
-        artifactsGrid.innerHTML = '<div class="no-artifacts">Chưa có hiện vật nào được thêm vào bảo tàng này.</div>';
+        document.getElementById('artifactsPagination').style.display = 'none';
+      }
+    }
+
+    // Change page
+    function changePage(direction) {
+      const totalPages = Math.ceil(allArtifacts.length / artifactsPerPage);
+      const newPage = currentPage + direction;
+      
+      if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        displayArtifactsPage();
+        setupPagination();
+        
+        // Scroll to artifacts section
+        document.querySelector('.artifacts-section').scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }
+
+    // View artifact detail - redirect to detail page
+    function viewArtifactDetail(artifactIndex) {
+      const artifact = allArtifacts[artifactIndex];
+      if (artifact) {
+        // Save current state before navigating
+        saveCurrentState();
+        
+        // Pass artifact ID and museum ID to detail page
+        window.location.href = `/artifact_detail.html?id=${artifact.ArtifactID}&museumId=${currentMuseumId}`;
+      }
+    }
+
+    // Save current page state (scroll position and current page)
+    function saveCurrentState() {
+      const state = {
+        scrollPosition: window.pageYOffset || document.documentElement.scrollTop,
+        currentPage: currentPage,
+        museumId: currentMuseumId
+      };
+      
+      // Save to sessionStorage (will persist for this browser session)
+      sessionStorage.setItem('museumPageState', JSON.stringify(state));
+    }
+
+    // Restore previous state when returning from artifact detail
+    function restorePreviousState() {
+      try {
+        const savedState = sessionStorage.getItem('museumPageState');
+        if (savedState) {
+          const state = JSON.parse(savedState);
+          
+          // Only restore if we're on the same museum
+          if (state.museumId == currentMuseumId) {
+            // Restore pagination
+            if (state.currentPage && state.currentPage !== currentPage) {
+              currentPage = state.currentPage;
+              displayArtifactsPage();
+              setupPagination();
+            }
+            
+            // Restore scroll position after a small delay to ensure content is rendered
+            setTimeout(() => {
+              if (state.scrollPosition) {
+                window.scrollTo({
+                  top: state.scrollPosition,
+                  behavior: 'smooth'
+                });
+              }
+            }, 100);
+            
+            // Clear the saved state after using it
+            sessionStorage.removeItem('museumPageState');
+          }
+        }
+      } catch (error) {
+        console.error('Error restoring previous state:', error);
+        // If there's an error, just clear the saved state
+        sessionStorage.removeItem('museumPageState');
       }
     }
 
@@ -581,11 +699,104 @@
       }
     }
 
+    // Save state before page unload (for browser back/forward)
+    window.addEventListener('beforeunload', function() {
+      // Only save if we have artifacts loaded (avoid saving empty state)
+      if (allArtifacts && allArtifacts.length > 0) {
+        saveCurrentState();
+      }
+    });
+
     // Initialize page
     document.addEventListener('DOMContentLoaded', function() {
       loadUserInfo();
       loadMuseumData();
     });
   </script>
+
+  <style>
+    /* Pagination Styles */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 30px;
+      gap: 15px;
+    }
+
+    .pagination-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 70px;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .pagination-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .pagination-info {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 8px 15px;
+      border-radius: 15px;
+      font-weight: 500;
+      color: #333;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Artifact Card với nút Xem chi tiết */
+    .artifact-actions {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .detail-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      flex: 1;
+    }
+
+    .detail-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .pagination {
+        gap: 10px;
+      }
+      
+      .pagination-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-width: 60px;
+      }
+      
+      .pagination-info {
+        padding: 6px 12px;
+        font-size: 14px;
+      }
+    }
+  </style>
 </body>
 </html>
