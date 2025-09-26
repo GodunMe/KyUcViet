@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bản đồ - Vietnamese Memories</title>
+  <link rel="icon" type="image/png" href="logo.PNG" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #mapContainer {
+      height: calc(100vh - 160px);
+      width: 100%;
+      position: relative;
+    }
+    
+    .map-controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .control-btn {
+      padding: 8px 12px;
+      background: white;
+      border: none;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.3s;
+    }
+    
+    .control-btn:hover {
+      background: #f0f0f0;
+      transform: translateY(-1px);
+    }
+    
+    .control-btn.admin-only {
+      background: #007bff;
+      color: white;
+    }
+    
+    .marker-popup {
+      max-width: 250px;
+    }
+    
+    .marker-popup h4 {
+      margin: 0 0 8px 0;
+      color: #333;
+    }
+    
+    .marker-popup p {
+      margin: 4px 0;
+      font-size: 13px;
+      color: #666;
+    }
+    
+    .marker-popup .admin-controls {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+    }
+    
+    .popup-btn {
+      padding: 4px 8px;
+      font-size: 11px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .edit-btn {
+      background: #ffc107;
+      color: black;
+    }
+    
+    .delete-btn {
+      background: #dc3545;
+      color: white;
+    }
+    
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+    }
+    
+    .modal h3 {
+      margin-top: 0;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    .form-group textarea {
+      resize: vertical;
+      height: 80px;
+    }
+    
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .btn-primary {
+      background: #007bff;
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .admin-panel {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      display: none;
+      z-index: 1000;
+    }
+    
+    .admin-panel.show {
+      display: block;
+    }
+    
+    .admin-toggle {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      padding: 8px 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- User Header -->
+    <div class="user-header">
+      <div class="user-info" onclick="toggleUserBox()">
+        <img src="avatar.png" alt="User" class="user-icon">
+        <span class="user-name">Nguyen Van A</span>
+      </div>
+      <div class="user-box" id="userBox">
+        <button onclick="editProfile()">Chỉnh sửa thông tin</button>
+        <button onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1>🗺️ Bản đồ</h1>
+      <p>Khám phá các bảo tàng và địa điểm văn hóa xung quanh bạn</p>
+    </div>
+
+    <!-- Admin Toggle (Only visible for admin) -->
+    <button class="admin-toggle" id="adminToggle" onclick="toggleAdminMode()">
+      👑 Admin Mode
+    </button>
+
+    <!-- Map Container -->
+    <div id="mapContainer">
+      <!-- Map Controls -->
+      <div class="map-controls">
+        <button class="control-btn" onclick="locateUser()" title="Tìm vị trí của tôi">
+          📍 Vị trí của tôi
+        </button>
+        <button class="control-btn admin-only" id="addMarkerBtn" onclick="enableAddMarker()" title="Thêm điểm mới">
+          ➕ Thêm điểm
+        </button>
+        <button class="control-btn" onclick="toggleMarkerList()" title="Danh sách điểm">
+          📋 Danh sách
+        </button>
+      </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="admin-panel" id="adminPanel">
+      <p><strong>Chế độ Admin:</strong> Click vào bản đồ để thêm marker mới</p>
+      <button class="btn btn-secondary" onclick="disableAddMarker()">Hủy</button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="navigateToPage('home')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item active" onclick="navigateToPage('map')">
+      <div class="nav-icon">🗺️</div>
+      <div class="nav-label">Map</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('checkin')">
+      <div class="nav-icon">📍</div>
+      <div class="nav-label">Check-in</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('leaderboard')">
+      <div class="nav-icon">🏆</div>
+      <div class="nav-label">Bảng xếp hạng</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('profile')">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">Profile</div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Marker Modal -->
+  <div id="markerModal" class="modal">
+    <div class="modal-content">
+      <h3 id="modalTitle">Thêm điểm mới</h3>
+      <form id="markerForm">
+        <div class="form-group">
+          <label for="markerName">Tên địa điểm *</label>
+          <input type="text" id="markerName" required>
+        </div>
+        <div class="form-group">
+          <label for="markerType">Loại địa điểm</label>
+          <select id="markerType">
+            <option value="museum">Bảo tàng</option>
+            <option value="historical">Di tích lịch sử</option>
+            <option value="cultural">Văn hóa</option>
+            <option value="tourist">Du lịch</option>
+            <option value="other">Khác</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="markerDescription">Mô tả</label>
+          <textarea id="markerDescription" placeholder="Mô tả ngắn về địa điểm..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="markerAddress">Địa chỉ</label>
+          <input type="text" id="markerAddress" readonly>
+        </div>
+        <div class="modal-buttons">
+          <button type="button" class="btn btn-secondary" onclick="closeMarkerModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary">Lưu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <script>
+    let map;
+    let userMarker;
+    let markers = [];
+    let isAdmin = true; // Thay đổi thành false cho user thường
+    let addMarkerMode = false;
+    let editingMarker = null;
+    let currentUserLocation = null;
+
+    // Sample data - Thay thế bằng dữ liệu từ database
+    const sampleMarkers = [
+      {
+        id: 1,
+        name: "Bảo tàng Hồ Chí Minh",
+        type: "museum",
+        description: "Bảo tàng về cuộc đời và sự nghiệp của Chủ tịch Hồ Chí Minh",
+        lat: 21.0368,
+        lng: 105.8342,
+        address: "19 Ngọc Hà, Ba Đình, Hà Nội"
+      },
+      {
+        id: 2,
+        name: "Bảo tàng Lịch sử Quân sự Việt Nam",
+        type: "museum",
+        description: "Trưng bày hiện vật về lịch sử quân sự Việt Nam",
+        lat: 21.0245,
+        lng: 105.8412,
+        address: "28A Điện Biên Phủ, Ba Đình, Hà Nội"
+      },
+      {
+        id: 3,
+        name: "Văn Miếu - Quốc Tử Giám",
+        type: "historical",
+        description: "Ngôi đền đầu tiên ở Hà Nội, được xây dựng vào năm 1070",
+        lat: 21.0267,
+        lng: 105.8356,
+        address: "58 Quốc Tử Giám, Đống Đa, Hà Nội"
+      }
+    ];
+
+    // Navigation functions
+    function toggleUserBox() {
+      const box = document.getElementById('userBox');
+      box.classList.toggle('active');
+    }
+
+    function editProfile() {
+      window.location.href = '/KyUcViet/editProfile.html';
+    }
+
+    function logout() {
+      window.location.href = '/KyUcViet/login.html';
+    }
+
+    function navigateToPage(page) {
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      event.target.closest('.nav-item').classList.add('active');
+      
+      switch(page) {
+        case 'home':
+          window.location.href = '/KyUcViet/index.php';
+          break;
+        case 'map':
+          // Already on map page
+          break;
+        case 'checkin':
+          window.location.href = '/KyUcViet/checkin.html';
+          break;
+        case 'leaderboard':
+          window.location.href = '/KyUcViet/leaderboard.html';
+          break;
+        case 'profile':
+          window.location.href = '/KyUcViet/profile.html';
+          break;
+      }
+    }
+
+    // Map functions
+    function initMap() {
+      // Initialize map with default location (Hanoi)
+      map = L.map('mapContainer').setView([21.0285, 105.8542], 13);
+
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Get user location and center map
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            currentUserLocation = [lat, lng];
+            
+            // Center map on user location
+            map.setView([lat, lng], 15);
+            
+            // Add user marker
+            if (userMarker) {
+              map.removeLayer(userMarker);
+            }
+            
+            userMarker = L.marker([lat, lng], {
+              icon: L.divIcon({
+                className: 'user-marker',
+                html: '<div style="background: #007bff; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">📍</div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+              })
+            }).addTo(map);
+            
+            userMarker.bindPopup('<b>Vị trí của bạn</b>').openPopup();
+            
+            // Update address
+            reverseGeocode(lat, lng).then(address => {
+              if (address) {
+                userMarker.setPopupContent(`<b>Vị trí của bạn</b><br>${address}`);
+              }
+            });
+          },
+          error => {
+            console.warn('Geolocation error:', error);
+            alert('Không thể lấy vị trí hiện tại. Sử dụng vị trí mặc định.');
+          }
+        );
+      }
+
+      // Load existing markers
+      loadMarkers();
+
+      // Setup admin controls
+      setupAdminControls();
+
+      // Add click event for admin mode
+      map.on('click', onMapClick);
+    }
+
+    function loadMarkers() {
+      // Clear existing markers
+      markers.forEach(marker => map.removeLayer(marker.leafletMarker));
+      markers = [];
+
+      // Add sample markers (replace with API call)
+      sampleMarkers.forEach(markerData => {
+        addMarkerToMap(markerData);
+      });
+    }
+
+    function addMarkerToMap(markerData) {
+      const iconHtml = getMarkerIcon(markerData.type);
+      
+      const marker = L.marker([markerData.lat, markerData.lng], {
+        icon: L.divIcon({
+          className: 'custom-marker',
+          html: iconHtml,
+          iconSize: [30, 30],
+          iconAnchor: [15, 30],
+          popupAnchor: [0, -30]
+        })
+      }).addTo(map);
+
+      const popupContent = `
+        <div class="marker-popup">
+          <h4>${markerData.name}</h4>
+          <p><strong>Loại:</strong> ${getTypeLabel(markerData.type)}</p>
+          <p><strong>Mô tả:</strong> ${markerData.description || 'Không có mô tả'}</p>
+          <p><strong>Địa chỉ:</strong> ${markerData.address || 'Đang cập nhật...'}</p>
+          ${isAdmin ? `
+            <div class="admin-controls">
+              <button class="popup-btn edit-btn" onclick="editMarker(${markerData.id})">Sửa</button>
+              <button class="popup-btn delete-btn" onclick="deleteMarker(${markerData.id})">Xóa</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      marker.bindPopup(popupContent);
+
+      // Store marker data
+      markers.push({
+        id: markerData.id,
+        data: markerData,
+        leafletMarker: marker
+      });
+    }
+
+    function getMarkerIcon(type) {
+      const icons = {
+        museum: '🏛️',
+        historical: '🏛️',
+        cultural: '🎭',
+        tourist: '📍',
+        other: '📌'
+      };
+      
+      const icon = icons[type] || '📌';
+      return `<div style="background: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid #333; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${icon}</div>`;
+    }
+
+    function getTypeLabel(type) {
+      const labels = {
+        museum: 'Bảo tàng',
+        historical: 'Di tích lịch sử',
+        cultural: 'Văn hóa',
+        tourist: 'Du lịch',
+        other: 'Khác'
+      };
+      return labels[type] || 'Khác';
+    }
+
+    function setupAdminControls() {
+      const adminElements = document.querySelectorAll('.admin-only, .admin-toggle');
+      adminElements.forEach(el => {
+        el.style.display = isAdmin ? 'block' : 'none';
+      });
+    }
+
+    function toggleAdminMode() {
+      isAdmin = !isAdmin;
+      setupAdminControls();
+      loadMarkers(); // Reload to show/hide admin controls in popups
+      
+      const toggleBtn = document.getElementById('adminToggle');
+      toggleBtn.textContent = isAdmin ? '👑 Admin Mode' : '👤 User Mode';
+      toggleBtn.style.background = isAdmin ? '#28a745' : '#6c757d';
+    }
+
+    function locateUser() {
+      if (currentUserLocation) {
+        map.setView(currentUserLocation, 16);
+        if (userMarker) {
+          userMarker.openPopup();
+        }
+      } else {
+        alert('Vị trí chưa được xác định');
+      }
+    }
+
+    function enableAddMarker() {
+      if (!isAdmin) return;
+      
+      addMarkerMode = true;
+      document.getElementById('adminPanel').classList.add('show');
+      map.getContainer().style.cursor = 'crosshair';
+    }
+
+    function disableAddMarker() {
+      addMarkerMode = false;
+      document.getElementById('adminPanel').classList.remove('show');
+      map.getContainer().style.cursor = '';
+    }
+
+    function onMapClick(e) {
+      if (!addMarkerMode || !isAdmin) return;
+      
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
+      
+      // Get address for the clicked location
+      reverseGeocode(lat, lng).then(address => {
+        openMarkerModal(lat, lng, address);
+      });
+      
+      disableAddMarker();
+    }
+
+    function openMarkerModal(lat, lng, address = '') {
+      editingMarker = null;
+      document.getElementById('modalTitle').textContent = 'Thêm điểm mới';
+      document.getElementById('markerName').value = '';
+      document.getElementById('markerType').value = 'museum';
+      document.getElementById('markerDescription').value = '';
+      document.getElementById('markerAddress').value = address;
+      
+      // Store coordinates for later use
+      document.getElementById('markerModal').dataset.lat = lat;
+      document.getElementById('markerModal').dataset.lng = lng;
+      
+      document.getElementById('markerModal').style.display = 'block';
+    }
+
+    function closeMarkerModal() {
+      document.getElementById('markerModal').style.display = 'none';
+      editingMarker = null;
+    }
+
+    function editMarker(markerId) {
+      const marker = markers.find(m => m.id === markerId);
+      if (!marker) return;
+      
+      editingMarker = marker;
+      document.getElementById('modalTitle').textContent = 'Sửa điểm';
+      document.getElementById('markerName').value = marker.data.name;
+      document.getElementById('markerType').value = marker.data.type;
+      document.getElementById('markerDescription').value = marker.data.description || '';
+      document.getElementById('markerAddress').value = marker.data.address || '';
+      
+      document.getElementById('markerModal').style.display = 'block';
+    }
+
+    function deleteMarker(markerId) {
+      if (!confirm('Bạn có chắc muốn xóa điểm này?')) return;
+      
+      // Remove from map
+      const markerIndex = markers.findIndex(m => m.id === markerId);
+      if (markerIndex >= 0) {
+        map.removeLayer(markers[markerIndex].leafletMarker);
+        markers.splice(markerIndex, 1);
+      }
+      
+      // Here you would make API call to delete from database
+      console.log('Deleted marker:', markerId);
+      alert('Đã xóa điểm thành công!');
+    }
+
+    async function reverseGeocode(lat, lng) {
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=vi`);
+        const data = await response.json();
+        return data.display_name || '';
+      } catch (error) {
+        console.error('Reverse geocoding error:', error);
+        return '';
+      }
+    }
+
+    function toggleMarkerList() {
+      // Create a list of all markers
+      let listHtml = '<h4>Danh sách điểm đánh dấu:</h4>';
+      markers.forEach(marker => {
+        listHtml += `
+          <div style="margin: 8px 0; padding: 8px; background: #f9f9f9; border-radius: 4px; cursor: pointer;" onclick="map.setView([${marker.data.lat}, ${marker.data.lng}], 16); markers.find(m => m.id === ${marker.id}).leafletMarker.openPopup();">
+            <strong>${marker.data.name}</strong><br>
+            <small>${getTypeLabel(marker.data.type)}</small>
+          </div>
+        `;
+      });
+      
+      // Show in a popup
+      const popup = L.popup()
+        .setLatLng(map.getCenter())
+        .setContent(listHtml)
+        .openOn(map);
+    }
+
+    // Form submission
+    document.getElementById('markerForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('markerName').value.trim();
+      const type = document.getElementById('markerType').value;
+      const description = document.getElementById('markerDescription').value.trim();
+      const address = document.getElementById('markerAddress').value.trim();
+      
+      if (!name) {
+        alert('Vui lòng nhập tên địa điểm!');
+        return;
+      }
+      
+      if (editingMarker) {
+        // Update existing marker
+        editingMarker.data.name = name;
+        editingMarker.data.type = type;
+        editingMarker.data.description = description;
+        editingMarker.data.address = address;
+        
+        // Update marker on map
+        map.removeLayer(editingMarker.leafletMarker);
+        const markerIndex = markers.findIndex(m => m.id === editingMarker.id);
+        if (markerIndex >= 0) {
+          markers.splice(markerIndex, 1);
+        }
+        addMarkerToMap(editingMarker.data);
+        
+        console.log('Updated marker:', editingMarker.data);
+        alert('Đã cập nhật điểm thành công!');
+      } else {
+        // Add new marker
+        const modal = document.getElementById('markerModal');
+        const lat = parseFloat(modal.dataset.lat);
+        const lng = parseFloat(modal.dataset.lng);
+        
+        const newMarker = {
+          id: Date.now(), // In production, use proper ID from database
+          name: name,
+          type: type,
+          description: description,
+          address: address,
+          lat: lat,
+          lng: lng
+        };
+        
+        addMarkerToMap(newMarker);
+        console.log('Added new marker:', newMarker);
+        alert('Đã thêm điểm mới thành công!');
+      }
+      
+      closeMarkerModal();
+    });
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('markerModal');
+      if (event.target === modal) {
+        closeMarkerModal();
+      }
+    }
+
+    // Initialize map when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      initMap();
+    });
+  </script>
+</body>
+</html>
