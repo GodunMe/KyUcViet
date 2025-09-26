@@ -51,13 +51,13 @@
 
     <!-- Museum Info Section -->
     <div class="museum-info-section">
-      <h2>📖 Giới thiệu</h2>
+      <h2>Giới thiệu</h2>
       <p id="museumDescription">Đang tải mô tả bảo tàng...</p>
     </div>
 
     <!-- Museum Media Gallery -->
     <div class="museum-media-section" id="museumMediaSection" style="display: none;">
-      <h2>🖼️ Thư viện ảnh</h2>
+      <h2>Thư viện ảnh</h2>
       <div class="media-gallery" id="mediaGallery">
         <!-- Media items will be loaded here -->
       </div>
@@ -65,7 +65,7 @@
 
     <!-- Artifacts Section -->
     <div class="artifacts-section">
-      <h2>🏛️ Hiện vật</h2>
+      <h2>Hiện vật</h2>
       <div class="artifacts-grid" id="artifactsGrid">
         <!-- Artifacts will be loaded here -->
       </div>
@@ -111,7 +111,7 @@
   </div>
 
   <script>
-    const BASE_URL = "/EXEProject";
+    const BASE_URL = "";
     let currentMuseumId = null;
 
     // Get museum ID from URL parameters
@@ -218,7 +218,8 @@
         // Update museum info
         document.getElementById('museumName').textContent = data.museum.MuseumName;
         document.getElementById('museumAddress').textContent = data.museum.Address;
-        document.getElementById('museumDescription').textContent = data.museum.Description;
+        // Format museum description with line breaks
+        document.getElementById('museumDescription').innerHTML = formatTextWithLineBreaks(data.museum.Description);
         
         // Update page title
         document.title = `${data.museum.MuseumName} - Vietnamese Memories`;
@@ -247,8 +248,8 @@
       
       mediaGallery.innerHTML = '';
       
-      // Store media items for gallery navigation
-      window.galleryItems = mediaItems.filter(media => media.mime_type.startsWith('image/'));
+      // Store all media items for gallery navigation (including videos)
+      window.galleryItems = mediaItems;
       
       mediaItems.forEach((media, index) => {
         const mediaItem = document.createElement('div');
@@ -260,10 +261,12 @@
           `;
         } else if (media.mime_type.startsWith('video/')) {
           mediaItem.innerHTML = `
-            <video controls>
-              <source src="${BASE_URL + media.file_path}" type="${media.mime_type}">
-              Trình duyệt không hỗ trợ video.
-            </video>
+            <div class="video-thumbnail" onclick="openGalleryModal(${index})">
+              <video muted>
+                <source src="${BASE_URL + media.file_path}" type="${media.mime_type}">
+              </video>
+              <div class="play-overlay">▶</div>
+            </div>
           `;
         }
         
@@ -286,9 +289,15 @@
       artifactsGrid.innerHTML = '';
       
       if (data.success && data.artifacts.length > 0) {
-        data.artifacts.forEach(artifact => {
+        data.artifacts.forEach((artifact, index) => {
           const artifactCard = document.createElement('div');
           artifactCard.className = 'artifact-card';
+          
+          // Format description to preserve line breaks
+          const rawDescription = artifact.Description || 'Không có mô tả';
+          const description = formatTextWithLineBreaks(rawDescription);
+          const isLongDescription = rawDescription.length > 120;
+          const shortDescription = isLongDescription ? formatTextWithLineBreaks(rawDescription.substring(0, 120)) + '...' : description;
           
           artifactCard.innerHTML = `
             <div class="artifact-image">
@@ -296,7 +305,22 @@
             </div>
             <div class="artifact-info">
               <h3>${artifact.ArtifactName}</h3>
-              <p>${artifact.Description}</p>
+              <div class="artifact-description">
+                <p class="description-text" id="desc-${index}">
+                  <span class="short-text">${shortDescription}</span>
+                  ${isLongDescription ? `<span class="full-text" style="display: none;">${description}</span>` : ''}
+                </p>
+                ${isLongDescription ? `
+                  <button class="expand-btn" onclick="toggleDescription(${index})">
+                    <span class="expand-text">
+                      <span>Xem thêm</span> <span class="expand-icon">▼</span>
+                    </span>
+                    <span class="collapse-text" style="display: none;">
+                      <span>Thu gọn</span> <span class="collapse-icon">▲</span>
+                    </span>
+                  </button>
+                ` : ''}
+              </div>
             </div>
           `;
           
@@ -332,8 +356,13 @@
               &#10094;
             </button>
             
-            <div class="gallery-image-container">
-              <img id="galleryImage" src="${BASE_URL + window.galleryItems[currentGalleryIndex].file_path}" alt="Gallery Image">
+            <div class="gallery-image-container" id="galleryMediaContainer">
+              ${window.galleryItems[currentGalleryIndex].mime_type.startsWith('image/') 
+                ? `<img id="galleryImage" src="${BASE_URL + window.galleryItems[currentGalleryIndex].file_path}" alt="Gallery Image">`
+                : `<video id="galleryVideo" controls>
+                     <source src="${BASE_URL + window.galleryItems[currentGalleryIndex].file_path}" type="${window.galleryItems[currentGalleryIndex].mime_type}">
+                     Trình duyệt không hỗ trợ video.
+                   </video>`}
             </div>
             
             <button class="gallery-nav gallery-nav-right" onclick="nextImage()" ${window.galleryItems.length <= 1 ? 'style="display:none"' : ''}>
@@ -343,10 +372,16 @@
           
           <div class="gallery-thumbnails" ${window.galleryItems.length <= 1 ? 'style="display:none"' : ''}>
             ${window.galleryItems.map((item, index) => `
-              <img class="gallery-thumb ${index === currentGalleryIndex ? 'active' : ''}" 
-                   src="${BASE_URL + item.file_path}" 
-                   onclick="goToImage(${index})"
-                   alt="Thumbnail ${index + 1}">
+              <div class="gallery-thumb ${index === currentGalleryIndex ? 'active' : ''}" onclick="goToImage(${index})">
+                ${item.mime_type.startsWith('image/') 
+                  ? `<img src="${BASE_URL + item.file_path}" alt="Thumbnail ${index + 1}">`
+                  : `<div class="video-thumb">
+                       <video muted>
+                         <source src="${BASE_URL + item.file_path}" type="${item.mime_type}">
+                       </video>
+                       <div class="play-icon">▶</div>
+                     </div>`}
+              </div>
             `).join('')}
           </div>
         </div>
@@ -390,12 +425,23 @@
     }
 
     function updateGalleryImage() {
-      const galleryImage = document.getElementById('galleryImage');
+      const mediaContainer = document.getElementById('galleryMediaContainer');
       const currentIndexSpan = document.getElementById('currentIndex');
       const thumbnails = document.querySelectorAll('.gallery-thumb');
       
-      if (galleryImage && window.galleryItems[currentGalleryIndex]) {
-        galleryImage.src = BASE_URL + window.galleryItems[currentGalleryIndex].file_path;
+      if (mediaContainer && window.galleryItems[currentGalleryIndex]) {
+        const currentItem = window.galleryItems[currentGalleryIndex];
+        
+        // Update media content
+        if (currentItem.mime_type.startsWith('image/')) {
+          mediaContainer.innerHTML = `<img id="galleryImage" src="${BASE_URL + currentItem.file_path}" alt="Gallery Image">`;
+        } else if (currentItem.mime_type.startsWith('video/')) {
+          mediaContainer.innerHTML = `<video id="galleryVideo" controls>
+                                        <source src="${BASE_URL + currentItem.file_path}" type="${currentItem.mime_type}">
+                                        Trình duyệt không hỗ trợ video.
+                                      </video>`;
+        }
+        
         currentIndexSpan.textContent = currentGalleryIndex + 1;
         
         // Update thumbnail active state
@@ -451,6 +497,52 @@
       });
     }
 
+    // Format text to preserve line breaks
+    function formatTextWithLineBreaks(text) {
+      if (!text) return '';
+      
+      // Escape HTML characters to prevent XSS, then replace line breaks
+      const escapeHtml = (unsafe) => {
+        return unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      };
+      
+      // Replace different types of line breaks with HTML <br> tags
+      return escapeHtml(text)
+        .replace(/\r\n/g, '<br>')  // Windows line breaks
+        .replace(/\n/g, '<br>')    // Unix line breaks
+        .replace(/\r/g, '<br>')    // Mac line breaks
+        .trim();
+    }
+
+    // Toggle artifact description
+    function toggleDescription(index) {
+      const descElement = document.getElementById(`desc-${index}`);
+      const shortText = descElement.querySelector('.short-text');
+      const fullText = descElement.querySelector('.full-text');
+      const expandBtn = descElement.parentElement.querySelector('.expand-btn');
+      const expandText = expandBtn.querySelector('.expand-text');
+      const collapseText = expandBtn.querySelector('.collapse-text');
+      
+      if (fullText.style.display === 'none') {
+        // Expand
+        shortText.style.display = 'none';
+        fullText.style.display = 'inline';
+        expandText.style.display = 'none';
+        collapseText.style.display = 'inline';
+      } else {
+        // Collapse
+        shortText.style.display = 'inline';
+        fullText.style.display = 'none';
+        expandText.style.display = 'inline';
+        collapseText.style.display = 'none';
+      }
+    }
+
     // Loading and error states
     function showLoading() {
       document.getElementById('loadingState').style.display = 'block';
@@ -472,19 +564,19 @@
     function navigateToPage(page) {
       switch(page) {
         case 'home':
-          window.location.href = '/EXEProject/index.php';
+          window.location.href = '/index.php';
           break;
         case 'map':
-          window.location.href = '/EXEProject/map.html';
+          window.location.href = '/map.html';
           break;
         case 'checkin':
-          window.location.href = '/EXEProject/checkin.html';
+          window.location.href = '/checkin.html';
           break;
         case 'leaderboard':
-          window.location.href = '/EXEProject/leaderboard.html';
+          window.location.href = '/leaderboard.html';
           break;
         case 'profile':
-          window.location.href = '/EXEProject/profile.html';
+          window.location.href = '/profile.html';
           break;
       }
     }

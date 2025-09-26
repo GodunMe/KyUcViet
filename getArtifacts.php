@@ -25,21 +25,27 @@ try {
     $artifacts = [];
     while ($row = $artifactResult->fetch_assoc()) {
         // Convert relative path to web-accessible path
-        if (!empty($row['Image']) && !str_starts_with($row['Image'], 'http')) {
-            // Remove leading slash if exists, then add it back
-            $path = ltrim($row['Image'], '/');
-            
-            // If path doesn't start with uploads/, assume it's in uploads/artifacts/
-            if (!str_starts_with($path, 'uploads/')) {
-                $path = 'uploads/artifacts/' . basename($path);
+        if (!empty($row['Image'])) {
+            // If it's not a full URL
+            if (!str_starts_with($row['Image'], 'http')) {
+                // Clean the path
+                $path = ltrim($row['Image'], '/');
+                
+                // If path doesn't start with uploads/, assume it's a filename in uploads/artifacts/
+                if (!str_starts_with($path, 'uploads/')) {
+                    $path = 'uploads/artifacts/' . basename($path);
+                }
+                
+                // Add leading slash for web access
+                $row['Image'] = '/' . $path;
             }
-            
-            // Add leading slash for web access
-            $row['Image'] = '/' . $path;
-        } else if (empty($row['Image'])) {
-            // Default artifact image
+        } else {
+            // Default artifact image if no image specified
             $row['Image'] = '/uploads/artifacts/default.png';
         }
+        
+        // Debug: Add original path for troubleshooting
+        $row['OriginalImage'] = $row['Image'];
         $artifacts[] = $row;
     }
     

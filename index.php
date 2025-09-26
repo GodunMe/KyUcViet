@@ -70,7 +70,7 @@
   </div>
 
   <script>
-    const BASE_URL = "/EXEProject";
+    const BASE_URL = "";
     // JS
 // Load user info on page load
 async function loadUserInfo() {
@@ -121,7 +121,7 @@ function showUserNotLoggedInState() {
 
 // Go to login page
 function goToLogin() {
-  window.location.href = '/EXEProject/login.php?token=1';
+  window.location.href = '/login.php?token=1';
 }
 
 // --- Navigation ---
@@ -141,16 +141,16 @@ function navigateToPage(page) {
       window.scrollTo(0, 0);
       break;
     case 'map':
-      window.location.href = '/EXEProject/map.html';
+      window.location.href = '/map.html';
       break;
     case 'checkin':
-      window.location.href = '/EXEProject/checkin.html';
+      window.location.href = '/checkin.html';
       break;
     case 'leaderboard':
-      window.location.href = '/EXEProject/leaderboard.html';
+      window.location.href = '/leaderboard.html';
       break;
     case 'profile':
-      window.location.href = '/EXEProject/profile.html';
+      window.location.href = '/profile.html';
       break;
     default:
       console.log('Unknown page:', page);
@@ -358,17 +358,17 @@ function viewMuseumDetails(event, museumId) {
     .then(data => {
       if (data.loggedIn) {
         // User is logged in - allow access to museum details
-        window.location.href = `/EXEProject/museum.html?id=${museumId}`;
+        window.location.href = `/museum.html?id=${museumId}`;
       } else {
         // User not logged in - show alert and redirect to login
         alert('Bạn cần đăng nhập để xem chi tiết bảo tàng!');
-        window.location.href = '/EXEProject/login.php?token=1';
+        window.location.href = '/login.php?token=1';
       }
     })
     .catch(error => {
       console.error('Error checking login status:', error);
       alert('Bạn cần đăng nhập để xem chi tiết bảo tàng!');
-      window.location.href = '/EXEProject/login.php?token=1';
+      window.location.href = '/login.php?token=1';
     });
 }
 
@@ -383,7 +383,7 @@ function getDirections(event, museumId, museumName, lat, lng) {
     lng: lng,
     route: 'true'
   });
-  window.location.href = `/EXEProject/map.html?${params.toString()}`;
+  window.location.href = `/map.html?${params.toString()}`;
 }
 
 // --- Init ---
