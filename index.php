@@ -48,18 +48,38 @@
   </div>
 
   <script>
+    const BASE_URL = "/EXEProject";
     // JS
-function toggleUserBox() {
-  const box = document.getElementById('userBox');
-  box.classList.toggle('active'); // toggle class active
-}
+const userBox = document.getElementById('userBox');
+const userInfo = document.querySelector('.user-info');
+
+// Quản lý toggle box
+document.addEventListener('click', (e) => {
+  // Click vào avatar → toggle
+  if (userInfo.contains(e.target)) {
+    userBox.classList.toggle('active');
+    return;
+  }
+
+  // Click vào box → ẩn
+  if (userBox.contains(e.target)) {
+    userBox.classList.remove('active');
+    return;
+  }
+
+  // Click ngoài → ẩn
+  if (userBox.classList.contains('active')) {
+    userBox.classList.remove('active');
+  }
+});
+
 
 function editProfile() {
-  window.location.href = '/EXEProject/KyUcViet/editProfile.html';
+  window.location.href = BASE_URL + '/editProfile.html';
 }
 
 function logout() {
-  window.location.href = '/EXEProject/KyUcViet/login.html';
+  window.location.href = BASE_URL + '/login.html';
 }
 
 let map, userMarker, directionsService, directionsRenderer, userLocation;
@@ -87,7 +107,7 @@ function updateHeaderImage() {
 
   if (headerImages.length > 0) {
     const m = headerImages[currentIndex];
-    const url = m.file_path;
+    const url = BASE_URL + m.file_path;
     let el;
     if (m.mime_type.startsWith("video") || url.match(/\.(mp4|webm|ogg)$/i)) {
       el = document.createElement('video');
@@ -160,12 +180,11 @@ function renderMuseumList(museums) {
   museums.forEach(m => {
     const card = document.createElement('div');
     card.className = 'museum-card';
-
     let mediaHTML = '';
     if (m.media && m.media.length > 0) {
       const firstMedia = m.media[0];
       if (firstMedia.mime_type.startsWith("image")) {
-        mediaHTML = `<img class="museum-thumb" src="${firstMedia.file_path}" alt="${m.MuseumName}">`;
+        mediaHTML = `<img class="museum-thumb" src="${BASE_URL+firstMedia.file_path}" alt="${m.MuseumName}">`;
       } else {
         mediaHTML = `<img class="museum-thumb" src="video-placeholder.png" alt="${m.MuseumName}">`;
       }
