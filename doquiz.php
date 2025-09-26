@@ -58,43 +58,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin:0;
-      background:#fafafa;
+      margin: 0;
+      background: #f9f9f9;
     }
     .container {
-      max-width: 800px;
-      margin: 20px auto;
-      padding:20px;
-      background:white;
-      border-radius:12px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+      max-width: 480px;
+      margin: auto;
+      padding: 15px;
     }
     h2 {
-      text-align:center;
-      margin-bottom:20px;
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 20px;
     }
-    .question {
-      margin-bottom:20px;
+    .quiz-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 15px;
+      margin-bottom: 20px;
     }
-    .question h3 {
-      font-size:18px;
-      margin-bottom:10px;
+    .quiz-card h3 {
+      font-size: 16px;
+      margin-bottom: 10px;
     }
-    .question label {
-      display:block;
-      margin:5px 0;
-      cursor:pointer;
+    .option {
+      display: block;
+      background: #f1f1f1;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .option:hover {
+      background: #e6e6e6;
     }
     .quiz-submit {
-      display:block;
-      margin: 20px auto;
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
       background: linear-gradient(135deg, #ffe29f, #ffa99f);
-      color:#000;
-      font-weight:bold;
-      padding:12px 24px;
-      border:none;
-      border-radius:12px;
-      cursor:pointer;
+      color: #000;
+      font-weight: bold;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .quiz-submit:hover {
@@ -102,11 +111,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     .result {
-      text-align:center;
-      font-size:18px;
-      font-weight:bold;
-      margin:15px 0;
-      color:#d35400;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 15px 0;
+      color: #d35400;
     }
   </style>
 </head>
@@ -120,18 +129,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <form method="post">
       <?php foreach ($questions as $index => $q): ?>
-        <div class="question">
+        <div class="quiz-card">
           <h3>Câu <?php echo $index+1; ?>: <?php echo htmlspecialchars($q['QuestionText']); ?></h3>
           <?php for ($i=1; $i<=4; $i++): 
               $opt = $q['Option'.$i]; ?>
-              <label>
-                <input type="radio" name="q<?php echo $q['QuestionID']; ?>" value="<?php echo $i; ?>">
+              <label class="option">
+                <input type="radio" name="q<?php echo $q['QuestionID']; ?>" value="<?php echo $i; ?>" required>
                 <?php echo htmlspecialchars($opt); ?>
               </label>
           <?php endfor; ?>
         </div>
       <?php endforeach; ?>
-      <button type="submit" class="quiz-submit">Nộp bài</button>
+      <button type="submit" class="quiz-submit">📩 Nộp bài</button>
     </form>
   </div>
 </body>
