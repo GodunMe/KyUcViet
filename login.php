@@ -62,18 +62,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user['STATUS'] === 'Active') {
 
     // Nếu là admin → đi thẳng vào dashboard, không cần đổi mật khẩu
     if (strcasecmp($user['Role'], 'Admin') === 0) {
-        header("Location: admin/dashboard.php");
+        header("Location: /EXEProject/admin/dashboard.php");
         exit();
     }
 
     // Nếu là user thường và là lần đầu đăng nhập → bắt đổi mật khẩu
     if ($user['isFirstLogin'] == 1) {
-        header("Location: change_password.html");
+        header("Location: /EXEProject/change_password.html");
         exit();
     }
 
-    // User thường
-    header("Location: index.php");
+    // User thường - redirect về trang chủ với path đầy đủ
+    header("Location: /EXEProject/index.php");
     exit();
 
 } else {

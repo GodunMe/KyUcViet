@@ -111,6 +111,7 @@
   </div>
 
   <script>
+    const BASE_URL = "/EXEProject";
     let currentMuseumId = null;
 
     // Get museum ID from URL parameters
@@ -230,9 +231,9 @@
         // Set main image (first media or default)
         const mainImage = document.getElementById('museumMainImage');
         if (data.media && data.media.length > 0) {
-          mainImage.src = data.media[0].file_path;
+          mainImage.src = BASE_URL + data.media[0].file_path;
         } else {
-          mainImage.src = 'uploads/museums/default.png';
+          mainImage.src = BASE_URL + '/uploads/museums/default.png';
         }
       } else {
         throw new Error(data.message || 'Failed to load museum details');
@@ -255,12 +256,12 @@
         
         if (media.mime_type.startsWith('image/')) {
           mediaItem.innerHTML = `
-            <img src="${media.file_path}" alt="Museum Media" onclick="openGalleryModal(${index})">
+            <img src="${BASE_URL + media.file_path}" alt="Museum Media" onclick="openGalleryModal(${index})">
           `;
         } else if (media.mime_type.startsWith('video/')) {
           mediaItem.innerHTML = `
             <video controls>
-              <source src="${media.file_path}" type="${media.mime_type}">
+              <source src="${BASE_URL + media.file_path}" type="${media.mime_type}">
               Trình duyệt không hỗ trợ video.
             </video>
           `;
@@ -291,7 +292,7 @@
           
           artifactCard.innerHTML = `
             <div class="artifact-image">
-              <img src="${artifact.Image || 'uploads/artifacts/default.png'}" alt="${artifact.ArtifactName}">
+              <img src="${BASE_URL + (artifact.Image || '/uploads/artifacts/default.png')}" alt="${artifact.ArtifactName}">
             </div>
             <div class="artifact-info">
               <h3>${artifact.ArtifactName}</h3>
@@ -332,7 +333,7 @@
             </button>
             
             <div class="gallery-image-container">
-              <img id="galleryImage" src="${window.galleryItems[currentGalleryIndex].file_path}" alt="Gallery Image">
+              <img id="galleryImage" src="${BASE_URL + window.galleryItems[currentGalleryIndex].file_path}" alt="Gallery Image">
             </div>
             
             <button class="gallery-nav gallery-nav-right" onclick="nextImage()" ${window.galleryItems.length <= 1 ? 'style="display:none"' : ''}>
@@ -343,7 +344,7 @@
           <div class="gallery-thumbnails" ${window.galleryItems.length <= 1 ? 'style="display:none"' : ''}>
             ${window.galleryItems.map((item, index) => `
               <img class="gallery-thumb ${index === currentGalleryIndex ? 'active' : ''}" 
-                   src="${item.file_path}" 
+                   src="${BASE_URL + item.file_path}" 
                    onclick="goToImage(${index})"
                    alt="Thumbnail ${index + 1}">
             `).join('')}
@@ -394,7 +395,7 @@
       const thumbnails = document.querySelectorAll('.gallery-thumb');
       
       if (galleryImage && window.galleryItems[currentGalleryIndex]) {
-        galleryImage.src = window.galleryItems[currentGalleryIndex].file_path;
+        galleryImage.src = BASE_URL + window.galleryItems[currentGalleryIndex].file_path;
         currentIndexSpan.textContent = currentGalleryIndex + 1;
         
         // Update thumbnail active state

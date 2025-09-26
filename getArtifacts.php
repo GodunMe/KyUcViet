@@ -24,16 +24,21 @@ try {
     
     $artifacts = [];
     while ($row = $artifactResult->fetch_assoc()) {
-        // Convert relative path to absolute if needed
+        // Convert relative path to web-accessible path
         if (!empty($row['Image']) && !str_starts_with($row['Image'], 'http')) {
-            // Ensure the path starts with uploads/ if it's a relative path
-            if (!str_starts_with($row['Image'], 'uploads/')) {
-                $row['Image'] = 'uploads/artifacts/' . $row['Image'];
+            // Remove leading slash if exists, then add it back
+            $path = ltrim($row['Image'], '/');
+            
+            // If path doesn't start with uploads/, assume it's in uploads/artifacts/
+            if (!str_starts_with($path, 'uploads/')) {
+                $path = 'uploads/artifacts/' . basename($path);
             }
-            // Add leading slash if missing
-            if (!str_starts_with($row['Image'], '/')) {
-                $row['Image'] = '/' . $row['Image'];
-            }
+            
+            // Add leading slash for web access
+            $row['Image'] = '/' . $path;
+        } else if (empty($row['Image'])) {
+            // Default artifact image
+            $row['Image'] = '/uploads/artifacts/default.png';
         }
         $artifacts[] = $row;
     }

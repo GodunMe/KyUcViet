@@ -41,12 +41,22 @@ try {
     
     $media = [];
     while ($row = $mediaResult->fetch_assoc()) {
-        // Ensure file_path is properly formatted
-        if (!empty($row['file_path']) && !str_starts_with($row['file_path'], 'http')) {
-            // Add leading slash if missing
-            if (!str_starts_with($row['file_path'], '/')) {
-                $row['file_path'] = '/' . $row['file_path'];
+        // Ensure file_path is properly formatted for web access
+        if (!empty($row['file_path'])) {
+            // If it's not a full URL, make it a relative path from web root
+            if (!str_starts_with($row['file_path'], 'http')) {
+                // Remove leading slash if exists, then add it back for consistency
+                $path = ltrim($row['file_path'], '/');
+                $row['file_path'] = '/' . $path;
+                
+                // If path doesn't start with uploads/, assume it's in uploads/museums/
+                if (!str_starts_with($row['file_path'], '/uploads/')) {
+                    $row['file_path'] = '/uploads/museums/' . basename($row['file_path']);
+                }
             }
+        } else {
+            // Default image if no file_path
+            $row['file_path'] = '/uploads/museums/default.png';
         }
         $media[] = $row;
     }
