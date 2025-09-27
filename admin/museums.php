@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../auth_check.php';
+
 // admin/museums.php
 // Thêm bảo tàng và upload media (ảnh/video)
 
