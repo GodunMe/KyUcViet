@@ -12,6 +12,7 @@
 9. [API cần phát triển](#api-cần-phát-triển)
 10. [Giao diện người dùng](#giao-diện-người-dùng)
 11. [Kế hoạch triển khai](#kế-hoạch-triển-khai)
+12. [Quy trình cập nhật database](#quy-trình-cập-nhật-database)
 
 ## Tổng quan
 
@@ -286,3 +287,48 @@ CREATE TABLE user_friends (
 - Cải thiện hiệu suất
 - Thêm thành tích và phần thưởng
 - Tích hợp với các nền tảng xã hội khác
+
+## Quy trình cập nhật database
+
+Để đảm bảo tất cả các thành viên trong nhóm và các môi trường (phát triển, kiểm thử, sản phẩm) đều có cùng một cấu trúc cơ sở dữ liệu, dự án này sử dụng hệ thống migration để quản lý các thay đổi.
+
+### Cấu trúc thư mục migrations
+
+```
+migrations/
+  ├── migrate.php           # Script chạy migration
+  ├── README.md             # Hướng dẫn sử dụng
+  ├── 001_create_checkin_tables.sql  # Migration đầu tiên
+  └── ...                   # Các migration tiếp theo
+```
+
+### Chạy Migrations
+
+1. Mở terminal hoặc command prompt
+2. Di chuyển đến thư mục gốc của dự án (htdocs)
+3. Chạy lệnh sau:
+
+```
+php migrations/migrate.php
+```
+
+Script này sẽ:
+- Tạo bảng `migrations` nếu chưa tồn tại để theo dõi các migration đã chạy
+- Tìm và chạy các file SQL trong thư mục `migrations` theo thứ tự
+- Bỏ qua các migration đã được thực thi trước đó
+- Tạo thư mục `uploads/checkins` để lưu trữ ảnh
+
+### Tạo Migration mới
+
+Khi cần thay đổi cấu trúc cơ sở dữ liệu:
+
+1. Tạo file SQL mới trong thư mục `migrations` với định dạng tên: `00X_tên_migration.sql`
+2. Viết các câu lệnh SQL cần thiết trong file
+3. Commit file migration vào git repository để chia sẻ với các thành viên khác
+
+### Quy tắc quan trọng
+
+- **KHÔNG** sửa các migration đã được commit, thay vào đó hãy tạo migration mới
+- Luôn sử dụng `IF NOT EXISTS` khi tạo bảng để tránh lỗi
+- Chạy `php migrations/migrate.php` sau khi pull code mới từ repository về
+- Cập nhật schema cơ sở dữ liệu vào file `exe201.sql` định kỳ
