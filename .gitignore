@@ -1,0 +1,77 @@
+# IDE và editor
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Cấu hình cá nhân
+*.local.php
+local-config.php
+
+# File cấu hình có chứa thông tin nhạy cảm
+# Chú ý: db.php đã được commit trước đó nên không nên thêm vào .gitignore
+# config.php 
+
+# File tạm
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Log files
+*.log
+logs/
+error_log
+access_log
+
+# Cache và file tạm thời
+cache/
+tmp/
+
+# File tải lên (giữ lại cấu trúc thư mục nhưng không theo dõi file nội dung)
+uploads/*
+!uploads/.gitkeep
+!uploads/artifacts/.gitkeep
+!uploads/museums/.gitkeep
+!uploads/checkins/.gitkeep
+
+# Các file và thư mục cụ thể của XAMPP
+xampp/
+dashboard/
+webalizer/
+bitnami.css
+favicon.ico
+img/module_table_*.png
+# Giữ lại index.html cụ thể nếu cần
+# !dashboard/index.html
+
+# Các file hệ thống
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Vendor dependencies (nếu sử dụng Composer)
+/vendor/
+composer.lock
+
+# File biên dịch
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Môi trường phát triển
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Thư mục Node.js (nếu có)
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
