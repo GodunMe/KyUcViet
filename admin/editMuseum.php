@@ -22,7 +22,7 @@ if (!$museum) {
 }
 
 // Xử lý cập nhật museum
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["museum_name"])) {
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_museum"])) {
     $name = $_POST["museum_name"];
     $address = $_POST["address"];
     $desc = $_POST["description"];
@@ -35,7 +35,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["museum_name"])) {
     $stmt->execute();
     $stmt->close();
 
-    // Upload file media mới nếu có
+    header("Location: editMuseum.php?id=$id");
+    exit;
+}
+
+// Xử lý upload media mới
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["upload_media"])) {
     if (isset($_FILES["media"]) && $_FILES["media"]["error"] === UPLOAD_ERR_OK) {
         $uploadDir = __DIR__ . "/../uploads/museums/";
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
@@ -57,8 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["museum_name"])) {
             $stmt2->close();
         }
     }
-
-    header("Location: museums.php");
+    header("Location: editMuseum.php?id=$id");
     exit;
 }
 
@@ -108,7 +112,8 @@ $stmt->close();
     <a href="museums.php" class="btn btn-secondary mb-3">← Back</a>
 
     <!-- Form update museum -->
-    <form method="post" enctype="multipart/form-data">
+    <form method="post">
+        <input type="hidden" name="update_museum" value="1">
         <input type="text" name="museum_name" class="form-control mb-2"
                value="<?= htmlspecialchars($museum['MuseumName']) ?>" required>
         <input type="text" name="address" class="form-control mb-2"
@@ -119,10 +124,6 @@ $stmt->close();
                 value="<?= htmlspecialchars($museum['Latitude']) ?>"></div>
             <div class="col"><input type="text" name="longitude" class="form-control"
                 value="<?= htmlspecialchars($museum['Longitude']) ?>"></div>
-        </div>
-        <div class="mb-3">
-            <label>Upload new media:</label>
-            <input type="file" name="media" class="form-control">
         </div>
         <button type="submit" class="btn btn-primary">Save Changes</button>
     </form>
@@ -161,5 +162,13 @@ $stmt->close();
         <?php endforeach; ?>
         </tbody>
     </table>
+
+    <hr>
+    <h4>Upload New Media</h4>
+    <form method="post" enctype="multipart/form-data">
+        <input type="hidden" name="upload_media" value="1">
+        <input type="file" name="media" class="form-control mb-2" required>
+        <button type="submit" class="btn btn-success">Upload</button>
+    </form>
 </body>
 </html>
