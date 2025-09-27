@@ -60,7 +60,7 @@ require 'auth_check.php';
       <div class="nav-label">Map</div>
     </div>
     <div class="nav-item" onclick="navigateToPage('checkin')">
-      <div class="nav-icon">�</div>
+      <div class="nav-icon">📍</div>
       <div class="nav-label">Check-in</div>
     </div>
     <div class="nav-item" onclick="navigateToPage('leaderboard')">

@@ -1,10 +1,10 @@
 <?php
 /**
- * API tạo bài đăng check-in
+ * API tạo bài đăng check-in mới
  * 
- * Lưu thông tin check-in vào cơ sở dữ liệu và liên kết với ảnh đã tải lên
- * Yêu cầu: museumId, latitude, longitude, status, photoPath, privacy
- * Phản hồi: { success: true/false, checkinId: [id của check-in vừa tạo], points: [điểm thưởng] }
+ * Lưu thông tin check-in vào cơ sở dữ liệu và liên kết với nhiều ảnh đã tải lên
+ * Input: JSON { museumId, latitude, longitude, status, privacy, photos: [array of photo paths] }
+ * Output: { success: true/false, checkinId: [id], points: [points] }
  */
 
 header('Content-Type: application/json');
@@ -21,12 +21,23 @@ if (!isset($_SESSION['UserToken'])) {
     exit;
 }
 
+// Đọc dữ liệu JSON từ request body
+$input = json_decode(file_get_contents('php://input'), true);
+
+if (!$input) {
+    echo json_encode([
+        'success' => false, 
+        'error' => 'Dữ liệu đầu vào không hợp lệ'
+    ]);
+    exit;
+}
+
 // Kiểm tra dữ liệu đầu vào
-$requiredParams = ['museumId', 'latitude', 'longitude', 'status', 'photoPath'];
+$requiredParams = ['museumId', 'latitude', 'longitude', 'photos'];
 $missingParams = [];
 
 foreach ($requiredParams as $param) {
-    if (!isset($_POST[$param])) {
+    if (!isset($input[$param])) {
         $missingParams[] = $param;
     }
 }
@@ -41,12 +52,29 @@ if (!empty($missingParams)) {
 
 // Lấy dữ liệu đầu vào
 $userToken = $_SESSION['UserToken'];
-$museumId = intval($_POST['museumId']);
-$latitude = floatval($_POST['latitude']);
-$longitude = floatval($_POST['longitude']);
-$status = $_POST['status'];
-$photoPath = $_POST['photoPath'];
-$privacy = isset($_POST['privacy']) ? $_POST['privacy'] : 'public';
+$museumId = intval($input['museumId']);
+$latitude = floatval($input['latitude']);
+$longitude = floatval($input['longitude']);
+$status = isset($input['status']) ? $input['status'] : '';
+$photos = $input['photos']; // Array of photo paths
+$privacy = isset($input['privacy']) ? $input['privacy'] : 'public';
+
+// Kiểm tra photos array
+if (!is_array($photos) || empty($photos)) {
+    echo json_encode([
+        'success' => false, 
+        'error' => 'Cần ít nhất 1 ảnh để check-in'
+    ]);
+    exit;
+}
+
+if (count($photos) > 10) {
+    echo json_encode([
+        'success' => false, 
+        'error' => 'Tối đa 10 ảnh cho mỗi lần check-in'
+    ]);
+    exit;
+}
 
 // Kiểm tra quyền riêng tư hợp lệ
 if (!in_array($privacy, ['public', 'friends', 'private'])) {
@@ -92,16 +120,22 @@ try {
     
     $checkinId = $conn->insert_id;
     
-    // 2. Thêm ảnh check-in
+    // 2. Thêm ảnh check-in (hỗ trợ nhiều ảnh)
     $stmt = $conn->prepare("
         INSERT INTO checkin_photos (CheckinID, PhotoPath, UploadOrder)
-        VALUES (?, ?, 1)
+        VALUES (?, ?, ?)
     ");
-    $stmt->bind_param("is", $checkinId, $photoPath);
-    $stmt->execute();
     
-    // 3. Tính điểm thưởng (20 điểm cho mỗi lần check-in)
-    $points = 20;
+    foreach ($photos as $index => $photoPath) {
+        $uploadOrder = $index + 1;
+        $stmt->bind_param("isi", $checkinId, $photoPath, $uploadOrder);
+        $stmt->execute();
+    }
+    
+    // 3. Tính điểm thưởng (50 điểm cho mỗi lần check-in + bonus cho nhiều ảnh)
+    $basePoints = 50;
+    $photoBonus = (count($photos) - 1) * 5; // 5 điểm cho mỗi ảnh thêm
+    $points = $basePoints + $photoBonus;
     
     // Cập nhật điểm cho check-in
     $stmt = $conn->prepare("UPDATE checkins SET Points = ? WHERE CheckinID = ?");

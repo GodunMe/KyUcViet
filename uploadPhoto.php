@@ -54,8 +54,9 @@ if (!isset($_FILES['photo']) || $_FILES['photo']['error'] != UPLOAD_ERR_OK) {
     exit;
 }
 
-// Thư mục lưu trữ ảnh check-in
-$uploadDir = __DIR__ . '/uploads/checkins/';
+// Xác định thư mục lưu trữ dựa trên type
+$type = isset($_POST['type']) ? $_POST['type'] : 'checkin';
+$uploadDir = __DIR__ . '/uploads/checkins/'; // Mặc định là checkins
 
 // Đảm bảo thư mục tồn tại
 if (!file_exists($uploadDir)) {

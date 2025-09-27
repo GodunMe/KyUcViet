@@ -38,15 +38,13 @@ $stmt = $conn->prepare("
         c.CheckinTime,
         c.Status,
         c.Points,
+        c.Privacy,
         c.Latitude,
-        c.Longitude,
-        p.PhotoPath
+        c.Longitude
     FROM 
         checkins c
     JOIN 
         museum m ON c.MuseumID = m.MuseumID
-    LEFT JOIN 
-        checkin_photos p ON c.CheckinID = p.CheckinID
     WHERE 
         c.UserToken = ?
     ORDER BY 
@@ -60,6 +58,22 @@ $result = $stmt->get_result();
 
 $checkins = [];
 while ($row = $result->fetch_assoc()) {
+    // Lấy tất cả ảnh của check-in này
+    $photoStmt = $conn->prepare("
+        SELECT PhotoPath 
+        FROM checkin_photos 
+        WHERE CheckinID = ? 
+        ORDER BY UploadOrder
+    ");
+    $photoStmt->bind_param("i", $row['CheckinID']);
+    $photoStmt->execute();
+    $photoResult = $photoStmt->get_result();
+    
+    $photos = [];
+    while ($photoRow = $photoResult->fetch_assoc()) {
+        $photos[] = $photoRow['PhotoPath'];
+    }
+    
     // Định dạng thời gian check-in để hiển thị thân thiện
     $checkInTime = new DateTime($row['CheckinTime']);
     $now = new DateTime();
@@ -84,16 +98,17 @@ while ($row = $result->fetch_assoc()) {
     }
     
     $checkins[] = [
-        'id' => $row['CheckinID'],
-        'museumId' => $row['MuseumID'],
-        'museumName' => $row['MuseumName'],
-        'checkInTime' => $row['CheckinTime'],
-        'friendlyTime' => $friendlyTime,
-        'status' => $row['Status'],
-        'points' => $row['Points'],
-        'latitude' => $row['Latitude'],
-        'longitude' => $row['Longitude'],
-        'photoPath' => $row['PhotoPath']
+        'CheckinID' => $row['CheckinID'],
+        'MuseumID' => $row['MuseumID'],
+        'MuseumName' => $row['MuseumName'],
+        'CheckinTime' => $row['CheckinTime'],
+        'FriendlyTime' => $friendlyTime,
+        'Status' => $row['Status'],
+        'Points' => $row['Points'],
+        'Privacy' => $row['Privacy'],
+        'Latitude' => $row['Latitude'],
+        'Longitude' => $row['Longitude'],
+        'photos' => $photos
     ];
 }
 

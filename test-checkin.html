@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Check-in API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #4CAF50;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            background-color: #f0f8f0;
+            border: 1px solid #4CAF50;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .error {
+            background-color: #ffebee;
+            border: 1px solid #f44336;
+            color: #c62828;
+        }
+        .photo-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Check-in API</h1>
+    <p>Trang test các API cho tính năng check-in mới</p>
+
+    <!-- Test Get Location -->
+    <div class="test-section">
+        <h2>1. Get Current Location</h2>
+        <button onclick="getCurrentLocation()">Lấy vị trí hiện tại</button>
+        <div id="locationResult" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- Test Find Museums -->
+    <div class="test-section">
+        <h2>2. Find Nearby Museums</h2>
+        <div class="form-group">
+            <label>Latitude:</label>
+            <input type="number" id="testLat" step="0.0001" placeholder="21.0285">
+        </div>
+        <div class="form-group">
+            <label>Longitude:</label>
+            <input type="number" id="testLng" step="0.0001" placeholder="105.8542">
+        </div>
+        <button onclick="findMuseums()">Tìm bảo tàng gần đây</button>
+        <div id="museumsResult" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- Test Check Eligibility -->
+    <div class="test-section">
+        <h2>3. Check Check-in Eligibility</h2>
+        <div class="form-group">
+            <label>Museum ID:</label>
+            <input type="number" id="testMuseumId" placeholder="1">
+        </div>
+        <button onclick="checkEligibility()">Kiểm tra tư cách check-in</button>
+        <div id="eligibilityResult" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- Test Verify Location -->
+    <div class="test-section">
+        <h2>4. Verify Location</h2>
+        <div class="form-group">
+            <label>User Lat:</label>
+            <input type="number" id="verifyUserLat" step="0.0001">
+        </div>
+        <div class="form-group">
+            <label>User Lng:</label>
+            <input type="number" id="verifyUserLng" step="0.0001">
+        </div>
+        <div class="form-group">
+            <label>Museum ID:</label>
+            <input type="number" id="verifyMuseumId">
+        </div>
+        <button onclick="verifyLocation()">Xác minh vị trí</button>
+        <div id="verifyResult" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- Test Upload Photo -->
+    <div class="test-section">
+        <h2>5. Upload Photo</h2>
+        <div class="form-group">
+            <label>Chọn ảnh:</label>
+            <input type="file" id="photoInput" accept="image/*" multiple>
+        </div>
+        <button onclick="uploadPhotos()">Tải lên ảnh</button>
+        <div id="photoPreview"></div>
+        <div id="uploadResult" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- Test Create Check-in -->
+    <div class="test-section">
+        <h2>6. Create Check-in Post</h2>
+        <div class="form-group">
+            <label>Museum ID:</label>
+            <input type="number" id="checkinMuseumId">
+        </div>
+        <div class="form-group">
+            <label>Latitude:</label>
+            <input type="number" id="checkinLat" step="0.0001">
+        </div>
+        <div class="form-group">
+            <label>Longitude:</label>
+            <input type="number" id="checkinLng" step="0.0001">
+        </div>
+        <div class="form-group">
+            <label>Status:</label>
+            <textarea id="checkinStatus" placeholder="Chia sẻ trải nghiệm của bạn..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Privacy:</label>
+            <select id="checkinPrivacy">
+                <option value="public">Công khai</option>
+                <option value="friends">Chỉ bạn bè</option>
+                <option value="private">Riêng tư</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Photo URLs (JSON array):</label>
+            <textarea id="checkinPhotos" placeholder='["uploads/checkins/photo1.jpg", "uploads/checkins/photo2.jpg"]'></textarea>
+        </div>
+        <button onclick="createCheckin()">Tạo Check-in</button>
+        <div id="checkinResult" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- Test Get Recent Check-ins -->
+    <div class="test-section">
+        <h2>7. Get Recent Check-ins</h2>
+        <button onclick="getRecentCheckins()">Lấy lịch sử check-in</button>
+        <div id="recentResult" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        let currentLocation = null;
+        let uploadedPhotos = [];
+
+        // 1. Get current location
+        function getCurrentLocation() {
+            const resultDiv = document.getElementById('locationResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Đang lấy vị trí...';
+            
+            if (!navigator.geolocation) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Trình duyệt không hỗ trợ định vị GPS';
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    currentLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    resultDiv.className = 'result';
+                    resultDiv.textContent = JSON.stringify({
+                        success: true,
+                        latitude: currentLocation.lat,
+                        longitude: currentLocation.lng,
+                        accuracy: position.coords.accuracy
+                    }, null, 2);
+                    
+                    // Auto fill location fields
+                    document.getElementById('testLat').value = currentLocation.lat;
+                    document.getElementById('testLng').value = currentLocation.lng;
+                    document.getElementById('verifyUserLat').value = currentLocation.lat;
+                    document.getElementById('verifyUserLng').value = currentLocation.lng;
+                    document.getElementById('checkinLat').value = currentLocation.lat;
+                    document.getElementById('checkinLng').value = currentLocation.lng;
+                },
+                error => {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Lỗi định vị: ${error.message}`;
+                }
+            );
+        }
+
+        // 2. Find nearby museums
+        async function findMuseums() {
+            const lat = document.getElementById('testLat').value;
+            const lng = document.getElementById('testLng').value;
+            const resultDiv = document.getElementById('museumsResult');
+            
+            if (!lat || !lng) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = 'Vui lòng nhập tọa độ';
+                return;
+            }
+            
+            try {
+                const response = await fetch('getNearbyMuseums.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `latitude=${lat}&longitude=${lng}`
+                });
+                
+                const data = await response.json();
+                resultDiv.className = 'result';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                
+                // Auto fill museum ID if found
+                if (data.success && data.museums && data.museums.length > 0) {
+                    const firstMuseum = data.museums[0];
+                    document.getElementById('testMuseumId').value = firstMuseum.MuseumID;
+                    document.getElementById('verifyMuseumId').value = firstMuseum.MuseumID;
+                    document.getElementById('checkinMuseumId').value = firstMuseum.MuseumID;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = 'Lỗi: ' + error.message;
+            }
+        }
+
+        // 3. Check eligibility
+        async function checkEligibility() {
+            const museumId = document.getElementById('testMuseumId').value;
+            const resultDiv = document.getElementById('eligibilityResult');
+            
+            if (!museumId) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = 'Vui lòng nhập Museum ID';
+                return;
+            }
+            
+            try {
+                const response = await fetch('checkCheckinEligibility.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `museumId=${museumId}`
+                });
+                
+                const data = await response.json();
+                resultDiv.className = 'result';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = 'Lỗi: ' + error.message;
+            }
+        }
+
+        // 4. Verify location
+        async function verifyLocation() {
+            const userLat = document.getElementById('verifyUserLat').value;
+            const userLng = document.getElementById('verifyUserLng').value;
+            const museumId = document.getElementById('verifyMuseumId').value;
+            const resultDiv = document.getElementById('verifyResult');
+            
+            if (!userLat || !userLng || !museumId) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = 'Vui lòng nhập đầy đủ thông tin';
+                return;
+            }
+            
+            try {
+                const response = await fetch('verifyLocation.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `userLat=${userLat}&userLng=${userLng}&museumId=${museumId}`
+                });
+                
+                const data = await response.json();
+                resultDiv.className = 'result';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = 'Lỗi: ' + error.message;
+            }
+        }
+
+        // 5. Upload photos
+        async function uploadPhotos() {
+            const fileInput = document.getElementById('photoInput');
+            const files = fileInput.files;
+            const resultDiv = document.getElementById('uploadResult');
+            const previewDiv = document.getElementById('photoPreview');
+            
+            if (files.length === 0) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = 'Vui lòng chọn ảnh';
+                return;
+            }
+            
+            uploadedPhotos = [];
+            previewDiv.innerHTML = '';
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Đang tải lên...';
+            
+            try {
+                for (let i = 0; i < files.length; i++) {
+                    const formData = new FormData();
+                    formData.append('photo', files[i]);
+                    formData.append('type', 'checkin');
+                    
+                    const response = await fetch('uploadPhoto.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        uploadedPhotos.push(data.photoPath);
+                        
+                        // Show preview
+                        const img = document.createElement('img');
+                        img.src = data.photoPath;
+                        img.className = 'photo-preview';
+                        previewDiv.appendChild(img);
+                    }
+                }
+                
+                // Update result
+                resultDiv.className = 'result';
+                resultDiv.textContent = JSON.stringify({
+                    success: true,
+                    uploadedPhotos: uploadedPhotos
+                }, null, 2);
+                
+                // Auto fill photos field
+                document.getElementById('checkinPhotos').value = JSON.stringify(uploadedPhotos);
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Lỗi: ' + error.message;
+            }
+        }
+
+        // 6. Create check-in
+        async function createCheckin() {
+            const museumId = document.getElementById('checkinMuseumId').value;
+            const latitude = document.getElementById('checkinLat').value;
+            const longitude = document.getElementById('checkinLng').value;
+            const status = document.getElementById('checkinStatus').value;
+            const privacy = document.getElementById('checkinPrivacy').value;
+            const photosText = document.getElementById('checkinPhotos').value;
+            const resultDiv = document.getElementById('checkinResult');
+            
+            if (!museumId || !latitude || !longitude) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = 'Vui lòng nhập đầy đủ thông tin bắt buộc';
+                return;
+            }
+            
+            let photos = [];
+            try {
+                photos = JSON.parse(photosText || '[]');
+            } catch (e) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = 'Photos phải là JSON array hợp lệ';
+                return;
+            }
+            
+            if (photos.length === 0) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = 'Cần ít nhất 1 ảnh để check-in';
+                return;
+            }
+            
+            try {
+                const response = await fetch('createCheckinPost.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        museumId: parseInt(museumId),
+                        latitude: parseFloat(latitude),
+                        longitude: parseFloat(longitude),
+                        status: status,
+                        privacy: privacy,
+                        photos: photos
+                    })
+                });
+                
+                const data = await response.json();
+                resultDiv.className = 'result';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = 'Lỗi: ' + error.message;
+            }
+        }
+
+        // 7. Get recent check-ins
+        async function getRecentCheckins() {
+            const resultDiv = document.getElementById('recentResult');
+            
+            try {
+                const response = await fetch('getRecentCheckins.php');
+                const data = await response.json();
+                resultDiv.className = 'result';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = 'Lỗi: ' + error.message;
+            }
+        }
+
+        // Auto get location on page load
+        window.addEventListener('load', () => {
+            getCurrentLocation();
+        });
+    </script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 /**
  * API lấy danh sách bảo tàng gần vị trí người dùng
  * 
- * Trả về danh sách 3 bảo tàng gần nhất với vị trí người dùng
+ * Trả về danh sách 15 bảo tàng gần nhất với vị trí người dùng
  * Yêu cầu: latitude, longitude
  */
 
@@ -114,9 +114,9 @@ try {
         ]);
         exit;
     }
-    
-    // Chỉ lấy 3 bảo tàng gần nhất
-    $nearbyMuseums = array_slice($museums, 0, 3);
+
+    // Lấy 5 bảo tàng gần nhất
+    $nearbyMuseums = array_slice($museums, 0, 5);
     
     // Ghi log kết quả
     error_log("Found " . count($nearbyMuseums) . " nearby museums. Closest distance: " . 
