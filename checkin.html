@@ -6,6 +6,220 @@
   <title>Check-in - Vietnamese Memories</title>
   <link rel="icon" type="image/png" href="logo.PNG" />
   <link rel="stylesheet" href="style.css" />
+  
+  <!-- Thêm Leaflet để hiển thị bản đồ -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  
+  <style>
+    /* CSS cho quy trình check-in mới */
+    .checkin-steps {
+      display: none;
+      margin-top: 20px;
+    }
+    
+    .checkin-steps.active {
+      display: block;
+    }
+    
+    /* CSS cho danh sách bảo tàng gần đây */
+    .museum-list {
+      margin-top: 15px;
+    }
+    
+    .museum-card {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 15px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .museum-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .museum-card.highlight {
+      border: 2px solid #4CAF50;
+      background-color: #f1f8e9;
+    }
+    
+    .museum-card h4 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    
+    .museum-address {
+      color: #666;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    
+    .museum-distance {
+      color: #4CAF50;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .museum-highlight {
+      padding: 8px;
+      background-color: #4CAF50;
+      color: white;
+      border-radius: 4px;
+      text-align: center;
+      margin-top: 10px;
+    }
+    
+    .museum-remaining {
+      margin-top: 10px;
+      color: #666;
+      font-size: 13px;
+    }
+    
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    
+    .step-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    
+    .step-dot.active {
+      background-color: #4CAF50;
+      color: white;
+    }
+    
+    .step-dot.completed {
+      background-color: #4CAF50;
+      color: white;
+    }
+    
+    .step-dot.completed:after {
+      content: "✓";
+    }
+    
+    .step-line {
+      flex: 1;
+      height: 2px;
+      background-color: #ddd;
+      margin: 0 5px;
+      align-self: center;
+    }
+    
+    .step-line.active {
+      background-color: #4CAF50;
+    }
+    
+    .step-container {
+      display: none;
+      padding: 20px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      margin-bottom: 20px;
+    }
+    
+    .step-container.active {
+      display: block;
+    }
+    
+    .location-info {
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    
+    .location-distance {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .distance-indicator {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    
+    .distance-ok {
+      background-color: #4CAF50;
+    }
+    
+    .distance-far {
+      background-color: #f44336;
+    }
+    
+    #locationMap {
+      width: 100%;
+      height: 200px;
+      margin-top: 10px;
+      border-radius: 5px;
+    }
+    
+    .photo-upload-container {
+      margin-bottom: 20px;
+    }
+    
+    #photoPreview {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 5px;
+      margin-top: 10px;
+      display: none;
+    }
+    
+    .status-templates {
+      margin-top: 10px;
+    }
+    
+    .status-template {
+      display: inline-block;
+      padding: 5px 10px;
+      margin: 5px;
+      background-color: #f1f1f1;
+      border-radius: 15px;
+      cursor: pointer;
+    }
+    
+    .status-template:hover {
+      background-color: #e0e0e0;
+    }
+    
+    .checkin-success-message {
+      text-align: center;
+      padding: 20px;
+      background-color: #dff0d8;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+    
+    .step-navigation {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    
+    .checkin-error {
+      color: #f44336;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -13,7 +227,7 @@
     <div class="user-header">
       <div class="user-info" onclick="toggleUserBox()">
         <img src="avatar/default.png" alt="User" class="user-icon">
-        <span class="user-name">Nguyen Van A</span>
+        <span class="user-name" id="userName">Đang tải...</span>
       </div>
       <div class="user-box" id="userBox">
         <button onclick="editProfile()">Chỉnh sửa thông tin</button>
@@ -24,24 +238,111 @@
     <!-- Page Header -->
     <div class="page-header">
       <h1>📍 Check-in</h1>
-      <p>Quét QR code hoặc nhập mã để check-in tại bảo tàng</p>
+      <p>Khám phá bảo tàng gần bạn</p>
     </div>
 
-    <!-- QR Scanner Section -->
-    <div class="checkin-section">
-      <div class="qr-scanner">
-        <div id="qr-reader" style="width: 100%;"></div>
+    <!-- Section hiển thị ban đầu -->
+    <div id="initialCheckinSection" class="checkin-section">
+      <!-- Bảo tàng gần đây -->
+      <div class="nearby-museums">
+        <h3>Bảo tàng gần bạn</h3>
+        <p class="loading-message" id="loadingNearby">Đang tìm bảo tàng gần bạn...</p>
+        <div id="nearbyList" class="museum-list"></div>
+        <p class="checkin-error" id="initialError" style="display:none;"></p>
+      </div>
+    </div>
+
+    <!-- Quy trình Check-in mới -->
+    <div id="checkinSteps" class="checkin-steps">
+      <!-- Bước đi -->
+      <div class="step-indicator">
+        <div class="step-dot active" id="step1Dot">1</div>
+        <div class="step-line" id="line1"></div>
+        <div class="step-dot" id="step2Dot">2</div>
+        <div class="step-line" id="line2"></div>
+        <div class="step-dot" id="step3Dot">3</div>
+        <div class="step-line" id="line3"></div>
+        <div class="step-dot" id="step4Dot">4</div>
       </div>
       
-      <div class="or-divider">
-        <span>HOẶC</span>
+      <!-- Bước 1: Xác nhận bảo tàng -->
+      <div id="step1Container" class="step-container active">
+        <h3>Xác nhận thông tin bảo tàng</h3>
+        <div id="museumInfo">
+          <p><strong>Tên bảo tàng:</strong> <span id="museumName">...</span></p>
+          <p><strong>Địa chỉ:</strong> <span id="museumAddress">...</span></p>
+        </div>
+        <div class="step-navigation">
+          <button onclick="cancelCheckin()">Hủy</button>
+          <button onclick="goToStep2()">Tiếp tục</button>
+        </div>
       </div>
-
-      <!-- Manual Code Input -->
-      <div class="manual-input">
-        <h3>Nhập mã check-in</h3>
-        <input type="text" id="checkinCode" placeholder="Nhập mã check-in..." maxlength="10">
-        <button onclick="submitCheckin()" class="checkin-btn">Check-in</button>
+      
+      <!-- Bước 2: Xác minh vị trí -->
+      <div id="step2Container" class="step-container">
+        <h3>Xác minh vị trí</h3>
+        <p>Đang lấy vị trí của bạn...</p>
+        <div class="location-info" id="locationInfo" style="display:none;">
+          <div class="location-distance">
+            <div class="distance-indicator" id="distanceIndicator"></div>
+            <span id="distanceText"></span>
+          </div>
+          <div id="locationMap"></div>
+        </div>
+        <p class="checkin-error" id="locationError" style="display:none;"></p>
+        <div class="step-navigation">
+          <button onclick="goToStep1()">Quay lại</button>
+          <button onclick="goToStep3()" id="continueToStep3" disabled>Tiếp tục</button>
+        </div>
+      </div>
+      
+      <!-- Bước 3: Chụp ảnh -->
+      <div id="step3Container" class="step-container">
+        <h3>Chụp ảnh check-in</h3>
+        <div class="photo-upload-container">
+          <input type="file" id="photoInput" accept="image/*" capture="camera" style="display:none;">
+          <button onclick="document.getElementById('photoInput').click()">
+            📸 Chụp ảnh hoặc chọn từ thư viện
+          </button>
+          <img id="photoPreview" src="#" alt="Xem trước ảnh check-in">
+        </div>
+        <p class="checkin-error" id="photoError" style="display:none;"></p>
+        <div class="step-navigation">
+          <button onclick="goToStep2()">Quay lại</button>
+          <button onclick="goToStep4()" id="continueToStep4" disabled>Tiếp tục</button>
+        </div>
+      </div>
+      
+      <!-- Bước 4: Thêm trạng thái -->
+      <div id="step4Container" class="step-container">
+        <h3>Thêm trạng thái check-in</h3>
+        <textarea id="statusText" rows="3" placeholder="Chia sẻ cảm nghĩ của bạn về bảo tàng này..."></textarea>
+        <div class="status-templates" id="statusTemplates">
+          <div class="status-template" onclick="selectStatusTemplate(this)">Đang tham quan bảo tàng</div>
+          <div class="status-template" onclick="selectStatusTemplate(this)">Học hỏi được nhiều điều thú vị!</div>
+          <div class="status-template" onclick="selectStatusTemplate(this)">Trải nghiệm tuyệt vời tại đây!</div>
+        </div>
+        
+        <h4>Quyền riêng tư</h4>
+        <select id="privacyOption">
+          <option value="public">Công khai</option>
+          <option value="friends">Chỉ bạn bè</option>
+          <option value="private">Riêng tư</option>
+        </select>
+        
+        <p class="checkin-error" id="finalError" style="display:none;"></p>
+        
+        <div class="step-navigation">
+          <button onclick="goToStep3()">Quay lại</button>
+          <button onclick="submitFinalCheckin()">Hoàn tất Check-in</button>
+        </div>
+      </div>
+      
+      <!-- Thông báo thành công -->
+      <div id="checkinSuccessMessage" class="checkin-success-message" style="display:none;">
+        <h3>🎉 Check-in thành công!</h3>
+        <p id="successPoints"></p>
+        <button onclick="finishCheckin()">Xem danh sách check-in</button>
       </div>
     </div>
 
@@ -49,22 +350,7 @@
     <div class="recent-checkins">
       <h3>Check-in gần đây</h3>
       <div id="recentList" class="checkin-history">
-        <div class="checkin-item">
-          <div class="checkin-info">
-            <h4>Bảo tàng Hồ Chí Minh</h4>
-            <p class="checkin-time">Hôm nay, 14:30</p>
-            <p class="checkin-points">+25 điểm</p>
-          </div>
-          <div class="checkin-status">✓</div>
-        </div>
-        <div class="checkin-item">
-          <div class="checkin-info">
-            <h4>Bảo tàng Lịch sử Quân sự</h4>
-            <p class="checkin-time">Hôm qua, 10:15</p>
-            <p class="checkin-points">+30 điểm</p>
-          </div>
-          <div class="checkin-status">✓</div>
-        </div>
+        <p id="loadingCheckins">Đang tải...</p>
       </div>
     </div>
   </div>
@@ -94,6 +380,17 @@
   </div>
 
   <script>
+    // Biến toàn cục để lưu dữ liệu giữa các bước
+    let currentCheckinData = {
+      museumId: null,
+      userLat: null,
+      userLng: null,
+      photoFile: null,
+      photoPath: null,
+      status: "",
+      privacy: "public"
+    };
+    
     // Navigation functions
     function toggleUserBox() {
       const box = document.getElementById('userBox');
@@ -105,7 +402,7 @@
     }
 
     function logout() {
-      window.location.href = '/login.php?token=1';
+      window.location.href = '/logout.php';
     }
 
     function navigateToPage(page) {
@@ -113,7 +410,10 @@
         item.classList.remove('active');
       });
       
-      event.target.closest('.nav-item').classList.add('active');
+      if (event && event.target) {
+        const navItem = event.target.closest('.nav-item');
+        if (navItem) navItem.classList.add('active');
+      }
       
       switch(page) {
         case 'home':
@@ -134,47 +434,713 @@
       }
     }
 
-    // Check-in functions
-    function submitCheckin() {
-      const code = document.getElementById('checkinCode').value.trim();
-      if (!code) {
-        alert('Vui lòng nhập mã check-in!');
+    // Hàm để lấy vị trí người dùng và tìm bảo tàng gần đó
+    async function findNearbyMuseums() {
+      try {
+        document.getElementById('loadingNearby').style.display = 'block';
+        document.getElementById('nearbyList').innerHTML = '';
+        document.getElementById('initialError').style.display = 'none';
+        
+        console.log('Bắt đầu tìm bảo tàng gần đây...');
+        
+        // Kiểm tra nếu trình duyệt hỗ trợ vị trí
+        if (!navigator.geolocation) {
+          throw new Error('Trình duyệt của bạn không hỗ trợ định vị');
+        }
+        
+        // Sử dụng promise để xử lý lấy vị trí với các tùy chọn chính xác cao
+        console.log('Đang lấy vị trí hiện tại...');
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 15000, // Tăng thời gian chờ lên 15 giây
+            maximumAge: 0
+          });
+        });
+        
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        console.log(`Đã lấy vị trí: ${userLat}, ${userLng}`);
+        
+        // Gọi API để lấy danh sách bảo tàng gần đó
+        console.log('Đang gửi yêu cầu đến server...');
+        const response = await fetch('getNearbyMuseums.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `latitude=${userLat}&longitude=${userLng}`
+        });
+        
+        if (!response.ok) {
+          throw new Error('Lỗi khi kết nối với máy chủ');
+        }
+        
+        const data = await response.json();
+        console.log('Phản hồi từ server:', data);
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Không thể tìm bảo tàng gần bạn');
+        }
+        
+        // Hiển thị danh sách bảo tàng
+        displayNearbyMuseums(data.museums);
+        
+      } catch (error) {
+        console.error('Lỗi khi tìm bảo tàng:', error);
+        document.getElementById('loadingNearby').style.display = 'none';
+        showError('initialError', 'Không thể tìm bảo tàng gần bạn: ' + error.message);
+      }
+    }
+    
+    // Hiển thị danh sách bảo tàng gần đó
+    function displayNearbyMuseums(museums) {
+      const container = document.getElementById('nearbyList');
+      document.getElementById('loadingNearby').style.display = 'none';
+      
+      if (museums.length === 0) {
+        container.innerHTML = '<p>Không tìm thấy bảo tàng nào gần bạn</p>';
         return;
       }
       
-      // Simulate API call
-      if (code.length >= 4) {
-        alert('Check-in thành công! +20 điểm');
-        document.getElementById('checkinCode').value = '';
-        // Refresh recent check-ins list
-        loadRecentCheckins();
-      } else {
-        alert('Mã check-in không hợp lệ!');
+      container.innerHTML = '';
+      
+      // Hiển thị 3 bảo tàng gần nhất
+      museums.forEach((museum, index) => {
+        const card = document.createElement('div');
+        card.className = 'museum-card' + (index === 0 ? ' highlight' : '');
+        card.onclick = () => selectMuseum(museum);
+        
+        // Format khoảng cách
+        let distanceText = '';
+        if (museum.distance < 1000) {
+          distanceText = `${museum.distance} mét`;
+        } else {
+          distanceText = `${(museum.distance / 1000).toFixed(1)} km`;
+        }
+        
+        // Tạo nội dung card
+        let cardContent = `
+          <h4>${museum.name}</h4>
+          <div class="museum-address">${museum.address}</div>
+          <div class="museum-distance">Cách bạn ${distanceText}</div>
+        `;
+        
+        // Nếu là bảo tàng gần nhất, thêm thông báo nổi bật
+        if (index === 0) {
+          cardContent += `<div class="museum-highlight">Bạn đang gần nhất với bảo tàng này! Hãy tới để check-in</div>`;
+        }
+        
+        // Hiển thị thông tin check-in còn lại
+        if (museum.remainingCheckins <= 0) {
+          cardContent += `<div class="museum-remaining">Bạn đã check-in tại bảo tàng này hôm nay</div>`;
+        } else if (museum.waitTime > 0) {
+          const waitMinutes = Math.ceil(museum.waitTime / 60);
+          cardContent += `<div class="museum-remaining">Đợi ${waitMinutes} phút nữa để check-in lại</div>`;
+        } else {
+          cardContent += `<div class="museum-remaining">Bạn có thể check-in ngay bây giờ</div>`;
+        }
+        
+        card.innerHTML = cardContent;
+        container.appendChild(card);
+      });
+    }
+    
+    // Chọn bảo tàng để check-in
+    async function selectMuseum(museum) {
+      try {
+        // Lưu ID bảo tàng vào dữ liệu check-in
+        currentCheckinData.museumId = museum.id;
+        currentCheckinData.userLat = museum.userLat;
+        currentCheckinData.userLng = museum.userLng;
+        
+        // Hiển thị thông tin bảo tàng
+        document.getElementById('museumName').textContent = museum.name;
+        document.getElementById('museumAddress').textContent = museum.address;
+        
+        // Kiểm tra tư cách check-in
+        await checkEligibility(museum.id);
+        
+        // Chuyển thẳng sang bước chụp ảnh (bước 3)
+        showCheckinSteps();
+        goToStep3();
+        
+      } catch (error) {
+        alert('Lỗi: ' + error.message);
       }
     }
-
-    function loadRecentCheckins() {
-      // This would normally fetch from API
-      console.log('Loading recent check-ins...');
+    
+    // Chức năng nhập mã check-in đã được loại bỏ
+    
+    // Kiểm tra người dùng có đủ điều kiện check-in không
+    async function checkEligibility(museumId) {
+      try {
+        const response = await fetch('checkCheckinEligibility.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `museumId=${encodeURIComponent(museumId)}`
+        });
+        
+        if (!response.ok) {
+          throw new Error('Lỗi khi kiểm tra tư cách check-in');
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success || !data.canCheckin) {
+          throw new Error(data.reason || 'Bạn không đủ điều kiện để check-in');
+        }
+        
+        return true;
+      } catch (error) {
+        showError('initialError', error.message);
+        throw error;
+      }
+    }
+    
+    // Hiển thị quy trình check-in
+    function showCheckinSteps() {
+      document.getElementById('initialCheckinSection').style.display = 'none';
+      document.getElementById('checkinSteps').classList.add('active');
+    }
+    
+    // Hủy quy trình check-in và quay lại màn hình ban đầu
+    function cancelCheckin() {
+      document.getElementById('initialCheckinSection').style.display = 'block';
+      document.getElementById('checkinSteps').classList.remove('active');
+      document.getElementById('initialError').style.display = 'none';
+      resetSteps();
+    }
+    
+    // Reset tất cả các bước về trạng thái ban đầu
+    function resetSteps() {
+      // Ẩn tất cả các container
+      document.querySelectorAll('.step-container').forEach(container => {
+        container.classList.remove('active');
+      });
+      
+      // Reset các indicator
+      document.querySelectorAll('.step-dot').forEach(dot => {
+        dot.classList.remove('active', 'completed');
+      });
+      document.querySelectorAll('.step-line').forEach(line => {
+        line.classList.remove('active');
+      });
+      
+      // Hiển thị bước 1
+      document.getElementById('step1Container').classList.add('active');
+      document.getElementById('step1Dot').classList.add('active');
+      
+      // Reset các trường
+      document.getElementById('photoPreview').style.display = 'none';
+      document.getElementById('photoInput').value = '';
+      document.getElementById('statusText').value = '';
+      document.getElementById('privacyOption').value = 'public';
+      
+      // Reset lỗi
+      document.querySelectorAll('.checkin-error').forEach(error => {
+        error.style.display = 'none';
+      });
+      
+      // Reset data
+      currentCheckinData = {
+        museumId: currentCheckinData.museumId,
+        userLat: null,
+        userLng: null,
+        photoFile: null,
+        photoPath: null,
+        status: "",
+        privacy: "public"
+      };
+      
+      // Reset các nút
+      document.getElementById('continueToStep3').disabled = true;
+      document.getElementById('continueToStep4').disabled = true;
     }
 
-    // Initialize QR Scanner (placeholder)
-    function initQRScanner() {
-      const qrReader = document.getElementById('qr-reader');
-      qrReader.innerHTML = `
-        <div style="height: 200px; display: flex; align-items: center; justify-content: center; background: #f0f0f0; border-radius: 8px; color: #666;">
-          <div style="text-align: center;">
-            <div style="font-size: 24px; margin-bottom: 10px;">📷</div>
-            <div>Camera sẽ mở để quét QR code</div>
-            <div style="font-size: 12px; margin-top: 5px;">(Chức năng đang phát triển)</div>
-          </div>
-        </div>
-      `;
+    // CHUYỂN BƯỚC
+    
+    function goToStep1() {
+      switchToStep(1);
     }
+    
+    async function goToStep2() {
+      // Đánh dấu bước 1 hoàn thành
+      document.getElementById('step1Dot').classList.remove('active');
+      document.getElementById('step1Dot').classList.add('completed');
+      document.getElementById('line1').classList.add('active');
+      
+      // Hiển thị bước 2
+      switchToStep(2);
+      
+      // Lấy vị trí người dùng
+      await getUserLocation();
+    }
+    
+    function goToStep3() {
+      // Đánh dấu bước 2 hoàn thành
+      document.getElementById('step2Dot').classList.remove('active');
+      document.getElementById('step2Dot').classList.add('completed');
+      document.getElementById('line2').classList.add('active');
+      
+      // Hiển thị bước 3
+      switchToStep(3);
+    }
+    
+    function goToStep4() {
+      // Đánh dấu bước 3 hoàn thành
+      document.getElementById('step3Dot').classList.remove('active');
+      document.getElementById('step3Dot').classList.add('completed');
+      document.getElementById('line3').classList.add('active');
+      
+      // Hiển thị bước 4
+      switchToStep(4);
+      
+      // Tạo các mẫu trạng thái dựa vào tên bảo tàng
+      generateStatusTemplates();
+    }
+    
+    function switchToStep(step) {
+      // Ẩn tất cả các bước
+      document.querySelectorAll('.step-container').forEach(container => {
+        container.classList.remove('active');
+      });
+      
+      // Đánh dấu tất cả các chấm trước bước này thành completed
+      for (let i = 1; i < step; i++) {
+        document.getElementById(`step${i}Dot`).classList.remove('active');
+        document.getElementById(`step${i}Dot`).classList.add('completed');
+        if (i < 4) document.getElementById(`line${i}`).classList.add('active');
+      }
+      
+      // Kích hoạt bước hiện tại
+      document.getElementById(`step${step}Container`).classList.add('active');
+      document.getElementById(`step${step}Dot`).classList.add('active');
+      document.getElementById(`step${step}Dot`).classList.remove('completed');
+      
+      // Reset các bước sau
+      for (let i = step + 1; i <= 4; i++) {
+        document.getElementById(`step${i}Dot`).classList.remove('active', 'completed');
+        if (i <= 3) document.getElementById(`line${i-1}`).classList.remove('active');
+      }
+    }
+    
+    // XỬ LÝ VỊ TRÍ (BƯỚC 2)
+    
+    async function getUserLocation() {
+      try {
+        // Hiển thị đang tải
+        document.getElementById('locationInfo').style.display = 'none';
+        document.getElementById('locationError').style.display = 'none';
+        document.getElementById('continueToStep3').disabled = true;
+        
+        // Lấy vị trí
+        if (!navigator.geolocation) {
+          throw new Error('Trình duyệt của bạn không hỗ trợ định vị');
+        }
+        
+        // Sử dụng promise để xử lý lấy vị trí
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          });
+        });
+        
+        // Lưu vị trí người dùng
+        currentCheckinData.userLat = position.coords.latitude;
+        currentCheckinData.userLng = position.coords.longitude;
+        
+        // Kiểm tra vị trí so với bảo tàng
+        await verifyLocation();
+        
+      } catch (error) {
+        let errorMessage = 'Không thể lấy vị trí của bạn';
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Bạn đã từ chối quyền truy cập vị trí';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Thông tin vị trí không có sẵn';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Đã hết thời gian yêu cầu vị trí';
+            break;
+        }
+        
+        showError('locationError', errorMessage);
+      }
+    }
+    
+    async function verifyLocation() {
+      try {
+        // Gọi API kiểm tra vị trí
+        const response = await fetch('verifyLocation.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `museumId=${encodeURIComponent(currentCheckinData.museumId)}&userLat=${encodeURIComponent(currentCheckinData.userLat)}&userLng=${encodeURIComponent(currentCheckinData.userLng)}`
+        });
+        
+        if (!response.ok) {
+          throw new Error('Lỗi khi kiểm tra vị trí');
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Không thể xác minh vị trí');
+        }
+        
+        // Hiển thị kết quả
+        document.getElementById('locationInfo').style.display = 'block';
+        document.getElementById('distanceIndicator').className = 'distance-indicator ' + (data.withinRange ? 'distance-ok' : 'distance-far');
+        document.getElementById('distanceText').textContent = `Bạn đang cách bảo tàng ${data.distance}m (tối đa ${data.maxAllowedDistance}m)`;
+        
+        // Tạo bản đồ
+        createMap(data.museumDetails.latitude, data.museumDetails.longitude, currentCheckinData.userLat, currentCheckinData.userLng);
+        
+        // Chỉ cho phép tiếp tục nếu người dùng đang ở trong phạm vi
+        document.getElementById('continueToStep3').disabled = !data.withinRange;
+        
+        if (!data.withinRange) {
+          showError('locationError', `Bạn đang ở quá xa bảo tàng (${data.distance}m). Vui lòng đến gần hơn để check-in (tối đa ${data.maxAllowedDistance}m).`);
+        } else {
+          document.getElementById('locationError').style.display = 'none';
+        }
+        
+      } catch (error) {
+        showError('locationError', error.message);
+      }
+    }
+    
+    function createMap(museumLat, museumLng, userLat, userLng) {
+      // Tạo bản đồ
+      const map = L.map('locationMap').setView([museumLat, museumLng], 16);
+      
+      // Thêm layer bản đồ
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+      
+      // Thêm marker bảo tàng
+      L.marker([museumLat, museumLng])
+        .addTo(map)
+        .bindPopup('Vị trí bảo tàng')
+        .openPopup();
+      
+      // Thêm marker người dùng
+      L.marker([userLat, userLng])
+        .addTo(map)
+        .bindPopup('Vị trí của bạn');
+      
+      // Vẽ đường thẳng giữa 2 điểm
+      L.polyline([[museumLat, museumLng], [userLat, userLng]], {color: 'blue'}).addTo(map);
+      
+      // Điều chỉnh view để hiển thị cả 2 điểm
+      const bounds = L.latLngBounds([
+        [museumLat, museumLng],
+        [userLat, userLng]
+      ]);
+      map.fitBounds(bounds.pad(0.1));
+    }
+    
+    // XỬ LÝ ẢNH (BƯỚC 3)
+    
+    // Xử lý chọn ảnh
+    document.addEventListener('DOMContentLoaded', function() {
+      const photoInput = document.getElementById('photoInput');
+      const photoPreview = document.getElementById('photoPreview');
+      
+      photoInput.addEventListener('change', async function(e) {
+        if (e.target.files.length === 0) {
+          return;
+        }
+        
+        const file = e.target.files[0];
+        
+        // Kiểm tra file có phải là ảnh không
+        if (!file.type.match('image.*')) {
+          showError('photoError', 'Vui lòng chọn một file ảnh');
+          return;
+        }
+        
+        // Hiển thị xem trước
+        photoPreview.src = URL.createObjectURL(file);
+        photoPreview.style.display = 'block';
+        
+        // Lưu file ảnh
+        currentCheckinData.photoFile = file;
+        
+        // Cho phép tiếp tục
+        document.getElementById('continueToStep4').disabled = false;
+        document.getElementById('photoError').style.display = 'none';
+      });
+    });
+    
+    // XỬ LÝ TRẠNG THÁI (BƯỚC 4)
+    
+    // Tạo các mẫu trạng thái dựa vào tên bảo tàng
+    function generateStatusTemplates() {
+      const museumName = document.getElementById('museumName').textContent;
+      const templatesContainer = document.getElementById('statusTemplates');
+      
+      templatesContainer.innerHTML = '';
+      
+      const templates = [
+        `Đang khám phá ${museumName}`,
+        `Học hỏi được nhiều điều thú vị tại ${museumName}`,
+        `Ấn tượng với các hiện vật tại ${museumName}`,
+        `Một ngày tuyệt vời tại ${museumName}`
+      ];
+      
+      templates.forEach(template => {
+        const div = document.createElement('div');
+        div.className = 'status-template';
+        div.textContent = template;
+        div.onclick = function() { selectStatusTemplate(this); };
+        templatesContainer.appendChild(div);
+      });
+    }
+    
+    // Chọn mẫu trạng thái
+    function selectStatusTemplate(element) {
+      document.getElementById('statusText').value = element.textContent;
+    }
+    
+    // XỬ LÝ HOÀN TẤT CHECK-IN
+    
+    async function submitFinalCheckin() {
+      try {
+        document.getElementById('finalError').style.display = 'none';
+        
+        // Lấy các giá trị cuối cùng
+        const status = document.getElementById('statusText').value.trim() || `Đã check-in tại ${document.getElementById('museumName').textContent}`;
+        const privacy = document.getElementById('privacyOption').value;
+        
+        currentCheckinData.status = status;
+        currentCheckinData.privacy = privacy;
+        
+        // Tải ảnh lên trước
+        await uploadPhoto();
+        
+        // Gửi thông tin check-in
+        const response = await fetch('createCheckinPost.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `museumId=${encodeURIComponent(currentCheckinData.museumId)}&latitude=${encodeURIComponent(currentCheckinData.userLat)}&longitude=${encodeURIComponent(currentCheckinData.userLng)}&status=${encodeURIComponent(currentCheckinData.status)}&photoPath=${encodeURIComponent(currentCheckinData.photoPath)}&privacy=${encodeURIComponent(currentCheckinData.privacy)}`
+        });
+        
+        if (!response.ok) {
+          throw new Error('Lỗi khi tạo bài đăng check-in');
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Không thể hoàn tất check-in');
+        }
+        
+        // Hiển thị thông báo thành công
+        document.getElementById('successPoints').textContent = data.message;
+        
+        // Ẩn các bước check-in và hiện thông báo thành công
+        document.querySelectorAll('.step-container').forEach(container => {
+          container.style.display = 'none';
+        });
+        document.querySelector('.step-indicator').style.display = 'none';
+        document.getElementById('checkinSuccessMessage').style.display = 'block';
+        
+        // Cập nhật danh sách check-in gần đây
+        loadRecentCheckins();
+        
+      } catch (error) {
+        showError('finalError', error.message);
+      }
+    }
+    
+    async function uploadPhoto() {
+      if (!currentCheckinData.photoFile) {
+        throw new Error('Chưa chọn ảnh check-in');
+      }
+      
+      // Tạo form data để tải ảnh lên
+      const formData = new FormData();
+      formData.append('photo', currentCheckinData.photoFile);
+      
+      try {
+        const response = await fetch('uploadPhoto.php', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error('Lỗi khi tải ảnh lên');
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Không thể tải ảnh lên');
+        }
+        
+        // Lưu đường dẫn ảnh
+        currentCheckinData.photoPath = data.photoPath;
+        return data.photoPath;
+        
+      } catch (error) {
+        throw new Error('Lỗi khi tải ảnh: ' + error.message);
+      }
+    }
+    
+    function finishCheckin() {
+      // Quay về màn hình ban đầu
+      document.getElementById('initialCheckinSection').style.display = 'block';
+      document.getElementById('checkinSteps').classList.remove('active');
+      document.getElementById('checkinSuccessMessage').style.display = 'none';
+      document.querySelector('.step-indicator').style.display = 'flex';
+      
+      // Reset quy trình check-in
+      resetSteps();
+      
+      // Xóa dữ liệu
+      document.getElementById('checkinCode').value = '';
+    }
+    
+    // LOAD DỮ LIỆU VÀ KHỞI TẠO
+    
+    // Tải danh sách check-in gần đây
+    async function loadRecentCheckins() {
+      try {
+        document.getElementById('loadingCheckins').textContent = 'Đang tải...';
+        
+        const response = await fetch('getRecentCheckins.php');
+        
+        if (!response.ok) {
+          throw new Error('Không thể tải danh sách check-in');
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Lỗi khi tải danh sách check-in');
+        }
+        
+        // Hiển thị danh sách check-in
+        const recentList = document.getElementById('recentList');
+        recentList.innerHTML = '';
+        
+        if (data.checkins.length === 0) {
+          recentList.innerHTML = '<p>Bạn chưa có check-in nào</p>';
+          return;
+        }
+        
+        data.checkins.forEach(checkin => {
+          const checkinItem = document.createElement('div');
+          checkinItem.className = 'checkin-item';
+          
+          checkinItem.innerHTML = `
+            <div class="checkin-info">
+              <h4>${checkin.museumName}</h4>
+              <p class="checkin-time">${checkin.friendlyTime}</p>
+              <p class="checkin-points">+${checkin.points} điểm</p>
+            </div>
+            <div class="checkin-status">✓</div>
+          `;
+          
+          recentList.appendChild(checkinItem);
+        });
+        
+      } catch (error) {
+        document.getElementById('loadingCheckins').textContent = 'Không thể tải danh sách check-in: ' + error.message;
+      }
+    }
+    
+    // Lấy thông tin người dùng đang đăng nhập
+    async function loadUserInfo() {
+      try {
+        const response = await fetch('getUserInfo.php');
+        
+        if (!response.ok) {
+          throw new Error('Không thể tải thông tin người dùng');
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Lỗi khi tải thông tin người dùng');
+        }
+        
+        // Hiển thị tên người dùng
+        document.getElementById('userName').textContent = data.name;
+        
+      } catch (error) {
+        console.error('Lỗi khi tải thông tin người dùng:', error);
+      }
+    }
+    
+    // Hiển thị thông báo lỗi
+    function showError(elementId, message) {
+      const errorElement = document.getElementById(elementId);
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
+    }
+    
+    // Không cần hàm khởi tạo QR Scanner vì không dùng chức năng này
 
+    // Thử tìm bảo tàng gần đó với số lần thử tối đa
+    let locationAttempts = 0;
+    const maxLocationAttempts = 3;
+    
+    function attemptToFindMuseums() {
+      if (locationAttempts < maxLocationAttempts) {
+        locationAttempts++;
+        console.log(`Đang thử lấy vị trí lần thứ ${locationAttempts}/${maxLocationAttempts}...`);
+        findNearbyMuseums().catch(error => {
+          console.error(`Lần thử ${locationAttempts} thất bại:`, error);
+          if (locationAttempts < maxLocationAttempts) {
+            // Thử lại sau 3 giây
+            setTimeout(attemptToFindMuseums, 3000);
+          }
+        });
+      } else {
+        document.getElementById('loadingNearby').textContent = 
+          'Không thể tìm thấy vị trí của bạn sau nhiều lần thử. Vui lòng kiểm tra quyền truy cập vị trí và làm mới trang.';
+      }
+    }
+    
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
-      initQRScanner();
+      // Tải thông tin người dùng
+      loadUserInfo();
+      
+      // Tải danh sách check-in gần đây
+      loadRecentCheckins();
+      
+      // Bắt đầu tìm bảo tàng gần đó
+      attemptToFindMuseums();
+      
+      // Thêm nút làm mới vị trí
+      const nearbyTitle = document.querySelector('.nearby-museums h3');
+      if (nearbyTitle) {
+        const refreshButton = document.createElement('button');
+        refreshButton.textContent = '🔄 Làm mới';
+        refreshButton.style.marginLeft = '10px';
+        refreshButton.style.fontSize = '14px';
+        refreshButton.style.padding = '4px 8px';
+        refreshButton.onclick = function() {
+          locationAttempts = 0;
+          attemptToFindMuseums();
+        };
+        nearbyTitle.appendChild(refreshButton);
+      }
     });
   </script>
 </body>

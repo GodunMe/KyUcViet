@@ -237,7 +237,6 @@ CREATE TABLE user_friends (
 
 ### Quy trình check-in theo bước:
 1. **Bước 1: Xác định bảo tàng**
-   - Quét QR hoặc nhập mã check-in
    - Hiển thị thông tin bảo tàng và kiểm tra tư cách check-in
 
 2. **Bước 2: Xác minh vị trí**
