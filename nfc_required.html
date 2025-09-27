@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cần Tap NFC - Ký Ức Việt</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .nfc-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .nfc-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .nfc-icon {
+            font-size: 80px;
+            color: #667eea;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .nfc-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .nfc-message {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .nfc-steps {
+            text-align: left;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .nfc-steps h4 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .nfc-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .nfc-steps li {
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .back-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .warning-text {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #856404;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .nfc-card {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .nfc-icon {
+                font-size: 60px;
+            }
+            
+            .nfc-title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nfc-container">
+        <div class="nfc-card">
+            <div class="nfc-icon">📱</div>
+            <h1 class="nfc-title">Cần Token Đăng Nhập</h1>
+            
+            <div class="warning-text">
+                <strong>⚠️ Thiếu Token:</strong> Bạn cần tap thẻ NFC để lấy token đăng nhập
+            </div>
+            
+            <p class="nfc-message">
+                Để đăng nhập vào ứng dụng Ký Ức Việt, bạn cần có token từ thẻ NFC. 
+                Vui lòng thực hiện các bước sau để lấy token.
+            </p>
+            
+            <div class="nfc-steps">
+                <h4>📋 Hướng dẫn lấy token:</h4>
+                <ol>
+                    <li>Đảm bảo thiết bị của bạn hỗ trợ NFC</li>
+                    <li>Bật chức năng NFC trong cài đặt</li>
+                    <li>Giữ thẻ NFC gần thiết bị của bạn</li>
+                    <li>Tap thẻ để đọc token</li>
+                    <li>Quay lại trang đăng nhập với token</li>
+                </ol>
+            </div>
+            
+            <div class="warning-text">
+                <strong>💡 Lưu ý:</strong> Token sẽ được lưu tự động sau khi tap thẻ NFC thành công
+            </div>
+            
+            <button class="back-button" onclick="goBack()">
+                ← Quay lại trang chủ
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            window.location.href = '/index.php';
+        }
+
+        // Auto redirect sau 30 giây nếu không có action
+        setTimeout(function() {
+            if (confirm('Bạn có muốn quay lại trang chủ?')) {
+                goBack();
+            }
+        }, 30000);
+
+        // Thêm animation khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            const card = document.querySelector('.nfc-card');
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            
+            setTimeout(function() {
+                card.style.transition = 'all 0.6s ease-out';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+</body>
+</html>

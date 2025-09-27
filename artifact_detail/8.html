@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bản đồ Quyết tâm Chiến dịch Hồ Chí Minh - Ký Ức Việt</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .artifact-detail-content { max-width: 800px; margin: 0 auto; padding: 20px; background: rgba(255, 255, 255, 0.95); border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); line-height: 1.8; }
+        .artifact-title { font-size: 32px; font-weight: bold; color: #333; text-align: center; margin-bottom: 30px; border-bottom: 3px solid #667eea; padding-bottom: 15px; }
+        .artifact-content p { margin-bottom: 15px; color: #555; font-size: 16px; text-align: justify; clear: both; position: relative; z-index: 1; }
+        .artifact-content .bold-text { font-weight: bold; color: #333; font-size: 18px; margin: 30px 0 15px 0; display: block; clear: both; position: relative; z-index: 1; }
+        .artifact-image { text-align: center; margin: 30px 0; width: 100%; clear: both; position: relative; height: auto;}
+        .artifact-image img { display: block; width: 100%; height: auto; margin: 0 auto; border-radius: 15px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease; }
+        .artifact-image img:hover { transform: scale(1.02); }
+        .image-caption { font-style: italic; color: #666; font-size: 14px; margin-top: 15px; text-align: center; background: rgba(102, 126, 234, 0.1); padding: 8px; border-radius: 8px; clear: both; position: relative; z-index: 1; }
+        .back-button { position: fixed; top: 20px; left: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-size: 14px; z-index: 1000; transition: all 0.3s ease; }
+        .back-button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        @media (max-width: 768px) { .artifact-detail-content { padding: 15px; margin: 10px; } .artifact-title { font-size: 24px; } .artifact-image img { width: 100%; } .back-button { position: relative; top: auto; left: auto; margin-bottom: 20px; display: block; width: fit-content; } }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="goBack()">← Quay lại bảo tàng</button>
+    <div class="artifact-detail-content">
+        <h1 class="artifact-title">Bản đồ Quyết tâm Chiến dịch Hồ Chí Minh</h1>
+        <div class="artifact-content">
+            <div class="bold-text">Bản đồ Quyết tâm Chiến dịch Hồ Chí Minh - Kết tinh nghệ thuật quân sự Việt Nam</div>
+            <p>Bảo vật quốc gia tiếp theo tại BTLSQSVN là Bản đồ Quyết tâm Chiến dịch Hồ Chí Minh được tác nghiệp tại Sở chỉ huy Chiến dịch Hồ Chí Minh, đóng tại Tà Thiết, Lộc Ninh, Tây Ninh (nay thuộc tỉnh Bình Phước). Tấm bản đồ được hoàn thiện sau nhiều lần chỉnh lý, bổ sung, xin ý kiến của Bộ chỉ huy Chiến dịch, Quân ủy Trung ương và Bộ Chính trị về kế hoạch tác chiến của Chiến dịch.</p>
+            <p>Bản đồ hình chữ nhật, dài 185,5 cm, rộng 170 cm, can 12 mảnh, có chữ “Quyết tâm Chiến dịch Hồ Chí Minh”, được cán bộ tác chiến thể hiện trên bản đồ miền Nam Việt Nam, dưới sự chỉ đạo của các đồng chí: Đại tướng Văn Tiến Dũng, Tổng Tham mưu trưởng Quân đội Nhân dân Việt Nam, Tư lệnh Chiến dịch; Phạm Hùng, Bí thư Trung ương Cục miền Nam, Chính ủy Chiến dịch. Ngày 22/4/1975, Bộ chỉ huy Chiến dịch duyệt Quyết tâm lần cuối cùng. Đại tướng Văn Tiến Dũng và đồng chí Phạm Hùng cùng ký tên lên bản đồ.</p>
+            <div class="artifact-image">
+                <img src="/uploads/artifacts/8.png" alt="Hình ảnh hiện vật">
+                <div class="image-caption">Bản đồ Quyết tâm Chiến dịch Hồ Chí Minh - Kết tinh nghệ thuật quân sự Việt Nam.</div>
+            </div>
+            <p>Trên bản đồ, các mũi tên màu đỏ thể hiện hướng tiến công của các cánh quân tiến về giải phóng Sài Gòn - Gia Định. Cụ thể:</p>
+            <p>Hướng Bắc, Quân đoàn 1 có nhiệm vụ đánh chiếm căn cứ Phú Lợi, tiêu diệt Sư đoàn 5 của địch, tiếp đó đánh chiếm Bộ Tổng tham mưu địch.</p>
+            <p>Hướng Đông, Quân đoàn 4 có nhiệm vụ tiêu diệt sở chỉ huy Bộ tư lệnh Quân đoàn 3 và Sư đoàn 18 của địch ở Biên Hòa, sau đó thọc sâu vào nội thành đánh chiếm Dinh Độc Lập.</p>
+            <p>Hướng Đông Nam, Quân đoàn 2 có nhiệm vụ đánh chiếm Bà Rịa, căn cứ Nước Trong, Long Bình, chặn đường rút chạy của địch trên sông Lòng Tàu, sau đó phát triển vào nội thành cùng Quân đoàn 4 đánh chiếm Dinh Độc Lập.</p>
+            <p>Hướng Tây Bắc, Quân đoàn 3 có nhiệm vụ đánh chiếm Đồng Dù, tiêu diệt Sư đoàn 25 của địch, đánh chiếm sân bay Tân Sơn Nhất và cùng Quân đoàn 1 đánh chiếm Bộ Tổng tham mưu địch.</p>
+            <p>Hướng Tây Nam, Đoàn 232 có nhiệm vụ tiêu diệt Sư đoàn 22 địch, cắt đường số 4, sau đó đánh thọc sâu chiếm Biệt khu Thủ đô, Tổng nha cảnh sát của địch.</p>
+            <p>Ở ngoại thành, các đơn vị đặc công và lực lượng vũ trang tại chỗ có nhiệm vụ đánh và giữ các cầu quan trọng, dẫn đường cho các binh chủng chủ lực đánh chiếm các mục tiêu ở nội thành, phát động quần chúng nổi dậy giành chính quyền cơ sở.</p>
+            <p>Bản đồ Quyết tâm Chiến dịch Hồ Chí Minh là hiện vật thể hiện thành quả lao động sáng tạo, trí tuệ tập thể của Bộ chỉ huy Chiến dịch, kết tinh nghệ thuật quân sự Việt Nam, là một trong những yếu tố quyết định sự phát triển và thắng lợi của Chiến dịch Hồ Chí Minh lịch sử.</p>
+            <p>Tấm bản đồ được Đại tướng Văn Tiến Dũng lưu giữ từ năm 1975 đến năm 1990, sau đó trao tặng BTLSQSVN, nhân dịp kỷ niệm 15 năm Ngày giải phóng miền Nam, thống nhất đất nước. Bản đồ Quyết tâm Chiến dịch Hồ Chí Minh được Thủ tướng Chính phủ công nhận Bảo vật quốc gia vào ngày 14/1/2015.</p>
+        </div>
+    </div>
+    <script>
+        function goBack() {
+            // Simply go back to museum page
+            // The museum position was already saved when entering artifact detail
+            window.location.href = "/museum.html?id=3";
+        }
+    </script>
+</body>
+</html>

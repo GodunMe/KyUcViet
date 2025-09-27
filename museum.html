@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chi tiết bảo tàng - Vietnamese Memories</title>
+  <link rel="icon" type="image/png" href="logo.PNG" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- User Header -->
+    <div class="user-header" id="userHeader">
+      <!-- User logged in state -->
+      <div id="userLoggedIn" class="user-logged-in" style="display: none;">
+        <div class="user-info">
+          <img id="userAvatar" src="avatar/default.png" alt="User" class="user-icon">
+          <span id="userName" class="user-name">Loading...</span>
+        </div>
+        <div class="user-points">
+          <span id="userPoints">0đ</span>
+        </div>
+      </div>
+      
+      <!-- User not logged in state -->
+      <div id="usernotLoggedIn" class="user-not-logged-in" style="display: none;">
+        <div class="login-prompt">
+          <span class="login-text">Khám phá di sản Việt Nam</span>
+        </div>
+        <button class="login-btn" onclick="goToLogin()">
+          🔑 Đăng nhập
+        </button>
+      </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="back-button" onclick="goBack()">
+      <span>← Quay lại</span>
+    </div>
+
+    <!-- Museum Header -->
+    <div class="museum-header" id="museumHeader">
+      <div class="museum-hero">
+        <img id="museumMainImage" src="" alt="Museum" class="museum-hero-image">
+        <div class="museum-overlay">
+          <h1 id="museumName">Đang tải...</h1>
+          <p id="museumAddress">Đang tải địa chỉ...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Museum Info Section -->
+    <div class="museum-info-section">
+      <h2>Giới thiệu</h2>
+      <div id="museumDescriptionContainer">
+        <div id="museumDescriptionContent">
+          <p>Đang tải mô tả bảo tàng...</p>
+        </div>
+        <button id="expandButton" class="expand-btn" onclick="toggleDescriptionExpansion()" style="display: none;">
+          <span id="expandText">Hiện thêm</span>
+          <span class="expand-icon">↓</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Museum Media Gallery -->
+    <div class="museum-media-section" id="museumMediaSection" style="display: none;">
+      <h2>Thư viện ảnh</h2>
+      <div class="media-gallery" id="mediaGallery">
+        <!-- Media items will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Artifacts Section -->
+    <div class="artifacts-section">
+      <h2>Hiện vật</h2>
+      <div class="artifacts-grid" id="artifactsGrid">
+        <!-- Artifacts will be loaded here -->
+      </div>
+      <!-- Pagination -->
+      <div class="pagination" id="artifactsPagination" style="display: none;">
+        <button class="pagination-btn" id="prevBtn" onclick="changePage(-1)">‹ Trước</button>
+        <div class="pagination-info">
+          <span id="currentPage">1</span> / <span id="totalPages">1</span>
+        </div>
+        <button class="pagination-btn" id="nextBtn" onclick="changePage(1)">Sau ›</button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" id="loadingState">
+      <div class="loading-spinner"></div>
+      <p>Đang tải thông tin bảo tàng...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" id="errorState" style="display: none;">
+      <div class="error-icon">❌</div>
+      <h3>Không thể tải thông tin</h3>
+      <p>Vui lòng thử lại sau hoặc quay lại trang chủ.</p>
+      <button class="retry-btn" onclick="loadMuseumData()">Thử lại</button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="navigateToPage('home')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Trang chủ</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('map')">
+      <div class="nav-icon">🗺️</div>
+      <div class="nav-label">Bản đồ</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('checkin')">
+      <div class="nav-icon">📍</div>
+      <div class="nav-label">Check-in</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('leaderboard')">
+      <div class="nav-icon">🏆</div>
+      <div class="nav-label">Bảng xếp hạng</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('profile')">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">Profile</div>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = "";
+    let currentMuseumId = null;
+    
+    // Pagination variables
+    let allArtifacts = [];
+    let currentPage = 1;
+    const artifactsPerPage = 5;
+
+    // Get museum ID from URL parameters
+    function getMuseumIdFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('id');
+    }
+
+    // Load user info on page load
+    async function loadUserInfo() {
+      try {
+        const response = await fetch('getUserInfo.php');
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.loggedIn) {
+            showUserLoggedInState(data);
+          } else {
+            showUserNotLoggedInState();
+          }
+        } else {
+          showUserNotLoggedInState();
+        }
+      } catch (error) {
+        console.error('Error loading user info:', error);
+        showUserNotLoggedInState();
+      }
+    }
+
+    function showUserLoggedInState(userData) {
+      const loggedInDiv = document.getElementById('userLoggedIn');
+      const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+      
+      // Show logged in state, hide not logged in state
+      loggedInDiv.style.display = 'flex';
+      notLoggedInDiv.style.display = 'none';
+      
+      // Update user avatar
+      const avatarElement = document.getElementById('userAvatar');
+      avatarElement.src = userData.avatarRelative || 'avatar/default.png';
+      
+      // Update user name
+      const nameElement = document.getElementById('userName');
+      nameElement.textContent = userData.username || 'Guest User';
+      
+      // Update user points
+      const pointsElement = document.getElementById('userPoints');
+      pointsElement.textContent = (userData.score || 0) + 'đ';
+    }
+
+    function showUserNotLoggedInState() {
+      const loggedInDiv = document.getElementById('userLoggedIn');
+      const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+      
+      // Show not logged in state, hide logged in state
+      loggedInDiv.style.display = 'none';
+      notLoggedInDiv.style.display = 'flex';
+    }
+
+    function goToLogin() {
+      // Redirect to login page
+      window.location.href = 'login.php?token=1';
+    }
+
+    function goBack() {
+      window.location.href = 'index.php';
+    }
+
+    // Load museum details
+    async function loadMuseumData() {
+      currentMuseumId = getMuseumIdFromUrl();
+      
+      if (!currentMuseumId) {
+        showError('Không tìm thấy ID bảo tàng');
+        return;
+      }
+
+      showLoading();
+
+      try {
+        // Load museum details
+        await loadMuseumDetails(currentMuseumId);
+        
+        // Load artifacts
+        await loadArtifacts(currentMuseumId);
+        
+        // Restore previous state if available
+        restorePreviousState();
+        
+        hideLoading();
+      } catch (error) {
+        console.error('Error loading museum data:', error);
+        showError('Không thể tải thông tin bảo tàng');
+      }
+    }
+
+    // Load museum details from API
+    async function loadMuseumDetails(museumId) {
+      const response = await fetch(`getMuseumDetails.php?id=${museumId}`);
+      if (!response.ok) {
+        throw new Error('Failed to load museum details');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update museum info
+        document.getElementById('museumName').textContent = data.museum.MuseumName;
+        document.getElementById('museumAddress').textContent = data.museum.Address;
+        // Setup expandable museum description
+        setupExpandableDescription(data.museum.Description);
+        
+        // Update page title
+        document.title = `${data.museum.MuseumName} - Vietnamese Memories`;
+        
+        // Load media gallery if exists
+        if (data.media && data.media.length > 0) {
+          loadMediaGallery(data.media);
+        }
+        
+        // Set main image (first media or default)
+        const mainImage = document.getElementById('museumMainImage');
+        if (data.media && data.media.length > 0) {
+          mainImage.src = BASE_URL + data.media[0].file_path;
+        } else {
+          mainImage.src = BASE_URL + '/uploads/museums/default.png';
+        }
+      } else {
+        throw new Error(data.message || 'Failed to load museum details');
+      }
+    }
+
+    // Load media gallery
+    function loadMediaGallery(mediaItems) {
+      const mediaSection = document.getElementById('museumMediaSection');
+      const mediaGallery = document.getElementById('mediaGallery');
+      
+      mediaGallery.innerHTML = '';
+      
+      // Store all media items for gallery navigation (including videos)
+      window.galleryItems = mediaItems;
+      
+      mediaItems.forEach((media, index) => {
+        const mediaItem = document.createElement('div');
+        mediaItem.className = 'media-item';
+        
+        if (media.mime_type.startsWith('image/')) {
+          mediaItem.innerHTML = `
+            <img src="${BASE_URL + media.file_path}" alt="Museum Media" onclick="openGalleryModal(${index})">
+          `;
+        } else if (media.mime_type.startsWith('video/')) {
+          mediaItem.innerHTML = `
+            <div class="video-thumbnail" onclick="openGalleryModal(${index})">
+              <video muted>
+                <source src="${BASE_URL + media.file_path}" type="${media.mime_type}">
+              </video>
+              <div class="play-overlay">▶</div>
+            </div>
+          `;
+        }
+        
+        mediaGallery.appendChild(mediaItem);
+      });
+      
+      mediaSection.style.display = 'block';
+    }
+
+    // Load all artifacts
+    async function loadArtifacts(museumId) {
+      const response = await fetch(`getArtifacts.php?museumId=${museumId}`);
+      if (!response.ok) {
+        throw new Error('Failed to load artifacts');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && data.artifacts.length > 0) {
+        allArtifacts = data.artifacts;
+        currentPage = 1;
+        displayArtifactsPage();
+        setupPagination();
+      } else {
+        const artifactsGrid = document.getElementById('artifactsGrid');
+        artifactsGrid.innerHTML = '<div class="no-artifacts">Chưa có hiện vật nào được thêm vào bảo tàng này.</div>';
+        document.getElementById('artifactsPagination').style.display = 'none';
+      }
+    }
+
+    // Display artifacts for current page
+    function displayArtifactsPage() {
+      const artifactsGrid = document.getElementById('artifactsGrid');
+      artifactsGrid.innerHTML = '';
+      
+      const startIndex = (currentPage - 1) * artifactsPerPage;
+      const endIndex = startIndex + artifactsPerPage;
+      const pageArtifacts = allArtifacts.slice(startIndex, endIndex);
+      
+      pageArtifacts.forEach((artifact, index) => {
+        const globalIndex = startIndex + index;
+        const artifactCard = document.createElement('div');
+        artifactCard.className = 'artifact-card';
+        
+        // Format description to show only first 80 characters
+        const rawDescription = artifact.Description;
+        const shortDescription = rawDescription.length > 80 ? 
+          rawDescription.substring(0, 80) + '...' : rawDescription;
+        
+        artifactCard.innerHTML = `
+          <div class="artifact-image">
+            <img src="${BASE_URL + (artifact.Image || '/uploads/artifacts/default.png')}" alt="${artifact.ArtifactName}">
+          </div>
+          <div class="artifact-info">
+            <h3>${artifact.ArtifactName}</h3>
+            <div class="artifact-description">
+              <p class="description-text">${formatTextWithLineBreaks(shortDescription)}</p>
+            </div>
+            <div class="artifact-actions">
+              <button class="detail-btn" onclick="viewArtifactDetail(${globalIndex})">
+                📖 Xem chi tiết
+              </button>
+            </div>
+          </div>
+        `;
+        
+        artifactsGrid.appendChild(artifactCard);
+      });
+    }
+
+    // Setup pagination controls
+    function setupPagination() {
+      const totalPages = Math.ceil(allArtifacts.length / artifactsPerPage);
+      
+      if (totalPages > 1) {
+        document.getElementById('artifactsPagination').style.display = 'flex';
+        document.getElementById('currentPage').textContent = currentPage;
+        document.getElementById('totalPages').textContent = totalPages;
+        
+        // Update button states
+        document.getElementById('prevBtn').disabled = currentPage === 1;
+        document.getElementById('nextBtn').disabled = currentPage === totalPages;
+      } else {
+        document.getElementById('artifactsPagination').style.display = 'none';
+      }
+    }
+
+    // Change page
+    function changePage(direction) {
+      const totalPages = Math.ceil(allArtifacts.length / artifactsPerPage);
+      const newPage = currentPage + direction;
+      
+      if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        displayArtifactsPage();
+        setupPagination();
+        
+        // Scroll to artifacts section
+        document.querySelector('.artifacts-section').scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }
+
+    // View artifact detail - redirect to detail page
+    function viewArtifactDetail(artifactIndex) {
+      const artifact = allArtifacts[artifactIndex];
+      if (artifact) {
+        // Save current state before navigating
+        saveCurrentState();
+        
+        // Check if artifact has a custom detail page
+        if (artifact.artifact_detail && artifact.artifact_detail.trim() !== '') {
+          // Use the custom HTML file path from database
+          window.location.href = artifact.artifact_detail;
+        } else {
+          // Show alert that artifact needs custom HTML file
+          alert(`Hiện vật "${artifact.ArtifactName}" chưa có trang chi tiết. Vui lòng sử dụng Text Converter để tạo file HTML cho hiện vật này.`);
+        }
+      }
+    }
+
+    // Save current page state (scroll position and current page)
+    function saveCurrentState() {
+      const state = {
+        scrollPosition: window.pageYOffset || document.documentElement.scrollTop,
+        currentPage: currentPage,
+        museumId: currentMuseumId
+      };
+      
+      // Save to sessionStorage (will persist for this browser session)
+      sessionStorage.setItem('museumPageState', JSON.stringify(state));
+    }
+
+    // Restore previous state when returning from artifact detail
+    function restorePreviousState() {
+      try {
+        // Check if coming from index page (reset scroll)
+        const urlParams = new URLSearchParams(window.location.search);
+        const fromIndex = urlParams.get('fromIndex');
+        
+        if (fromIndex === 'true') {
+          // Clear any saved states and scroll to top
+          sessionStorage.removeItem('museumPageState');
+          sessionStorage.removeItem('artifactDetailState');
+          window.scrollTo(0, 0);
+          return;
+        }
+        
+        // No need to check artifactDetailState anymore
+        // We only restore museumPageState when coming back from artifact
+        
+        // Check for normal museum page state
+        const savedState = sessionStorage.getItem('museumPageState');
+        if (savedState) {
+          const state = JSON.parse(savedState);
+          
+          // Only restore if we're on the same museum
+          if (state.museumId == currentMuseumId) {
+            // Restore pagination
+            if (state.currentPage && state.currentPage !== currentPage) {
+              currentPage = state.currentPage;
+              displayArtifactsPage();
+              setupPagination();
+            }
+            
+            // Restore scroll position after a small delay to ensure content is rendered
+            setTimeout(() => {
+              if (state.scrollPosition) {
+                window.scrollTo({
+                  top: state.scrollPosition,
+                  behavior: 'smooth'
+                });
+              }
+            }, 100);
+            
+            // Clear the saved state after using it
+            sessionStorage.removeItem('museumPageState');
+          }
+        }
+      } catch (error) {
+        console.error('Error restoring previous state:', error);
+        // If there's an error, just clear the saved state
+        sessionStorage.removeItem('museumPageState');
+        sessionStorage.removeItem('artifactDetailState');
+      }
+    }
+
+    // Gallery modal functions
+    let currentGalleryIndex = 0;
+
+    function openGalleryModal(startIndex) {
+      if (!window.galleryItems || window.galleryItems.length === 0) return;
+      
+      currentGalleryIndex = startIndex;
+      
+      // Create fullscreen gallery modal
+      const modal = document.createElement('div');
+      modal.className = 'gallery-modal';
+      modal.innerHTML = `
+        <div class="gallery-container">
+          <div class="gallery-header">
+            <span class="gallery-counter">
+              <span id="currentIndex">${currentGalleryIndex + 1}</span> / ${window.galleryItems.length}
+            </span>
+            <span class="close-gallery" onclick="closeGalleryModal()">&times;</span>
+          </div>
+          
+          <div class="gallery-content">
+            <button class="gallery-nav gallery-nav-left" onclick="previousImage()" ${window.galleryItems.length <= 1 ? 'style="display:none"' : ''}>
+              &#10094;
+            </button>
+            
+            <div class="gallery-image-container" id="galleryMediaContainer">
+              ${window.galleryItems[currentGalleryIndex].mime_type.startsWith('image/') 
+                ? `<img id="galleryImage" src="${BASE_URL + window.galleryItems[currentGalleryIndex].file_path}" alt="Gallery Image">`
+                : `<video id="galleryVideo" controls>
+                     <source src="${BASE_URL + window.galleryItems[currentGalleryIndex].file_path}" type="${window.galleryItems[currentGalleryIndex].mime_type}">
+                     Trình duyệt không hỗ trợ video.
+                   </video>`}
+            </div>
+            
+            <button class="gallery-nav gallery-nav-right" onclick="nextImage()" ${window.galleryItems.length <= 1 ? 'style="display:none"' : ''}>
+              &#10095;
+            </button>
+          </div>
+          
+          <div class="gallery-thumbnails" ${window.galleryItems.length <= 1 ? 'style="display:none"' : ''}>
+            ${window.galleryItems.map((item, index) => `
+              <div class="gallery-thumb ${index === currentGalleryIndex ? 'active' : ''}" onclick="goToImage(${index})">
+                ${item.mime_type.startsWith('image/') 
+                  ? `<img src="${BASE_URL + item.file_path}" alt="Thumbnail ${index + 1}">`
+                  : `<div class="video-thumb">
+                       <video muted>
+                         <source src="${BASE_URL + item.file_path}" type="${item.mime_type}">
+                       </video>
+                       <div class="play-icon">▶</div>
+                     </div>`}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      modal.style.display = 'flex';
+      
+      // Add keyboard navigation
+      document.addEventListener('keydown', handleGalleryKeyboard);
+      
+      // Add touch/swipe support
+      addSwipeSupport();
+    }
+
+    function closeGalleryModal() {
+      const modal = document.querySelector('.gallery-modal');
+      if (modal) {
+        modal.remove();
+      }
+      document.removeEventListener('keydown', handleGalleryKeyboard);
+    }
+
+    function previousImage() {
+      if (currentGalleryIndex > 0) {
+        currentGalleryIndex--;
+        updateGalleryImage();
+      }
+    }
+
+    function nextImage() {
+      if (currentGalleryIndex < window.galleryItems.length - 1) {
+        currentGalleryIndex++;
+        updateGalleryImage();
+      }
+    }
+
+    function goToImage(index) {
+      currentGalleryIndex = index;
+      updateGalleryImage();
+    }
+
+    function updateGalleryImage() {
+      const mediaContainer = document.getElementById('galleryMediaContainer');
+      const currentIndexSpan = document.getElementById('currentIndex');
+      const thumbnails = document.querySelectorAll('.gallery-thumb');
+      
+      if (mediaContainer && window.galleryItems[currentGalleryIndex]) {
+        const currentItem = window.galleryItems[currentGalleryIndex];
+        
+        // Update media content
+        if (currentItem.mime_type.startsWith('image/')) {
+          mediaContainer.innerHTML = `<img id="galleryImage" src="${BASE_URL + currentItem.file_path}" alt="Gallery Image">`;
+        } else if (currentItem.mime_type.startsWith('video/')) {
+          mediaContainer.innerHTML = `<video id="galleryVideo" controls>
+                                        <source src="${BASE_URL + currentItem.file_path}" type="${currentItem.mime_type}">
+                                        Trình duyệt không hỗ trợ video.
+                                      </video>`;
+        }
+        
+        currentIndexSpan.textContent = currentGalleryIndex + 1;
+        
+        // Update thumbnail active state
+        thumbnails.forEach((thumb, index) => {
+          thumb.classList.toggle('active', index === currentGalleryIndex);
+        });
+      }
+    }
+
+    function handleGalleryKeyboard(event) {
+      switch(event.key) {
+        case 'ArrowLeft':
+          previousImage();
+          break;
+        case 'ArrowRight':
+          nextImage();
+          break;
+        case 'Escape':
+          closeGalleryModal();
+          break;
+      }
+    }
+
+    function addSwipeSupport() {
+      const galleryContainer = document.querySelector('.gallery-image-container');
+      if (!galleryContainer) return;
+      
+      let startX = 0;
+      let startY = 0;
+      
+      galleryContainer.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      });
+      
+      galleryContainer.addEventListener('touchend', (e) => {
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        
+        const diffX = startX - endX;
+        const diffY = startY - endY;
+        
+        // Only trigger if horizontal swipe is dominant
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+          if (diffX > 0) {
+            // Swipe left - next image
+            nextImage();
+          } else {
+            // Swipe right - previous image
+            previousImage();
+          }
+        }
+      });
+    }
+
+    // Format text to preserve line breaks
+    function formatTextWithLineBreaks(text) {
+      if (!text) return '';
+      
+      // Escape HTML characters to prevent XSS, then replace line breaks
+      const escapeHtml = (unsafe) => {
+        return unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      };
+      
+      // Replace different types of line breaks with HTML <br> tags
+      return escapeHtml(text)
+        .replace(/\r\n/g, '<br>')  // Windows line breaks
+        .replace(/\n/g, '<br>')    // Unix line breaks
+        .replace(/\r/g, '<br>')    // Mac line breaks
+        .trim();
+    }
+
+    function formatExpandableDescription(text) {
+      if (!text) return '';
+      
+      // For expandable descriptions, preserve original formatting
+      // Convert line breaks to proper HTML while maintaining paragraph structure
+      return text
+        .replace(/\r\n/g, '\n')    // Normalize Windows line breaks
+        .replace(/\r/g, '\n')      // Normalize Mac line breaks
+        .replace(/\n\n+/g, '</p><p>')  // Convert double+ line breaks to paragraphs
+        .replace(/\n/g, '<br>')    // Convert single line breaks to <br>
+        .trim();
+    }
+
+    // Toggle artifact description
+    function toggleDescription(index) {
+      const descElement = document.getElementById(`desc-${index}`);
+      const shortText = descElement.querySelector('.short-text');
+      const fullText = descElement.querySelector('.full-text');
+      const expandBtn = descElement.parentElement.querySelector('.expand-btn');
+      const expandText = expandBtn.querySelector('.expand-text');
+      const collapseText = expandBtn.querySelector('.collapse-text');
+      
+      if (fullText.style.display === 'none') {
+        // Expand
+        shortText.style.display = 'none';
+        fullText.style.display = 'inline';
+        expandText.style.display = 'none';
+        collapseText.style.display = 'inline';
+      } else {
+        // Collapse
+        shortText.style.display = 'inline';
+        fullText.style.display = 'none';
+        expandText.style.display = 'inline';
+        collapseText.style.display = 'none';
+      }
+    }
+
+    // Loading and error states
+    function showLoading() {
+      document.getElementById('loadingState').style.display = 'block';
+      document.getElementById('errorState').style.display = 'none';
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingState').style.display = 'none';
+    }
+
+    function showError(message) {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('errorState').style.display = 'block';
+      const errorState = document.getElementById('errorState');
+      errorState.querySelector('p').textContent = message;
+    }
+
+    // Navigation functions
+    function navigateToPage(page) {
+      switch(page) {
+        case 'home':
+          window.location.href = '/index.php';
+          break;
+        case 'map':
+          window.location.href = '/map.html';
+          break;
+        case 'checkin':
+          window.location.href = '/checkin.html';
+          break;
+        case 'leaderboard':
+          window.location.href = '/leaderboard.html';
+          break;
+        case 'profile':
+          window.location.href = '/profile.html';
+          break;
+      }
+    }
+
+    // Save state before page unload (for browser back/forward)
+    window.addEventListener('beforeunload', function() {
+      // Only save if we have artifacts loaded (avoid saving empty state)
+      if (allArtifacts && allArtifacts.length > 0) {
+        saveCurrentState();
+      }
+    });
+
+    // Museum Description Expansion System
+    let descriptionChunks = [];
+    let currentChunkIndex = 0;
+    let originalDescription = '';
+
+    function setupExpandableDescription(description) {
+      originalDescription = description;
+      
+      // Count words in description
+      const wordCount = description.split(/\s+/).length;
+      console.log('Description word count:', wordCount);
+      
+      // Determine number of chunks based on word count
+      let numberOfChunks;
+      if (wordCount < 400) {
+        numberOfChunks = 1; // Show all at once
+      } else if (wordCount < 700) {
+        numberOfChunks = 2; // Split into 2 parts
+      } else if (wordCount < 1200) {
+        numberOfChunks = 3; // Split into 3 parts
+      } else {
+        numberOfChunks = 4; // Split into 4 parts
+      }
+      
+      console.log('Number of chunks:', numberOfChunks);
+      
+      // If only 1 chunk, show everything and hide button
+      if (numberOfChunks === 1) {
+        document.getElementById('museumDescriptionContent').innerHTML = 
+          `<div class="description-chunk visible">
+            <p>${formatTextWithLineBreaks(description)}</p>
+          </div>`;
+        document.getElementById('expandButton').style.display = 'none';
+        return;
+      }
+      
+      // Calculate character positions for each chunk while preserving original formatting
+      const totalChars = description.length;
+      const charsPerChunk = Math.ceil(totalChars / numberOfChunks);
+      
+      // Store character position thresholds for each chunk
+      descriptionChunks = [];
+      for (let i = 0; i < numberOfChunks; i++) {
+        const startPos = i * charsPerChunk;
+        const endPos = Math.min(startPos + charsPerChunk, totalChars);
+        
+        // Adjust end position to avoid cutting words - find next space or sentence end
+        let adjustedEndPos = endPos;
+        if (endPos < totalChars) {
+          // Look for sentence ending first
+          for (let j = endPos; j < Math.min(endPos + 100, totalChars); j++) {
+            if (description[j].match(/[.!?]/)) {
+              adjustedEndPos = j + 1;
+              break;
+            }
+          }
+          // If no sentence ending found, look for space
+          if (adjustedEndPos === endPos) {
+            for (let j = endPos; j < Math.min(endPos + 50, totalChars); j++) {
+              if (description[j] === ' ') {
+                adjustedEndPos = j;
+                break;
+              }
+            }
+          }
+        }
+        
+        descriptionChunks.push({
+          startPos: startPos,
+          endPos: adjustedEndPos
+        });
+      }
+      
+      console.log('Chunks created:', descriptionChunks.length, 'chunks');
+      
+      // Show first chunk initially
+      currentChunkIndex = 0;
+      displayDescriptionChunks();
+      
+      // Show expand button
+      const expandButton = document.getElementById('expandButton');
+      expandButton.style.display = 'inline-flex';
+    }
+
+    function displayDescriptionChunks() {
+      const container = document.getElementById('museumDescriptionContent');
+      
+      // Get the end position for current chunk
+      const currentChunk = descriptionChunks[currentChunkIndex];
+      if (!currentChunk) return;
+      
+      // Extract text from start to current chunk's end position
+      const textToShow = originalDescription.substring(0, currentChunk.endPos);
+      
+      // Format text preserving original line breaks
+      const formattedText = formatTextWithLineBreaks(textToShow);
+      
+      // Display with proper formatting
+      const finalText = `<p>${formattedText}</p>`;
+      
+      container.innerHTML = `<div class="description-chunk visible">
+        ${finalText}
+      </div>`;
+      
+      // Update button text and state
+      updateExpandButton();
+    }
+
+    function updateExpandButton() {
+      const expandButton = document.getElementById('expandButton');
+      const expandText = document.getElementById('expandText');
+      
+      if (currentChunkIndex >= descriptionChunks.length - 1) {
+        // All chunks shown - show "Ẩn bớt" button
+        expandText.textContent = 'Ẩn bớt';
+        expandButton.classList.add('collapsed');
+      } else {
+        // More chunks available - show "Hiện thêm" button  
+        expandText.textContent = 'Hiện thêm';
+        expandButton.classList.remove('collapsed');
+      }
+    }
+
+    function toggleDescriptionExpansion() {
+      if (currentChunkIndex >= descriptionChunks.length - 1) {
+        // Currently fully expanded - collapse to first chunk
+        currentChunkIndex = 0;
+        displayDescriptionChunks();
+        
+        // Smooth scroll to description
+        document.getElementById('museumDescriptionContainer').scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      } else {
+        // Expand to next chunk
+        currentChunkIndex++;
+        displayDescriptionChunks();
+      }
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      loadUserInfo();
+      loadMuseumData();
+    });
+  </script>
+
+  <style>
+    /* Pagination Styles */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 30px;
+      gap: 15px;
+    }
+
+    .pagination-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 70px;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .pagination-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .pagination-info {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 8px 15px;
+      border-radius: 15px;
+      font-weight: 500;
+      color: #333;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Artifact Card với nút Xem chi tiết */
+    .artifact-actions {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .detail-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      flex: 1;
+    }
+
+    .detail-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      .pagination {
+        gap: 10px;
+      }
+      
+      .pagination-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-width: 60px;
+      }
+      
+      .pagination-info {
+        padding: 6px 12px;
+        font-size: 14px;
+      }
+    }
+
+    /* Museum Description Expansion Styles */
+    #museumDescriptionContainer {
+      position: relative;
+    }
+
+    #museumDescriptionContent {
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+
+    .expand-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white !important;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 15px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+    }
+
+    .expand-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+      background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    }
+
+    .expand-btn * {
+      color: white !important;
+    }
+
+    .expand-icon {
+      transition: transform 0.3s ease;
+      font-size: 12px;
+    }
+
+    .expand-btn.collapsed .expand-icon {
+      transform: rotate(180deg);
+    }
+
+    .description-chunk {
+      margin-bottom: 15px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+    }
+
+    .description-chunk.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</body>
+</html>
