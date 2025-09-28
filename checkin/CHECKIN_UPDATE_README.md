@@ -62,15 +62,11 @@
 - Không giới hạn thời gian giữa các bảo tàng khác nhau
 
 #### Xác Minh Vị Trí:
-- Người dùng phải ở trong **bán kính 50m** từ bảo tàng
+- Người dùng phải ở trong **bán kính 200m** từ bảo tàng
 - Sử dụng công thức Haversine để tính khoảng cách chính xác
 
 ### 5. Tính Năng Mạng Xã Hội
 
-#### Bài Đăng Check-in:
-- Lưu như bài đăng với ảnh, trạng thái, vị trí
-- 3 mức quyền riêng tư: công khai, bạn bè, riêng tư
-- Hỗ trợ like/comment (cấu trúc DB đã sẵn sàng)
 
 #### Điểm Thưởng:
 - **50 điểm** cơ bản mỗi lần check-in
@@ -93,18 +89,7 @@
 - `migrations/001_create_checkin_tables.sql` - Migration script
 - `migrations/migrate.php` - Migration runner
 
-## Cách Test
 
-1. **Truy cập**: `http://localhost/test-checkin.html`
-2. **Đăng nhập**: Đảm bảo đã đăng nhập vào hệ thống
-3. **Test từng bước**:
-   - Lấy vị trí hiện tại
-   - Tìm bảo tàng gần đây
-   - Kiểm tra tư cách check-in
-   - Xác minh vị trí
-   - Tải lên ảnh
-   - Tạo check-in
-   - Xem lịch sử
 
 
 
