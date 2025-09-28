@@ -37,8 +37,9 @@ try {
     if ($result && $result->num_rows > 0) {
         $row = $result->fetch_assoc();
         
-        // Process avatar path - use relative path for client
+        // Process avatar path - use absolute path for client
         $avatarPath = $row['avatar'] ? $row['avatar'] : 'avatar/default.png';
+        $avatarAbsolute = '/' . ltrim($avatarPath, '/'); // Ensure starts with /
         
         $userInfo = [
             'loggedIn' => true,
@@ -48,7 +49,7 @@ try {
             'score' => (int)($row['Score'] ?: 0), // If null, default to 0
             'status' => $row['STATUS'],
             'avatar' => $avatarPath,
-            'avatarRelative' => $avatarPath
+            'avatarRelative' => $avatarAbsolute
         ];
     } else {
         // User not found, return default values
@@ -60,7 +61,7 @@ try {
             'score' => 0,
             'status' => 'inactive',
             'avatar' => 'avatar/default.png',
-            'avatarRelative' => 'avatar/default.png'
+            'avatarRelative' => '/avatar/default.png'
         ];
     }
     
