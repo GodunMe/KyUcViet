@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Máy bay MiG-21 số hiệu 5121 - Ký Ức Việt</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .artifact-detail-content { max-width: 800px; margin: 0 auto; padding: 20px; background: rgba(255, 255, 255, 0.95); border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); line-height: 1.8; }
+        .artifact-title { font-size: 32px; font-weight: bold; color: #333; text-align: center; margin-bottom: 30px; border-bottom: 3px solid #667eea; padding-bottom: 15px; }
+        .artifact-content p { margin-bottom: 15px; color: #555; font-size: 16px; text-align: justify; clear: both; position: relative; z-index: 1; }
+        .artifact-content .bold-text { font-weight: bold; color: #333; font-size: 18px; margin: 30px 0 15px 0; display: block; clear: both; position: relative; z-index: 1; }
+        .artifact-image { text-align: center; margin: 30px 0; width: 100%; clear: both; position: relative; height: auto;}
+        .artifact-image img { display: block; width: 100%; height: auto; margin: 0 auto; border-radius: 15px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease; }
+        .artifact-image img:hover { transform: scale(1.02); }
+        .image-caption { font-style: italic; color: #666; font-size: 14px; margin-top: 15px; text-align: center; background: rgba(102, 126, 234, 0.1); padding: 8px; border-radius: 8px; clear: both; position: relative; z-index: 1; }
+        .back-button { position: fixed; top: 20px; left: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-size: 14px; z-index: 1000; transition: all 0.3s ease; }
+        .back-button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        @media (max-width: 768px) { .artifact-detail-content { padding: 15px; margin: 10px; } .artifact-title { font-size: 24px; } .artifact-image img { width: 100%; } .back-button { position: relative; top: auto; left: auto; margin-bottom: 20px; display: block; width: fit-content; } }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="goBack()">← Quay lại bảo tàng</button>
+    <div class="artifact-detail-content">
+        <h1 class="artifact-title">Máy bay MiG-21 số hiệu 5121</h1>
+        <div class="artifact-content">
+            <div class="bold-text">Tiêm kích duy nhất trên thế giới hạ B-52 bằng tên lửa không đối không</div>
+            <p>Được đặt gần máy bay 4324 bên trong khu chuyên đề kháng chiến chống Mỹ, cứu nước là bảo vật quốc gia MiG-21 số hiệu 5121 với những chiến tích vô song trong lịch sử quân sự thế giới.</p>
+            <p>Đây là chiếc MiG-21 do Trung tướng Phạm Tuân, Anh hùng lực lượng vũ trang nhân dân điều khiển bắn rơi máy bay B-52 của không quân Mỹ. Đêm ngày 27/12/1972, phi công Phạm Tuân lái chiếc 5121 xuất kích từ sân bay Yên Bái đến vùng trời Sơn La thì phát hiện B-52, anh liền lái máy bay vượt qua đội hình tiêm kích F-14 yểm trợ B-52, điều chỉnh đường ngắm và bắn liền hai quả tên lửa. “Pháo đài bay” được coi là bất khả xâm phạm, biểu tượng của cái gọi là “Không lực Hoa Kỳ” trúng đạn, bốc cháy ngùn ngụt rồi đâm sầm xuống đất.</p>
+            <div class="artifact-image">
+                <img src="/uploads/artifacts/6.png" alt="Hình ảnh hiện vật">
+                <div class="image-caption">Máy bay MiG-21 số hiệu 5121 - Tiêm kích duy nhất trên thế giới hạ B-52 bằng tên lửa không đối không.</div>
+            </div>
+            <p>Đây là lần đầu tiên Không quân Việt Nam bắn rơi B-52, góp phần đập tan cuộc tập kích đường không chiến lược quy mô lớn bằng máy bay B-52 của Mỹ vào Hà Nội, Hải Phòng trong 12 ngày đêm tháng 12 năm 1972.</p>
+            <p>Cho đến nay, MiG-21 số hiệu 5121 là chiếc máy bay tiêm kích duy nhất trên thế giới bắn hạ được B-52 bằng tên lửa không đối không. Ngoài kỳ tích bắn rơi “siêu pháo đài bay” B-52, chiếc 5121 còn bắn rơi thêm 4 chiếc máy bay của Mỹ do hai phi công Vũ Đình Rạng và Đinh Tôn điều khiển. Chiếc MiG-21 số hiệu 5121 được Thủ tướng Chính phủ công nhận là bảo vật quốc gia ngày 01/10/2012.</p>
+        </div>
+    </div>
+    <script>
+        function goBack() {
+            // Simply go back to museum page
+            // The museum position was already saved when entering artifact detail
+            window.location.href = "/museum.html?id=3";
+        }
+    </script>
+</body>
+</html>

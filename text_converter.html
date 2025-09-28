@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to HTML Converter</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        textarea { width: 100%; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-family: monospace; resize: vertical; }
+        input { width: 200px; padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        .info { background: #e7f3ff; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
+        code { background: #f8f9fa; padding: 2px 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Text to HTML Converter</h1>
+        
+        <div class="section">
+            <h3>Thông tin hiện vật:</h3>
+            <input type="text" id="artifactName" placeholder="Tên hiện vật">
+            <input type="number" id="artifactId" placeholder="Artifact ID">
+            <input type="number" id="museumId" placeholder="Museum ID">
+        </div>
+        
+        <div class="section">
+            <h3>📝 Nhập nội dung Text:</h3>
+            <div class="info">
+                <strong>Hướng dẫn:</strong><br>
+                <code>**text**</code> → Text in đậm<br>
+                <code>IMG:/path/image.jpg</code> → Ảnh<br>
+                <code>CAPTION:chú thích</code> → Chú thích ảnh (đặt ngay sau IMG)<br>
+                Dòng trống → Ngắt đoạn
+            </div>
+            <textarea id="textInput" placeholder="Nhập nội dung..."></textarea>
+        </div>
+        
+        <div class="section">
+            <button onclick="convert()">🔄 Chuyển đổi</button>
+            <button onclick="copyResult()">📋 Copy</button>
+            <button onclick="downloadResult()">💾 Tải file</button>
+        </div>
+        
+        <div class="section">
+            <h3>📄 HTML Output:</h3>
+            <textarea id="output" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        function convert() {
+            const text = document.getElementById('textInput').value;
+            const name = document.getElementById('artifactName').value || 'Chi tiết hiện vật';
+            const id = document.getElementById('artifactId').value || '1';
+            const museumId = document.getElementById('museumId').value || '1';
+            
+            if (!text.trim()) {
+                alert('Vui lòng nhập nội dung!');
+                return;
+            }
+            
+            const html = generateHTML(text, name, museumId);
+            document.getElementById('output').value = html;
+        }
+        
+        function generateHTML(text, name, museumId) {
+            let html = '';
+            
+            // HTML head
+            html += '<!DOCTYPE html>\n';
+            html += '<html lang="vi">\n';
+            html += '<head>\n';
+            html += '    <meta charset="UTF-8">\n';
+            html += '    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n';
+            html += '    <title>' + name + ' - Ký Ức Việt</title>\n';
+            html += '    <link rel="stylesheet" href="../style.css">\n';
+            
+            // Add CSS
+            html += getCSS();
+            
+            html += '</head>\n<body>\n';
+            
+            // Back button
+            html += '    <button class="back-button" onclick="goBack()">← Quay lại bảo tàng</button>\n';
+            
+            // Main content
+            html += '    <div class="artifact-detail-content">\n';
+            html += '        <h1 class="artifact-title">' + name + '</h1>\n';
+            html += '        <div class="artifact-content">\n';
+            
+            // Process content
+            html += processText(text);
+            
+            html += '        </div>\n';
+            html += '    </div>\n';
+            
+            // JavaScript
+            html += '    <script>\n';
+            html += '        function goBack() {\n';
+            html += '            // Simply go back to museum page\n';
+            html += '            // The museum position was already saved when entering artifact detail\n';
+            html += '            window.location.href = "/museum.html?id=' + museumId + '";\n';
+            html += '        }\n';
+            html += '    <\/script>\n';
+            html += '</body>\n</html>';
+            
+            return html;
+        }
+        
+        function getCSS() {
+            let css = '    <style>\n';
+            css += '        .artifact-detail-content { max-width: 800px; margin: 0 auto; padding: 20px; background: rgba(255, 255, 255, 0.95); border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); line-height: 1.8; }\n';
+            css += '        .artifact-title { font-size: 32px; font-weight: bold; color: #333; text-align: center; margin-bottom: 30px; border-bottom: 3px solid #667eea; padding-bottom: 15px; }\n';
+            css += '        .artifact-content p { margin-bottom: 15px; color: #555; font-size: 16px; text-align: justify; clear: both; position: relative; z-index: 1; }\n';
+            css += '        .artifact-content .bold-text { font-weight: bold; color: #333; font-size: 18px; margin: 30px 0 15px 0; display: block; clear: both; position: relative; z-index: 1; }\n';
+            css += '        .artifact-image { text-align: center; margin: 30px 0; width: 100%; clear: both; position: relative; height: auto;}\n';
+            css += '        .artifact-image img { display: block; width: 100%; height: auto; margin: 0 auto; border-radius: 15px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease; }\n';
+            css += '        .artifact-image img:hover { transform: scale(1.02); }\n';
+            css += '        .image-caption { font-style: italic; color: #666; font-size: 14px; margin-top: 15px; text-align: center; background: rgba(102, 126, 234, 0.1); padding: 8px; border-radius: 8px; clear: both; position: relative; z-index: 1; }\n';
+            css += '        .back-button { position: fixed; top: 20px; left: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-size: 14px; z-index: 1000; transition: all 0.3s ease; }\n';
+            css += '        .back-button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }\n';
+            css += '        @media (max-width: 768px) { .artifact-detail-content { padding: 15px; margin: 10px; } .artifact-title { font-size: 24px; } .artifact-image img { width: 100%; } .back-button { position: relative; top: auto; left: auto; margin-bottom: 20px; display: block; width: fit-content; } }\n';
+            css += '    </style>\n';
+            return css;
+        }
+        
+        function processText(text) {
+            const lines = text.split('\n');
+            let result = '';
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                
+                if (line === '') continue;
+                
+                if (line.startsWith('IMG:')) {
+                    const src = line.substring(4).trim();
+                    result += '            <div class="artifact-image">\n';
+                    result += '                <img src="' + src + '" alt="Hình ảnh hiện vật">\n';
+                    
+                    // Check for caption on next line
+                    if (i + 1 < lines.length && lines[i + 1].trim().startsWith('CAPTION:')) {
+                        const caption = lines[i + 1].trim().substring(8).trim();
+                        result += '                <div class="image-caption">' + caption + '</div>\n';
+                        i++; // Skip caption line
+                    }
+                    
+                    result += '            </div>\n';
+                } else if (line.startsWith('**') && line.endsWith('**')) {
+                    const bold = line.substring(2, line.length - 2);
+                    result += '            <div class="bold-text">' + bold + '</div>\n';
+                } else if (!line.startsWith('CAPTION:')) {
+                    // Regular paragraph
+                    const processed = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    result += '            <p>' + processed + '</p>\n';
+                }
+            }
+            
+            return result;
+        }
+        
+        function copyResult() {
+            const output = document.getElementById('output');
+            if (!output.value) {
+                alert('Chưa có nội dung để copy!');
+                return;
+            }
+            output.select();
+            document.execCommand('copy');
+            alert('Đã copy vào clipboard!');
+        }
+        
+        function downloadResult() {
+            const content = document.getElementById('output').value;
+            const id = document.getElementById('artifactId').value || 'artifact';
+            
+            if (!content) {
+                alert('Chưa có nội dung để tải!');
+                return;
+            }
+            
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = id + '.html';
+            a.click();
+            URL.revokeObjectURL(url);
+            alert('Đã tải file ' + id + '.html!');
+        }
+    </script>
+</body>
+</html>

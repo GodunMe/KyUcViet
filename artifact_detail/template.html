@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tên Hiện Vật - Ký Ức Việt</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .artifact-detail-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            line-height: 1.8;
+        }
+        
+        .artifact-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+        }
+        
+        .artifact-content p {
+            margin-bottom: 15px;
+            color: #555;
+            font-size: 16px;
+            text-align: justify;
+        }
+        
+        .artifact-content .bold-text {
+            font-weight: bold;
+            color: #333;
+            font-size: 18px;
+            margin: 25px 0 15px 0;
+            display: block;
+        }
+        
+        .artifact-image {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .artifact-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .image-caption {
+            font-style: italic;
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .artifact-detail-content {
+                padding: 15px;
+                margin: 10px;
+            }
+            
+            .artifact-title {
+                font-size: 24px;
+            }
+            
+            .back-button {
+                position: relative;
+                top: auto;
+                left: auto;
+                margin-bottom: 20px;
+                display: block;
+                width: fit-content;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="goBack()">← Quay lại bảo tàng</button>
+    
+    <div class="artifact-detail-content">
+        <h1 class="artifact-title">Tên Hiện Vật</h1>
+        
+        <div class="artifact-content">
+            <!-- Nội dung chi tiết hiện vật sẽ được đặt ở đây -->
+            
+            <div class="bold-text">Giới thiệu</div>
+            <p>Đây là mô tả chi tiết về hiện vật...</p>
+            
+            <div class="artifact-image">
+                <img src="/uploads/artifacts/artifact1.jpg" alt="Hình ảnh hiện vật">
+                <div class="image-caption">Chú thích cho hình ảnh</div>
+            </div>
+            
+            <div class="bold-text">Lịch sử</div>
+            <p>Thông tin về lịch sử của hiện vật...</p>
+            
+            <!-- Thêm nội dung khác tại đây -->
+        </div>
+    </div>
+    
+    <script>
+        function goBack() {
+            // Simply go back to museum page
+            // The museum position was already saved when entering artifact detail
+            window.location.href = '/museum.html?id=MUSEUM_ID';
+        }
+    </script>
+</body>
+</html>

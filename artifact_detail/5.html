@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Máy bay tiêm kích MiG-21 số hiệu 4324 - Ký Ức Việt</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .artifact-detail-content { max-width: 800px; margin: 0 auto; padding: 20px; background: rgba(255, 255, 255, 0.95); border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); line-height: 1.8; }
+        .artifact-title { font-size: 32px; font-weight: bold; color: #333; text-align: center; margin-bottom: 30px; border-bottom: 3px solid #667eea; padding-bottom: 15px; }
+        .artifact-content p { margin-bottom: 15px; color: #555; font-size: 16px; text-align: justify; clear: both; position: relative; z-index: 1; }
+        .artifact-content .bold-text { font-weight: bold; color: #333; font-size: 18px; margin: 30px 0 15px 0; display: block; clear: both; position: relative; z-index: 1; }
+        .artifact-image { text-align: center; margin: 30px 0; width: 100%; clear: both; position: relative; height: auto;}
+        .artifact-image img { display: block; width: 100%; height: auto; margin: 0 auto; border-radius: 15px; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease; }
+        .artifact-image img:hover { transform: scale(1.02); }
+        .image-caption { font-style: italic; color: #666; font-size: 14px; margin-top: 15px; text-align: center; background: rgba(102, 126, 234, 0.1); padding: 8px; border-radius: 8px; clear: both; position: relative; z-index: 1; }
+        .back-button { position: fixed; top: 20px; left: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-size: 14px; z-index: 1000; transition: all 0.3s ease; }
+        .back-button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        @media (max-width: 768px) { .artifact-detail-content { padding: 15px; margin: 10px; } .artifact-title { font-size: 24px; } .artifact-image img { width: 100%; } .back-button { position: relative; top: auto; left: auto; margin-bottom: 20px; display: block; width: fit-content; } }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="goBack()">← Quay lại bảo tàng</button>
+    <div class="artifact-detail-content">
+        <h1 class="artifact-title">Máy bay tiêm kích MiG-21 số hiệu 4324</h1>
+        <div class="artifact-content">
+            <p class="bold-text">Cơn ác mộng, nỗi khiếp sợ của giặc lái Mỹ</p>
+            <p>Chiếc tiêm kích MiG-21 số hiệu 4324 được treo trang trọng trên cao ngay giữa sảnh chính của Bảo tàng, kết hợp màn hình LED rộng trình chiếu các video clip, hình ảnh danh lam thắng cảnh khắp mọi miền Tổ quốc, tạo cảm giác như máy bay đang xuất kích bảo vệ bầu trời Tổ quốc, gây ấn tượng đặc biệt với mọi người.</p>
+            <p>Đây là chiếc máy bay chiến đấu được gắn nhiều ngôi sao nhất của Không quân Nhân dân Việt Nam - 14 ngôi sao tượng trưng cho 14 chiến công bắn rơi máy bay Mỹ trên bầu trời Việt Nam.</p>
+            <div class="artifact-image">
+                <img src="/uploads/artifacts/1 BVQG.jpg" alt="Hình ảnh hiện vật">
+            </div>
+            <div class="artifact-image">
+                <img src="/uploads/artifacts/5.2.png" alt="Hình ảnh hiện vật">
+                <div class="image-caption">Chiếc tiêm kích MiG-21 số hiệu 4324 được treo trang trọng trên cao ngay giữa sảnh chính của Bảo tàng như đang xuất kích bảo vệ bầu trời Tổ quốc.</div>
+            </div>
+            <p>Theo hồ sơ hiện vật của BTLSQSVN, tiêm kích 4324 đã lập công lớn góp phần đánh bại chiến lược “Chiến tranh cục bộ” đánh phá miền Bắc lần thứ nhất giai đoạn 1965 - 1968 của đế quốc Mỹ. Chỉ trong năm 1967, 9 phi công thuộc Trung đoàn Không quân 921, Quân chủng PK-KQ lần lượt lái chiếc 4324 không chiến, bắn rơi 14 máy bay Mỹ. Các phi công 2 lần bắn rơi máy bay Mỹ gồm: Lê Trọng Huyên, Phạm Thanh Ngân, Nguyễn Hồng Nhị, Nguyễn Văn Cốc, Nguyễn Đăng Kính.</p>
+            <p>Xác suất tiêu diệt mục tiêu của chiếc 4324 được đánh giá tốt nhất trong những phi đội MiG-21 của Việt Nam khi đó: Đối đầu địch 22 lần, xạ kích 16 lần và tiêu diệt tới 14 máy bay Mỹ, nó trở thành cơn ác mộng, nỗi khiếp sợ của giặc lái Mỹ.</p>
+        </div>
+    </div>
+    <script>
+        function goBack() {
+            // Simply go back to museum page
+            // The museum position was already saved when entering artifact detail
+            window.location.href = "/museum.html?id=3";
+        }
+    </script>
+</body>
+</html>
