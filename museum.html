@@ -240,13 +240,13 @@
       
       if (data.success) {
         // Update museum info
-        document.getElementById('museumName').textContent = data.museum.MuseumName;
-        document.getElementById('museumAddress').textContent = data.museum.Address;
+        document.getElementById('museumName').textContent = data.museum.name;
+        document.getElementById('museumAddress').textContent = data.museum.address;
         // Setup expandable museum description
-        setupExpandableDescription(data.museum.Description);
+        setupExpandableDescription(data.museum.description);
         
         // Update page title
-        document.title = `${data.museum.MuseumName} - Vietnamese Memories`;
+        document.title = `${data.museum.name} - Vietnamese Memories`;
         
         // Load media gallery if exists
         if (data.media && data.media.length > 0) {
@@ -732,7 +732,7 @@
           window.location.href = '/map.html';
           break;
         case 'checkin':
-          window.location.href = '/checkin.html';
+          window.location.href = './checkin/checkin.html';
           break;
         case 'leaderboard':
           window.location.href = '/leaderboard.html';
