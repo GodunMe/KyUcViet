@@ -3,13 +3,37 @@ include 'db.php';
 
 header('Content-Type: application/json');
 
-// Get museum ID from URL parameter
-$museumId = isset($_GET['id']) ? intval($_GET['id']) : 0;
+// Khởi tạo session nếu chưa có
+session_start();
+
+// Kiểm tra đăng nhập
+if (!isset($_SESSION['UserToken'])) {
+    echo json_encode(['success' => false, 'error' => 'Bạn cần đăng nhập để sử dụng tính năng này']);
+    exit;
+}
+
+// Kiểm tra xem có thông tin mã check-in hoặc ID bảo tàng không
+$museumId = 0;
+$code = '';
+
+// Kiểm tra nếu có ID bảo tàng
+if (isset($_GET['id'])) {
+    $museumId = intval($_GET['id']);
+} 
+// Kiểm tra nếu có mã check-in từ POST
+elseif (isset($_POST['code'])) {
+    $code = trim($_POST['code']);
+    // Xử lý mã check-in
+    if (is_numeric($code)) {
+        // Nếu mã là số, coi đó là ID bảo tàng
+        $museumId = intval($code);
+    }
+}
 
 if ($museumId <= 0) {
     echo json_encode([
         'success' => false,
-        'message' => 'Invalid museum ID'
+        'error' => 'Mã check-in hoặc ID bảo tàng không hợp lệ'
     ]);
     exit;
 }
@@ -25,7 +49,7 @@ try {
     if ($museumResult->num_rows === 0) {
         echo json_encode([
             'success' => false,
-            'message' => 'Museum not found'
+            'error' => 'Không tìm thấy bảo tàng'
         ]);
         exit;
     }
@@ -64,14 +88,21 @@ try {
     // Return response
     echo json_encode([
         'success' => true,
-        'museum' => $museum,
+        'museum' => [
+            'id' => $museum['MuseumID'],
+            'name' => $museum['MuseumName'],
+            'address' => $museum['Address'],
+            'description' => $museum['Description'],
+            'latitude' => $museum['Latitude'],
+            'longitude' => $museum['Longitude']
+        ],
         'media' => $media
     ]);
 
 } catch (Exception $e) {
     echo json_encode([
         'success' => false,
-        'message' => 'Database error: ' . $e->getMessage()
+        'error' => 'Lỗi cơ sở dữ liệu: ' . $e->getMessage()
     ]);
 }
 
