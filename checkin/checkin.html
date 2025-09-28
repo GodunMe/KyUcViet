@@ -910,6 +910,14 @@
                 <div style="font-size: 48px; margin-bottom: 20px;">🎉</div>
                 <h3>Check-in thành công!</h3>
                 <p>Bạn đã check-in tại <span id="successMuseumName"></span></p>
+                <div id="pointsInfo" class="points-earned" style="display: none;">
+                    <span id="pointsEarned">+10 điểm</span>
+                    <br><small>Lần đầu check-in hôm nay!</small>
+                </div>
+                <div id="noPointsInfo" style="display: none; background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin: 20px 0;">
+                    <span>Bạn đã check-in tại đây hôm nay rồi</span>
+                    <br><small>Không cộng thêm điểm</small>
+                </div>
                 <button class="btn" onclick="goHome()">Thoát</button>
             </div>
         </div>
@@ -1425,7 +1433,7 @@
                 console.log('Parsed data:', data);
                 
                 if (data && data.success) {
-                    showSuccess(selectedMuseum.MuseumName);
+                    showSuccess(selectedMuseum.MuseumName, data.points, data.isFirstToday);
                     // Reset photos
                     selectedPhotos = [];
                     // Reload recent checkins
@@ -1511,10 +1519,23 @@
             document.getElementById('initialPhotoButton').style.display = 'block';
         }
 
-        function showSuccess(museumName) {
+        function showSuccess(museumName, points, isFirstToday) {
             document.getElementById('checkinProcess').style.display = 'none';
             document.getElementById('successMessage').style.display = 'block';
             document.getElementById('successMuseumName').textContent = museumName;
+            
+            // Hiển thị thông tin điểm
+            const pointsInfo = document.getElementById('pointsInfo');
+            const noPointsInfo = document.getElementById('noPointsInfo');
+            
+            if (isFirstToday && points > 0) {
+                pointsInfo.style.display = 'block';
+                noPointsInfo.style.display = 'none';
+                document.getElementById('pointsEarned').textContent = `+${points} điểm`;
+            } else {
+                pointsInfo.style.display = 'none';
+                noPointsInfo.style.display = 'block';
+            }
         }
 
         // Utility functions

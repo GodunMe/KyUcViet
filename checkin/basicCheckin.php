@@ -78,16 +78,30 @@ try {
             }
         }
         
-        // Cộng điểm
-        $stmt = $conn->prepare("UPDATE users SET Score = Score + 10 WHERE UserToken = ?");
-        $stmt->bind_param("s", $userToken);
+        // Kiểm tra xem đã check-in tại bảo tàng này trong ngày chưa để quyết định cộng điểm
+        $today = date('Y-m-d');
+        $stmt = $conn->prepare("SELECT COUNT(*) as checkin_count FROM checkins WHERE UserToken = ? AND MuseumID = ? AND DATE(CheckinTime) = ?");
+        $stmt->bind_param("sis", $userToken, $museumId, $today);
         $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $isFirstCheckinToday = ($row['checkin_count'] == 1); // Vì check-in đã được insert ở trên
+        
+        $pointsEarned = 0;
+        if ($isFirstCheckinToday) {
+            // Cộng điểm chỉ cho lần check-in đầu tiên trong ngày
+            $stmt = $conn->prepare("UPDATE users SET Score = Score + 10 WHERE UserToken = ?");
+            $stmt->bind_param("s", $userToken);
+            $stmt->execute();
+            $pointsEarned = 10;
+        }
         
         echo json_encode([
             'success' => true,
             'message' => 'Check-in thành công tại ' . $museum['MuseumName'],
             'checkinId' => $checkinId,
-            'points' => 10,
+            'points' => $pointsEarned,
+            'isFirstToday' => $isFirstCheckinToday,
             'photos' => $uploadedPhotos
         ]);
     } else {

@@ -38,7 +38,6 @@ $stmt = $conn->prepare("
         c.CheckinTime,
         c.Status,
         c.Points,
-        c.Privacy,
         c.Latitude,
         c.Longitude
     FROM 
@@ -105,7 +104,6 @@ while ($row = $result->fetch_assoc()) {
         'FriendlyTime' => $friendlyTime,
         'Status' => $row['Status'],
         'Points' => $row['Points'],
-        'Privacy' => $row['Privacy'],
         'Latitude' => $row['Latitude'],
         'Longitude' => $row['Longitude'],
         'photos' => $photos
