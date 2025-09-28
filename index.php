@@ -60,7 +60,7 @@ require 'auth_check.php';
       <div class="nav-label">Map</div>
     </div>
     <div class="nav-item" onclick="navigateToPage('checkin')">
-      <div class="nav-icon">�</div>
+      <div class="nav-icon">📍</div>
       <div class="nav-label">Check-in</div>
     </div>
     <div class="nav-item" onclick="navigateToPage('leaderboard')">
@@ -160,7 +160,7 @@ function navigateToPage(page) {
       window.location.href = '/map.html';
       break;
     case 'checkin':
-      window.location.href = '/checkin.html';
+      window.location.href = '/checkin/checkin.html';
       break;
     case 'leaderboard':
       window.location.href = '/leaderboard.html';
@@ -374,7 +374,7 @@ function viewMuseumDetails(event, museumId) {
     .then(data => {
       if (data.loggedIn) {
         // User is logged in - allow access to museum details
-        window.location.href = `/museum.html?id=${museumId}&fromIndex=true`;
+        window.location.href = `/museum.html?id=${museumId}`;
       } else {
         // User not logged in - show alert and redirect to login
         alert('Bạn cần đăng nhập để xem chi tiết bảo tàng!');

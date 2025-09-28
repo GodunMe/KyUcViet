@@ -45,11 +45,6 @@
       transform: translateY(-1px);
     }
     
-    .control-btn.admin-only {
-      background: #007bff;
-      color: white;
-    }
-    
     .marker-popup {
       max-width: 250px;
     }
@@ -65,136 +60,6 @@
       color: #666;
     }
     
-    .marker-popup .admin-controls {
-      margin-top: 10px;
-      display: flex;
-      gap: 8px;
-    }
-    
-    .popup-btn {
-      padding: 4px 8px;
-      font-size: 11px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    
-    .edit-btn {
-      background: #ffc107;
-      color: black;
-    }
-    
-    .delete-btn {
-      background: #dc3545;
-      color: white;
-    }
-    
-    /* Modal styles */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 2000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.5);
-    }
-    
-    .modal-content {
-      background-color: white;
-      margin: 10% auto;
-      padding: 20px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 400px;
-    }
-    
-    .modal h3 {
-      margin-top: 0;
-    }
-    
-    .form-group {
-      margin-bottom: 15px;
-    }
-    
-    .form-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-    }
-    
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-    
-    .form-group textarea {
-      resize: vertical;
-      height: 80px;
-    }
-    
-    .modal-buttons {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 20px;
-    }
-    
-    .btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    
-    .btn-primary {
-      background: #007bff;
-      color: white;
-    }
-    
-    .btn-secondary {
-      background: #6c757d;
-      color: white;
-    }
-    
-    .admin-panel {
-      position: fixed;
-      bottom: 100px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: white;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      display: none;
-      z-index: 1000;
-    }
-    
-    .admin-panel.show {
-      display: block;
-    }
-    
-    .admin-toggle {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      z-index: 1000;
-      padding: 8px 12px;
-      background: #28a745;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 12px;
-    }
   </style>
 </head>
 <body>
@@ -229,11 +94,6 @@
       <p>Khám phá các bảo tàng và địa điểm văn hóa xung quanh bạn</p>
     </div>
 
-    <!-- Admin Toggle (Only visible for admin) -->
-    <button class="admin-toggle" id="adminToggle" onclick="toggleAdminMode()">
-      👑 Admin Mode
-    </button>
-
     <!-- Map Container -->
     <div id="mapContainer">
       <!-- Map Controls -->
@@ -241,20 +101,12 @@
         <button class="control-btn" onclick="locateUser()" title="Tìm vị trí của tôi">
           📍 Vị trí của tôi
         </button>
-        <button class="control-btn admin-only" id="addMarkerBtn" onclick="enableAddMarker()" title="Thêm điểm mới">
-          ➕ Thêm điểm
-        </button>
         <button class="control-btn" onclick="toggleMarkerList()" title="Danh sách điểm">
           📋 Danh sách
         </button>
       </div>
     </div>
 
-    <!-- Admin Panel -->
-    <div class="admin-panel" id="adminPanel">
-      <p><strong>Chế độ Admin:</strong> Click vào bản đồ để thêm marker mới</p>
-      <button class="btn btn-secondary" onclick="disableAddMarker()">Hủy</button>
-    </div>
   </div>
 
   <!-- Bottom Navigation -->
@@ -281,40 +133,6 @@
     </div>
   </div>
 
-  <!-- Add/Edit Marker Modal -->
-  <div id="markerModal" class="modal">
-    <div class="modal-content">
-      <h3 id="modalTitle">Thêm điểm mới</h3>
-      <form id="markerForm">
-        <div class="form-group">
-          <label for="markerName">Tên địa điểm *</label>
-          <input type="text" id="markerName" required>
-        </div>
-        <div class="form-group">
-          <label for="markerType">Loại địa điểm</label>
-          <select id="markerType">
-            <option value="museum">Bảo tàng</option>
-            <option value="historical">Di tích lịch sử</option>
-            <option value="cultural">Văn hóa</option>
-            <option value="tourist">Du lịch</option>
-            <option value="other">Khác</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="markerDescription">Mô tả</label>
-          <textarea id="markerDescription" placeholder="Mô tả ngắn về địa điểm..."></textarea>
-        </div>
-        <div class="form-group">
-          <label for="markerAddress">Địa chỉ</label>
-          <input type="text" id="markerAddress" readonly>
-        </div>
-        <div class="modal-buttons">
-          <button type="button" class="btn btn-secondary" onclick="closeMarkerModal()">Hủy</button>
-          <button type="submit" class="btn btn-primary">Lưu</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -327,9 +145,6 @@
     let map;
     let userMarker;
     let markers = [];
-    let isAdmin = true; // Thay đổi thành false cho user thường
-    let addMarkerMode = false;
-    let editingMarker = null;
     let currentUserLocation = null;
 
     // Museum data - loaded from database
@@ -406,7 +221,7 @@
           // Already on map page
           break;
         case 'checkin':
-          window.location.href = '/checkin.html';
+          window.location.href = '/checkin/checkin.html';
           break;
         case 'leaderboard':
           window.location.href = '/leaderboard.html';
@@ -470,12 +285,6 @@
 
       // Load existing markers
       loadMarkers();
-
-      // Setup admin controls
-      setupAdminControls();
-
-      // Add click event for admin mode
-      map.on('click', onMapClick);
     }
 
     async function loadMarkers() {
@@ -534,12 +343,6 @@
           <p><strong>Loại:</strong> ${getTypeLabel(markerData.type)}</p>
           <p><strong>Mô tả:</strong> ${markerData.description || 'Không có mô tả'}</p>
           <p><strong>Địa chỉ:</strong> ${markerData.address || 'Đang cập nhật...'}</p>
-          ${isAdmin ? `
-            <div class="admin-controls">
-              <button class="popup-btn edit-btn" onclick="editMarker(${markerData.id})">Sửa</button>
-              <button class="popup-btn delete-btn" onclick="deleteMarker(${markerData.id})">Xóa</button>
-            </div>
-          ` : ''}
         </div>
       `;
 
@@ -577,22 +380,6 @@
       return labels[type] || 'Khác';
     }
 
-    function setupAdminControls() {
-      const adminElements = document.querySelectorAll('.admin-only, .admin-toggle');
-      adminElements.forEach(el => {
-        el.style.display = isAdmin ? 'block' : 'none';
-      });
-    }
-
-    function toggleAdminMode() {
-      isAdmin = !isAdmin;
-      setupAdminControls();
-      loadMarkers(); // Reload to show/hide admin controls in popups
-      
-      const toggleBtn = document.getElementById('adminToggle');
-      toggleBtn.textContent = isAdmin ? '👑 Admin Mode' : '👤 User Mode';
-      toggleBtn.style.background = isAdmin ? '#28a745' : '#6c757d';
-    }
 
     function locateUser() {
       if (currentUserLocation) {
@@ -605,82 +392,6 @@
       }
     }
 
-    function enableAddMarker() {
-      if (!isAdmin) return;
-      
-      addMarkerMode = true;
-      document.getElementById('adminPanel').classList.add('show');
-      map.getContainer().style.cursor = 'crosshair';
-    }
-
-    function disableAddMarker() {
-      addMarkerMode = false;
-      document.getElementById('adminPanel').classList.remove('show');
-      map.getContainer().style.cursor = '';
-    }
-
-    function onMapClick(e) {
-      if (!addMarkerMode || !isAdmin) return;
-      
-      const lat = e.latlng.lat;
-      const lng = e.latlng.lng;
-      
-      // Get address for the clicked location
-      reverseGeocode(lat, lng).then(address => {
-        openMarkerModal(lat, lng, address);
-      });
-      
-      disableAddMarker();
-    }
-
-    function openMarkerModal(lat, lng, address = '') {
-      editingMarker = null;
-      document.getElementById('modalTitle').textContent = 'Thêm điểm mới';
-      document.getElementById('markerName').value = '';
-      document.getElementById('markerType').value = 'museum';
-      document.getElementById('markerDescription').value = '';
-      document.getElementById('markerAddress').value = address;
-      
-      // Store coordinates for later use
-      document.getElementById('markerModal').dataset.lat = lat;
-      document.getElementById('markerModal').dataset.lng = lng;
-      
-      document.getElementById('markerModal').style.display = 'block';
-    }
-
-    function closeMarkerModal() {
-      document.getElementById('markerModal').style.display = 'none';
-      editingMarker = null;
-    }
-
-    function editMarker(markerId) {
-      const marker = markers.find(m => m.id === markerId);
-      if (!marker) return;
-      
-      editingMarker = marker;
-      document.getElementById('modalTitle').textContent = 'Sửa điểm';
-      document.getElementById('markerName').value = marker.data.name;
-      document.getElementById('markerType').value = marker.data.type;
-      document.getElementById('markerDescription').value = marker.data.description || '';
-      document.getElementById('markerAddress').value = marker.data.address || '';
-      
-      document.getElementById('markerModal').style.display = 'block';
-    }
-
-    function deleteMarker(markerId) {
-      if (!confirm('Bạn có chắc muốn xóa điểm này?')) return;
-      
-      // Remove from map
-      const markerIndex = markers.findIndex(m => m.id === markerId);
-      if (markerIndex >= 0) {
-        map.removeLayer(markers[markerIndex].leafletMarker);
-        markers.splice(markerIndex, 1);
-      }
-      
-      // Here you would make API call to delete from database
-      console.log('Deleted marker:', markerId);
-      alert('Đã xóa điểm thành công!');
-    }
 
     async function reverseGeocode(lat, lng) {
       try {
@@ -712,68 +423,6 @@
         .openOn(map);
     }
 
-    // Form submission
-    document.getElementById('markerForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const name = document.getElementById('markerName').value.trim();
-      const type = document.getElementById('markerType').value;
-      const description = document.getElementById('markerDescription').value.trim();
-      const address = document.getElementById('markerAddress').value.trim();
-      
-      if (!name) {
-        alert('Vui lòng nhập tên địa điểm!');
-        return;
-      }
-      
-      if (editingMarker) {
-        // Update existing marker
-        editingMarker.data.name = name;
-        editingMarker.data.type = type;
-        editingMarker.data.description = description;
-        editingMarker.data.address = address;
-        
-        // Update marker on map
-        map.removeLayer(editingMarker.leafletMarker);
-        const markerIndex = markers.findIndex(m => m.id === editingMarker.id);
-        if (markerIndex >= 0) {
-          markers.splice(markerIndex, 1);
-        }
-        addMarkerToMap(editingMarker.data);
-        
-        console.log('Updated marker:', editingMarker.data);
-        alert('Đã cập nhật điểm thành công!');
-      } else {
-        // Add new marker
-        const modal = document.getElementById('markerModal');
-        const lat = parseFloat(modal.dataset.lat);
-        const lng = parseFloat(modal.dataset.lng);
-        
-        const newMarker = {
-          id: Date.now(), // In production, use proper ID from database
-          name: name,
-          type: type,
-          description: description,
-          address: address,
-          lat: lat,
-          lng: lng
-        };
-        
-        addMarkerToMap(newMarker);
-        console.log('Added new marker:', newMarker);
-        alert('Đã thêm điểm mới thành công!');
-      }
-      
-      closeMarkerModal();
-    });
-
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-      const modal = document.getElementById('markerModal');
-      if (event.target === modal) {
-        closeMarkerModal();
-      }
-    }
 
     // Parse URL parameters
     function getUrlParams() {
