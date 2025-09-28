@@ -160,7 +160,7 @@ function navigateToPage(page) {
       window.location.href = '/map.html';
       break;
     case 'checkin':
-      window.location.href = '/checkin.html';
+      window.location.href = '/checkin/checkin.html';
       break;
     case 'leaderboard':
       window.location.href = '/leaderboard.html';

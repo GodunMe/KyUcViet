@@ -106,36 +106,7 @@
    - Tạo check-in
    - Xem lịch sử
 
-## Tính Năng Chưa Hoàn Thành
 
-### Cần Phát Triển Thêm:
-1. **API Social Features**:
-   - Like/unlike bài đăng
-   - Comment/reply
-   - Bảng tin từ bạn bè
-
-2. **Friend Management**:
-   - Gửi/chấp nhận lời mời kết bạn
-   - Quản lý danh sách bạn bè
-
-3. **Advanced UI**:
-   - Gallery ảnh với swipe
-   - Real-time notifications
-   - Social feed
-
-## Performance & Security
-
-### Đã Tối Ưu:
-- **Database indexes** cho các truy vấn thường dùng
-- **Image compression** tự động
-- **Transaction safety** cho data integrity
-- **Input validation** và sanitization
-
-### Recommendations:
-- Caching cho nearby museums
-- Rate limiting cho API calls
-- Image CDN cho production
-- Push notifications cho social features
 
 ## Kết Luận
 

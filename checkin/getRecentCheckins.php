@@ -9,7 +9,7 @@
 header('Content-Type: application/json');
 
 // Kết nối database
-require_once 'db.php';
+require_once '../db.php';
 
 // Khởi tạo session nếu chưa có
 session_start();
