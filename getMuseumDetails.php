@@ -49,7 +49,7 @@ try {
     if ($museumResult->num_rows === 0) {
         echo json_encode([
             'success' => false,
-                            'error' => 'Không tìm thấy bảo tàng'
+            'error' => 'Không tìm thấy bảo tàng'
         ]);
         exit;
     }

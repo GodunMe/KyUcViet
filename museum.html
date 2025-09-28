@@ -52,7 +52,15 @@
     <!-- Museum Info Section -->
     <div class="museum-info-section">
       <h2>Giới thiệu</h2>
-      <p id="museumDescription">Đang tải mô tả bảo tàng...</p>
+      <div id="museumDescriptionContainer">
+        <div id="museumDescriptionContent">
+          <p>Đang tải mô tả bảo tàng...</p>
+        </div>
+        <button id="expandButton" class="expand-btn" onclick="toggleDescriptionExpansion()" style="display: none;">
+          <span id="expandText">Hiện thêm</span>
+          <span class="expand-icon">↓</span>
+        </button>
+      </div>
     </div>
 
     <!-- Museum Media Gallery -->
@@ -190,7 +198,7 @@
     }
 
     function goBack() {
-      window.history.back();
+      window.location.href = 'index.php';
     }
 
     // Load museum details
@@ -234,8 +242,8 @@
         // Update museum info
         document.getElementById('museumName').textContent = data.museum.MuseumName;
         document.getElementById('museumAddress').textContent = data.museum.Address;
-        // Format museum description with line breaks
-        document.getElementById('museumDescription').innerHTML = formatTextWithLineBreaks(data.museum.Description);
+        // Setup expandable museum description
+        setupExpandableDescription(data.museum.Description);
         
         // Update page title
         document.title = `${data.museum.MuseumName} - Vietnamese Memories`;
@@ -328,7 +336,7 @@
         artifactCard.className = 'artifact-card';
         
         // Format description to show only first 80 characters
-        const rawDescription = artifact.Description || 'Không có mô tả';
+        const rawDescription = artifact.Description;
         const shortDescription = rawDescription.length > 80 ? 
           rawDescription.substring(0, 80) + '...' : rawDescription;
         
@@ -395,8 +403,14 @@
         // Save current state before navigating
         saveCurrentState();
         
-        // Pass artifact ID and museum ID to detail page
-        window.location.href = `/artifact_detail.html?id=${artifact.ArtifactID}&museumId=${currentMuseumId}`;
+        // Check if artifact has a custom detail page
+        if (artifact.artifact_detail && artifact.artifact_detail.trim() !== '') {
+          // Use the custom HTML file path from database
+          window.location.href = artifact.artifact_detail;
+        } else {
+          // Show alert that artifact needs custom HTML file
+          alert(`Hiện vật "${artifact.ArtifactName}" chưa có trang chi tiết. Vui lòng sử dụng Text Converter để tạo file HTML cho hiện vật này.`);
+        }
       }
     }
 
@@ -415,6 +429,22 @@
     // Restore previous state when returning from artifact detail
     function restorePreviousState() {
       try {
+        // Check if coming from index page (reset scroll)
+        const urlParams = new URLSearchParams(window.location.search);
+        const fromIndex = urlParams.get('fromIndex');
+        
+        if (fromIndex === 'true') {
+          // Clear any saved states and scroll to top
+          sessionStorage.removeItem('museumPageState');
+          sessionStorage.removeItem('artifactDetailState');
+          window.scrollTo(0, 0);
+          return;
+        }
+        
+        // No need to check artifactDetailState anymore
+        // We only restore museumPageState when coming back from artifact
+        
+        // Check for normal museum page state
         const savedState = sessionStorage.getItem('museumPageState');
         if (savedState) {
           const state = JSON.parse(savedState);
@@ -446,6 +476,7 @@
         console.error('Error restoring previous state:', error);
         // If there's an error, just clear the saved state
         sessionStorage.removeItem('museumPageState');
+        sessionStorage.removeItem('artifactDetailState');
       }
     }
 
@@ -637,6 +668,19 @@
         .trim();
     }
 
+    function formatExpandableDescription(text) {
+      if (!text) return '';
+      
+      // For expandable descriptions, preserve original formatting
+      // Convert line breaks to proper HTML while maintaining paragraph structure
+      return text
+        .replace(/\r\n/g, '\n')    // Normalize Windows line breaks
+        .replace(/\r/g, '\n')      // Normalize Mac line breaks
+        .replace(/\n\n+/g, '</p><p>')  // Convert double+ line breaks to paragraphs
+        .replace(/\n/g, '<br>')    // Convert single line breaks to <br>
+        .trim();
+    }
+
     // Toggle artifact description
     function toggleDescription(index) {
       const descElement = document.getElementById(`desc-${index}`);
@@ -688,7 +732,7 @@
           window.location.href = '/map.html';
           break;
         case 'checkin':
-          window.location.href = '/checkin/checkin.html';
+          window.location.href = '/checkin.html';
           break;
         case 'leaderboard':
           window.location.href = '/leaderboard.html';
@@ -706,6 +750,147 @@
         saveCurrentState();
       }
     });
+
+    // Museum Description Expansion System
+    let descriptionChunks = [];
+    let currentChunkIndex = 0;
+    let originalDescription = '';
+
+    function setupExpandableDescription(description) {
+      originalDescription = description;
+      
+      // Count words in description
+      const wordCount = description.split(/\s+/).length;
+      console.log('Description word count:', wordCount);
+      
+      // Determine number of chunks based on word count
+      let numberOfChunks;
+      if (wordCount < 400) {
+        numberOfChunks = 1; // Show all at once
+      } else if (wordCount < 700) {
+        numberOfChunks = 2; // Split into 2 parts
+      } else if (wordCount < 1200) {
+        numberOfChunks = 3; // Split into 3 parts
+      } else {
+        numberOfChunks = 4; // Split into 4 parts
+      }
+      
+      console.log('Number of chunks:', numberOfChunks);
+      
+      // If only 1 chunk, show everything and hide button
+      if (numberOfChunks === 1) {
+        document.getElementById('museumDescriptionContent').innerHTML = 
+          `<div class="description-chunk visible">
+            <p>${formatTextWithLineBreaks(description)}</p>
+          </div>`;
+        document.getElementById('expandButton').style.display = 'none';
+        return;
+      }
+      
+      // Calculate character positions for each chunk while preserving original formatting
+      const totalChars = description.length;
+      const charsPerChunk = Math.ceil(totalChars / numberOfChunks);
+      
+      // Store character position thresholds for each chunk
+      descriptionChunks = [];
+      for (let i = 0; i < numberOfChunks; i++) {
+        const startPos = i * charsPerChunk;
+        const endPos = Math.min(startPos + charsPerChunk, totalChars);
+        
+        // Adjust end position to avoid cutting words - find next space or sentence end
+        let adjustedEndPos = endPos;
+        if (endPos < totalChars) {
+          // Look for sentence ending first
+          for (let j = endPos; j < Math.min(endPos + 100, totalChars); j++) {
+            if (description[j].match(/[.!?]/)) {
+              adjustedEndPos = j + 1;
+              break;
+            }
+          }
+          // If no sentence ending found, look for space
+          if (adjustedEndPos === endPos) {
+            for (let j = endPos; j < Math.min(endPos + 50, totalChars); j++) {
+              if (description[j] === ' ') {
+                adjustedEndPos = j;
+                break;
+              }
+            }
+          }
+        }
+        
+        descriptionChunks.push({
+          startPos: startPos,
+          endPos: adjustedEndPos
+        });
+      }
+      
+      console.log('Chunks created:', descriptionChunks.length, 'chunks');
+      
+      // Show first chunk initially
+      currentChunkIndex = 0;
+      displayDescriptionChunks();
+      
+      // Show expand button
+      const expandButton = document.getElementById('expandButton');
+      expandButton.style.display = 'inline-flex';
+    }
+
+    function displayDescriptionChunks() {
+      const container = document.getElementById('museumDescriptionContent');
+      
+      // Get the end position for current chunk
+      const currentChunk = descriptionChunks[currentChunkIndex];
+      if (!currentChunk) return;
+      
+      // Extract text from start to current chunk's end position
+      const textToShow = originalDescription.substring(0, currentChunk.endPos);
+      
+      // Format text preserving original line breaks
+      const formattedText = formatTextWithLineBreaks(textToShow);
+      
+      // Display with proper formatting
+      const finalText = `<p>${formattedText}</p>`;
+      
+      container.innerHTML = `<div class="description-chunk visible">
+        ${finalText}
+      </div>`;
+      
+      // Update button text and state
+      updateExpandButton();
+    }
+
+    function updateExpandButton() {
+      const expandButton = document.getElementById('expandButton');
+      const expandText = document.getElementById('expandText');
+      
+      if (currentChunkIndex >= descriptionChunks.length - 1) {
+        // All chunks shown - show "Ẩn bớt" button
+        expandText.textContent = 'Ẩn bớt';
+        expandButton.classList.add('collapsed');
+      } else {
+        // More chunks available - show "Hiện thêm" button  
+        expandText.textContent = 'Hiện thêm';
+        expandButton.classList.remove('collapsed');
+      }
+    }
+
+    function toggleDescriptionExpansion() {
+      if (currentChunkIndex >= descriptionChunks.length - 1) {
+        // Currently fully expanded - collapse to first chunk
+        currentChunkIndex = 0;
+        displayDescriptionChunks();
+        
+        // Smooth scroll to description
+        document.getElementById('museumDescriptionContainer').scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      } else {
+        // Expand to next chunk
+        currentChunkIndex++;
+        displayDescriptionChunks();
+      }
+    }
 
     // Initialize page
     document.addEventListener('DOMContentLoaded', function() {
@@ -796,6 +981,64 @@
         padding: 6px 12px;
         font-size: 14px;
       }
+    }
+
+    /* Museum Description Expansion Styles */
+    #museumDescriptionContainer {
+      position: relative;
+    }
+
+    #museumDescriptionContent {
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+
+    .expand-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white !important;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 15px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+    }
+
+    .expand-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+      background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    }
+
+    .expand-btn * {
+      color: white !important;
+    }
+
+    .expand-icon {
+      transition: transform 0.3s ease;
+      font-size: 12px;
+    }
+
+    .expand-btn.collapsed .expand-icon {
+      transform: rotate(180deg);
+    }
+
+    .description-chunk {
+      margin-bottom: 15px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+    }
+
+    .description-chunk.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
   </style>
 </body>

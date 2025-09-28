@@ -254,9 +254,20 @@
     }
 
     function goToLogin() {
-      // Redirect to login page
-      window.location.href = 'login.php?token=1';
-    }
+  // Kiểm tra xem có token không (có thể từ localStorage, sessionStorage, hoặc URL parameter)
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenFromUrl = urlParams.get('token');
+  const tokenFromStorage = localStorage.getItem('nfc_token') || sessionStorage.getItem('nfc_token');
+  
+  if (tokenFromUrl || tokenFromStorage) {
+    // Có token, chuyển đến trang login
+    const token = tokenFromUrl || tokenFromStorage;
+    window.location.href = `/login.php?token=${token}`;
+  } else {
+    // Không có token, chuyển đến trang thông báo NFC
+    window.location.href = '/nfc_required.html';
+  }
+}
 
     // Navigation functions
     function navigateToPage(page) {

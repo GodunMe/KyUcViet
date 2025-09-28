@@ -16,7 +16,7 @@ if ($museumId <= 0) {
 
 try {
     // Get artifacts for the museum
-    $artifactQuery = "SELECT ArtifactID, MuseumID, ArtifactName, Description, Image, MimeType FROM artifact WHERE MuseumID = ? ORDER BY ArtifactID ASC";
+    $artifactQuery = "SELECT ArtifactID, MuseumID, ArtifactName, Description, Image, MimeType, artifact_detail FROM artifact WHERE MuseumID = ? ORDER BY ArtifactID ASC";
     $artifactStmt = $conn->prepare($artifactQuery);
     $artifactStmt->bind_param("i", $museumId);
     $artifactStmt->execute();
