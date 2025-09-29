@@ -374,7 +374,7 @@ function viewMuseumDetails(event, museumId) {
     .then(data => {
       if (data.loggedIn) {
         // User is logged in - allow access to museum details
-        window.location.href = `/museum.html?id=${museumId}`;
+        window.location.href = `/museum.html?id=${museumId}&fromIndex=true`;
       } else {
         // User not logged in - show alert and redirect to login
         alert('Bạn cần đăng nhập để xem chi tiết bảo tàng!');
