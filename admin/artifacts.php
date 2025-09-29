@@ -31,12 +31,12 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['action']) && $_POST['ac
         $allowedDetail = ['text/html'];
         $mimeCheck = mime_content_type($_FILES['ArtifactDetail']['tmp_name']);
         if (in_array($mimeCheck, $allowedDetail)) {
-            $targetDir = "../uploads/artifact_detail/";
+            $targetDir = "../artifact_detail/";
             if (!is_dir($targetDir)) mkdir($targetDir,0755,true);
-            $fname = uniqid("detail_") . "_" . basename($_FILES["ArtifactDetail"]["name"]);
+            $fname = basename($_FILES["ArtifactDetail"]["name"]);
             $targetFile = $targetDir . $fname;
             if (move_uploaded_file($_FILES["ArtifactDetail"]["tmp_name"], $targetFile)) {
-                $detailPath = "uploads/artifact_detail/" . $fname;
+                $detailPath = "artifact_detail/" . $fname;
             }
         }
     }

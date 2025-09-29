@@ -12,19 +12,22 @@ require_once "../db.php";
 // helper paths
 $uploadsBaseDir = realpath(__DIR__ . "/../uploads"); // may be false if not exists
 $artifactImgDir = __DIR__ . "/../uploads/artifacts/";
-$artifactDetailDir = __DIR__ . "/../uploads/artifact_detail/";
+$artifactDetailDir = __DIR__ . "/../artifact_detail/";
 
 // ensure folders exist
 if (!is_dir($artifactImgDir)) mkdir($artifactImgDir, 0755, true);
 if (!is_dir($artifactDetailDir)) mkdir($artifactDetailDir, 0755, true);
 
-// small helper to safely delete a file only if it's in uploads folder
+// small helper to safely delete a file only if it's in uploads folder or artifact_detail
 function safe_unlink($relativePath, $uploadsBaseDir) {
     if (empty($relativePath)) return;
     $full = realpath(__DIR__ . "/../" . ltrim($relativePath, "/"));
-    if (!$full || !$uploadsBaseDir) return;
-    // ensure file is under uploads dir
-    if (strpos($full, $uploadsBaseDir) === 0 && file_exists($full)) {
+    if (!$full) return;
+
+    $uploadsDir = realpath(__DIR__ . "/../uploads");
+    $detailDir = realpath(__DIR__ . "/../artifact_detail");
+
+    if ((strpos($full, $uploadsDir) === 0 || strpos($full, $detailDir) === 0) && file_exists($full)) {
         @unlink($full);
     }
 }
@@ -51,7 +54,8 @@ function validate_and_move_image($fileField, $destDir, $maxBytes = 5 * 1024 * 10
     if ($imgInfo === false) return false;
     if (strpos($imgInfo['mime'], 'image/') !== 0) return false;
 
-    $safeName = uniqid('art_') . '.' . $ext;
+    // giữ nguyên tên gốc, thêm uniqid để tránh ghi đè
+    $safeName = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $origName);
     $dest = rtrim($destDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $safeName;
 
     if (!move_uploaded_file($f['tmp_name'], $dest)) return false;
@@ -81,12 +85,13 @@ function validate_and_move_detail($fileField, $destDir, $maxBytes = 200 * 1024) 
     if ($contents === false) return false;
     if (stripos($contents, '<?php') !== false || stripos($contents, '<?=') !== false) return false;
 
-    $safeName = uniqid('detail_') . '.' . $ext;
+    // giữ nguyên tên file gốc, lọc ký tự lạ
+    $safeName = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $origName);
     $dest = rtrim($destDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $safeName;
 
     if (!move_uploaded_file($f['tmp_name'], $dest)) return false;
     @chmod($dest, 0644);
-    $webPath = 'uploads/artifact_detail/' . $safeName;
+    $webPath = 'artifact_detail/' . $safeName;
     return ['file_path' => $webPath, 'mime' => $mime];
 }
 
@@ -122,8 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // If new image uploaded -> validate & move, then delete old if present
     $imgRes = validate_and_move_image('Image', $artifactImgDir);
     if ($imgRes !== false) {
-        // delete old image safely
-        if (!empty($artifact['Image'])) safe_unlink($artifact['Image'], realpath(__DIR__ . "/../uploads"));
+        if (!empty($artifact['Image'])) safe_unlink($artifact['Image'], $uploadsBaseDir);
         $newImagePath = $imgRes['file_path'];
         $newMimeType = $imgRes['mime'];
     }
@@ -131,9 +135,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // If new artifact_detail uploaded -> validate & move, then delete old
     $detRes = validate_and_move_detail('ArtifactDetail', $artifactDetailDir);
     if ($detRes !== false) {
-        if (!empty($artifact['artifact_detail'])) safe_unlink($artifact['artifact_detail'], realpath(__DIR__ . "/../uploads"));
+        if (!empty($artifact['artifact_detail'])) safe_unlink($artifact['artifact_detail'], $uploadsBaseDir);
         $newDetailPath = $detRes['file_path'];
-        // note: we don't store mime of detail into MimeType column; keep MimeType for image
     }
 
     // Update DB
