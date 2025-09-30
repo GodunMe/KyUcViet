@@ -13,9 +13,9 @@ if (!isset($_SESSION['UserToken'])) {
     exit;
 }
 
-// Check if user is admin (assuming admin check exists)
+// Check if user is admin based on Role
 $userToken = $_SESSION['UserToken'];
-$stmt = $conn->prepare("SELECT isAdmin FROM users WHERE UserToken = ?");
+$stmt = $conn->prepare("SELECT Role FROM users WHERE UserToken = ?");
 $stmt->bind_param("s", $userToken);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -26,9 +26,17 @@ if ($result->num_rows === 0) {
 }
 
 $user = $result->fetch_assoc();
-if (!$user['isAdmin']) {
-    echo json_encode(['success' => false, 'error' => 'Admin access required']);
+if (!isAdmin($user['Role'])) {
+    echo json_encode(['success' => false, 'error' => 'Admin access required. Current role: ' . $user['Role']]);
     exit;
+}
+
+/**
+ * Function to check if user is admin based on Role
+ */
+function isAdmin($role) {
+    $adminRoles = ['Admin', 'admin', 'ADMIN', 'Administrator', 'administrator'];
+    return in_array($role, $adminRoles);
 }
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';

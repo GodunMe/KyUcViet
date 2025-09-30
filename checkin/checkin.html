@@ -1926,12 +1926,21 @@
                 const response = await fetch('getRecentCheckins.php');
                 const data = await response.json();
                 
+                console.log('Recent checkins response:', data); // Debug log
+                
                 const container = document.getElementById('recentCheckins');
                 
                 if (data.success && data.checkins && data.checkins.length > 0) {
                     container.innerHTML = '';
                     
-                    data.checkins.forEach(checkin => {
+                    data.checkins.forEach((checkin, index) => {
+                        // Debug log for each checkin
+                        console.log(`Checkin ${index}:`, {
+                            CheckinTime: checkin.CheckinTime,
+                            FriendlyTime: checkin.FriendlyTime,
+                            calculated: formatDate(checkin.CheckinTime)
+                        });
+                        
                         const checkinItem = document.createElement('div');
                         checkinItem.className = 'checkin-item';
                         
@@ -1962,7 +1971,7 @@
                             </div>
                             <div class="checkin-info">
                                 <div class="checkin-museum">${checkin.MuseumName}</div>
-                                <div class="checkin-time">${checkin.FriendlyTime || formatDate(checkin.CheckinTime)} • ${pointsDisplay}</div>
+                                <div class="checkin-time">${formatDate(checkin.CheckinTime)} • ${pointsDisplay}</div>
                                 <div class="checkin-approval-status">${approvalStatusDisplay}</div>
                                 ${checkin.Caption ? `<div class="checkin-status">"${checkin.Caption}"</div>` : ''}
                                 ${checkin.DeniedReason ? `<div style="color: #e74c3c; font-size: 12px; margin-top: 5px;">Lý do từ chối: ${checkin.DeniedReason}</div>` : ''}
@@ -1989,16 +1998,42 @@
             const now = new Date();
             const diff = now - date;
             
+            // Debug log để kiểm tra
+            console.log('formatDate debug:', {
+                dateString: dateString,
+                parsedDate: date.toISOString(),
+                currentTime: now.toISOString(),
+                diffMs: diff
+            });
+            
             const minutes = Math.floor(diff / 60000);
             const hours = Math.floor(diff / 3600000);
             const days = Math.floor(diff / 86400000);
             
-            if (minutes < 1) return 'Vừa xong';
-            if (minutes < 60) return `${minutes} phút trước`;
-            if (hours < 24) return `${hours} giờ trước`;
-            if (days < 7) return `${days} ngày trước`;
+            console.log('Time calculations:', {
+                minutes: minutes,
+                hours: hours,
+                days: days
+            });
             
-            return date.toLocaleDateString('vi-VN');
+            if (days > 0) {
+                if (days === 1) {
+                    return 'Hôm qua lúc ' + date.toLocaleTimeString('vi-VN', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                } else if (days < 7) {
+                    return `${days} ngày trước`;
+                } else {
+                    return date.toLocaleDateString('vi-VN');
+                }
+            } else if (hours > 0) {
+                return `${hours} giờ trước`;
+            } else if (minutes > 0) {
+                return `${minutes} phút trước`;
+            } else {
+                return 'Vừa xong';
+            }
         }
 
         // View check-in detail

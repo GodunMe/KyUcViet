@@ -496,6 +496,15 @@
                 }
 
                 const result = await response.json();
+                
+                // Debug log to see what we receive
+                console.log('API Response:', result);
+                if (result.data && result.data.checkin) {
+                    console.log('Checkin time data:', {
+                        time: result.data.checkin.time,
+                        timeFormatted: result.data.checkin.timeFormatted
+                    });
+                }
 
                 if (!result.success) {
                     throw new Error(result.message || 'Không thể tải thông tin check-in');
@@ -555,7 +564,10 @@
             // Update header
             document.getElementById('museumName').textContent = data.museum.name;
             document.getElementById('museumAddress').textContent = '📍 ' + data.museum.address;
-            document.getElementById('checkinTime').textContent = '⏰ ' + data.checkin.timeFormatted;
+            
+            // Calculate time ago on client side for accuracy
+            const timeAgo = calculateTimeAgo(data.checkin.time);
+            document.getElementById('checkinTime').textContent = '⏰ ' + timeAgo;
 
             // Set museum image
             if (data.museum.image) {
@@ -706,6 +718,50 @@
                 hour: '2-digit',
                 minute: '2-digit'
             });
+        }
+
+        // Calculate time ago from timestamp (client-side for accuracy)
+        function calculateTimeAgo(timestamp) {
+            const now = new Date();
+            const checkinTime = new Date(timestamp);
+            const diffMs = now.getTime() - checkinTime.getTime();
+            
+            // Convert to minutes, hours, days
+            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            console.log('Time calculation:', {
+                now: now.toISOString(),
+                checkinTime: checkinTime.toISOString(),
+                diffMs: diffMs,
+                diffMinutes: diffMinutes,
+                diffHours: diffHours,
+                diffDays: diffDays
+            });
+            
+            if (diffDays > 0) {
+                if (diffDays === 1) {
+                    return 'Hôm qua lúc ' + checkinTime.toLocaleTimeString('vi-VN', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                } else {
+                    return checkinTime.toLocaleDateString('vi-VN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+            } else if (diffHours > 0) {
+                return diffHours + ' giờ trước';
+            } else if (diffMinutes > 0) {
+                return diffMinutes + ' phút trước';
+            } else {
+                return 'Vừa xong';
+            }
         }
 
         // Close modal on outside click

@@ -1,7 +1,7 @@
 <?php
 /**
- * API Get Check-in Detail
- * Returns detailed information about a specific check-in including photos
+ * API Get Check-in Detail for Admin
+ * Returns detailed information about any check-in for admin purposes
  */
 
 header('Content-Type: application/json');
@@ -13,9 +13,27 @@ require_once '../db.php';
 session_start();
 
 try {
-    // Check if user is logged in
+    // Check if user is logged in and is admin
     if (!isset($_SESSION['UserToken'])) {
         throw new Exception('Unauthorized: Please login first');
+    }
+
+    // Check if user is admin
+    $userToken = $_SESSION['UserToken'];
+    $stmt = $conn->prepare("SELECT Role FROM users WHERE UserToken = ?");
+    $stmt->bind_param("s", $userToken);
+    $stmt->execute();
+    $userResult = $stmt->get_result();
+    
+    if ($userResult->num_rows === 0) {
+        throw new Exception('User not found');
+    }
+    
+    $userData = $userResult->fetch_assoc();
+    $userRole = strtolower($userData['Role']);
+    
+    if (!in_array($userRole, ['admin', 'administrator'])) {
+        throw new Exception('Access denied: Admin privileges required');
     }
 
     // Get checkin ID from request
@@ -25,9 +43,7 @@ try {
         throw new Exception('Checkin ID is required');
     }
 
-    $userToken = $_SESSION['UserToken'];
-
-    // Get check-in details with museum information (Enhanced for Approval System)
+    // Get check-in details with museum and user information
     $stmt = $conn->prepare("
         SELECT 
             c.CheckinID,
@@ -43,67 +59,28 @@ try {
             c.ProcessedBy,
             c.DeniedReason,
             c.CheckinTime,
-            c.Points,  -- Keep for backward compatibility
+            c.Points,
             m.MuseumName,
             m.Address as MuseumAddress,
             m.Description as MuseumDescription,
             u.Username,
-            u.Role as UserRole
+            u.Role as UserRole,
+            u.Score as UserScore
         FROM checkins c
         JOIN museum m ON c.MuseumID = m.MuseumID
         JOIN users u ON c.UserToken = u.UserToken
-        WHERE c.CheckinID = ? AND c.UserToken = ?
+        WHERE c.CheckinID = ?
     ");
     
-    $stmt->bind_param("is", $checkinId, $userToken);
+    $stmt->bind_param("i", $checkinId);
     $stmt->execute();
     $result = $stmt->get_result();
     
     if ($result->num_rows === 0) {
-        throw new Exception('Check-in not found or access denied');
+        throw new Exception('Check-in not found');
     }
-    
+
     $checkin = $result->fetch_assoc();
-    
-    // Check if this was the first check-in of the day at this museum
-    $checkinDate = date('Y-m-d', strtotime($checkin['CheckinTime']));
-    $museumId = intval($checkin['MuseumID']);  // Ensure MuseumID is integer
-    
-    // Count ALL check-ins at THIS SPECIFIC MUSEUM on the same date
-    $stmt = $conn->prepare("
-        SELECT COUNT(*) as total_checkins_today
-        FROM checkins 
-        WHERE UserToken = ? 
-        AND MuseumID = ? 
-        AND DATE(CheckinTime) = ?
-    ");
-    
-    $stmt->bind_param("sis", $userToken, $museumId, $checkinDate);
-    $stmt->execute();
-    $countResult = $stmt->get_result();
-    $countData = $countResult->fetch_assoc();
-    
-    // Find the order of this specific check-in within the day AT THIS MUSEUM
-    $stmt = $conn->prepare("
-        SELECT COUNT(*) as checkins_before_this
-        FROM checkins 
-        WHERE UserToken = ? 
-        AND MuseumID = ? 
-        AND DATE(CheckinTime) = ?
-        AND CheckinTime < ?
-    ");
-    
-    $stmt->bind_param("siss", $userToken, $museumId, $checkinDate, $checkin['CheckinTime']);
-    $stmt->execute();
-    $orderResult = $stmt->get_result();
-    $orderData = $orderResult->fetch_assoc();
-    
-    // This is first check-in if there are no check-ins before it on the same day AT THIS MUSEUM
-    $isFirstCheckinToday = ($orderData['checkins_before_this'] == 0);
-    $pointsEarned = $isFirstCheckinToday ? intval($checkin['Points']) : 0;
-    
-    // Enhanced debug log
-    error_log("Debug Checkin Detail: CheckinID={$checkinId}, UserToken={$userToken}, MuseumID={$museumId}, Date={$checkinDate}, TotalTodayAtThisMuseum={$countData['total_checkins_today']}, CheckinsBeforeThisAtThisMuseum={$orderData['checkins_before_this']}, IsFirstAtThisMuseumToday={$isFirstCheckinToday}, PointsInDB={$checkin['Points']}, PointsEarned={$pointsEarned}");
     
     // Get photos for this check-in
     $stmt = $conn->prepare("
@@ -171,13 +148,14 @@ try {
             break;
     }
 
-    // Format the response (Enhanced for Approval System)
+    // Format the response for admin
     $checkinDetail = [
         'id' => $checkin['CheckinID'],
         'user' => [
             'token' => $checkin['UserToken'],
             'name' => $checkin['Username'],
-            'role' => $checkin['UserRole']
+            'role' => $checkin['UserRole'],
+            'score' => intval($checkin['UserScore'])
         ],
         'museum' => [
             'id' => $checkin['MuseumID'],
@@ -192,7 +170,7 @@ try {
         ],
         'checkin' => [
             'time' => $checkin['CheckinTime'],
-            'caption' => $checkin['Caption'],  // Đổi từ status
+            'caption' => $checkin['Caption'],
             'approvalStatus' => $checkin['ApprovalStatus'],
             'approvalStatusText' => $approvalStatusText,
             'statusClass' => $statusClass,
@@ -201,9 +179,7 @@ try {
             'processedAt' => $checkin['ProcessedAt'],
             'processedBy' => $checkin['ProcessedBy'],
             'deniedReason' => $checkin['DeniedReason'],
-            'points' => intval($checkin['Points']), // Backward compatibility
-            'pointsEarned' => $pointsEarned,
-            'isFirstCheckinToday' => $isFirstCheckinToday,
+            'points' => intval($checkin['Points']),
             'timeFormatted' => formatTime($checkin['CheckinTime'])
         ],
         'photos' => $photos,
@@ -243,11 +219,6 @@ function formatTime($timestamp) {
     $now = new DateTime();
     $checkinTime = new DateTime($timestamp);
     $diff = $now->diff($checkinTime);
-    
-    // Debug log
-    error_log("Debug formatTime: Now=" . $now->format('Y-m-d H:i:s') . 
-              ", CheckinTime=" . $checkinTime->format('Y-m-d H:i:s') . 
-              ", Diff(days=" . $diff->days . ", hours=" . $diff->h . ", minutes=" . $diff->i . ")");
     
     if ($diff->days > 0) {
         if ($diff->days == 1) {

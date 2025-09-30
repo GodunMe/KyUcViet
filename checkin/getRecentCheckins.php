@@ -96,9 +96,13 @@ while ($row = $result->fetch_assoc()) {
     }
     
     // Định dạng thời gian check-in để hiển thị thân thiện
+    date_default_timezone_set('Asia/Ho_Chi_Minh');
     $checkInTime = new DateTime($row['CheckinTime']);
     $now = new DateTime();
     $interval = $now->diff($checkInTime);
+    
+    // Debug log
+    error_log("Time calculation: CheckinTime={$row['CheckinTime']}, Now=" . $now->format('Y-m-d H:i:s') . ", Diff(days={$interval->days}, hours={$interval->h}, minutes={$interval->i})");
     
     if ($interval->days == 0) {
         if ($interval->h == 0) {
