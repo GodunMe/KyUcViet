@@ -60,22 +60,43 @@ try {
     
     // Check if this was the first check-in of the day at this museum
     $checkinDate = date('Y-m-d', strtotime($checkin['CheckinTime']));
+    $museumId = intval($checkin['MuseumID']);  // Ensure MuseumID is integer
+    
+    // Count ALL check-ins at THIS SPECIFIC MUSEUM on the same date
     $stmt = $conn->prepare("
-        SELECT COUNT(*) as checkin_count
+        SELECT COUNT(*) as total_checkins_today
         FROM checkins 
         WHERE UserToken = ? 
         AND MuseumID = ? 
-        AND DATE(CheckinTime) = ? 
-        AND CheckinTime < ?
+        AND DATE(CheckinTime) = ?
     ");
     
-    $stmt->bind_param("siss", $userToken, $checkin['MuseumID'], $checkinDate, $checkin['CheckinTime']);
+    $stmt->bind_param("sis", $userToken, $museumId, $checkinDate);
     $stmt->execute();
     $countResult = $stmt->get_result();
     $countData = $countResult->fetch_assoc();
     
-    $isFirstCheckinToday = ($countData['checkin_count'] == 0);
+    // Find the order of this specific check-in within the day AT THIS MUSEUM
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) as checkins_before_this
+        FROM checkins 
+        WHERE UserToken = ? 
+        AND MuseumID = ? 
+        AND DATE(CheckinTime) = ?
+        AND CheckinTime < ?
+    ");
+    
+    $stmt->bind_param("siss", $userToken, $museumId, $checkinDate, $checkin['CheckinTime']);
+    $stmt->execute();
+    $orderResult = $stmt->get_result();
+    $orderData = $orderResult->fetch_assoc();
+    
+    // This is first check-in if there are no check-ins before it on the same day AT THIS MUSEUM
+    $isFirstCheckinToday = ($orderData['checkins_before_this'] == 0);
     $pointsEarned = $isFirstCheckinToday ? intval($checkin['Points']) : 0;
+    
+    // Enhanced debug log
+    error_log("Debug Checkin Detail: CheckinID={$checkinId}, UserToken={$userToken}, MuseumID={$museumId}, Date={$checkinDate}, TotalTodayAtThisMuseum={$countData['total_checkins_today']}, CheckinsBeforeThisAtThisMuseum={$orderData['checkins_before_this']}, IsFirstAtThisMuseumToday={$isFirstCheckinToday}, PointsInDB={$checkin['Points']}, PointsEarned={$pointsEarned}");
     
     // Get photos for this check-in
     $stmt = $conn->prepare("
