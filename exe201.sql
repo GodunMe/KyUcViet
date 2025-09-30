@@ -24,11 +24,61 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `option`
+-- Drop tables in correct order (child tables first, then parent tables)
 --
 
 DROP TABLE IF EXISTS `option`;
-CREATE TABLE `option` (
+DROP TABLE IF EXISTS `question`;
+DROP TABLE IF EXISTS `quiz`;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `quiz`
+--
+
+CREATE TABLE `quiz` (
+  `QuizID` int(11) NOT NULL,
+  `MuseumID` int(11) DEFAULT NULL,
+  `Explaination` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `quiz`
+--
+
+INSERT INTO `quiz` (`QuizID`, `MuseumID`, `Explaination`) VALUES
+(1, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
+(2, 3, 'Quiz kiểm tra kiến thức lịch sử bảo tàng'),
+(3, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
+(4, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
+(5, 3, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(6, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
+(7, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
+(8, 3, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(9, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
+(10, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(11, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(12, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(13, 4, 'Quiz kiểm tra kiến thức lịch sử'),
+(14, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(15, 4, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng'),
+(16, 4, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng'),
+(17, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(18, 5, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(19, 5, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(20, 5, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng'),
+(21, 5, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(22, 5, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(23, 5, 'Quiz kiểm tra kiến thức về bảo tàng');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `question`
+--
+
+CREATE TABLE `question` (
   `OptionID` int(11) NOT NULL,
   `QuestionID` int(11) DEFAULT NULL,
   `TEXT` varchar(255) NOT NULL,
@@ -139,7 +189,6 @@ INSERT INTO `option` (`OptionID`, `QuestionID`, `TEXT`, `isCorrect`) VALUES
 -- Table structure for table `question`
 --
 
-DROP TABLE IF EXISTS `question`;
 CREATE TABLE `question` (
   `QuestionID` int(11) NOT NULL,
   `QuizID` int(11) DEFAULT NULL,
@@ -173,7 +222,120 @@ INSERT INTO `question` (`QuestionID`, `QuizID`, `QuestionText`) VALUES
 (20, 20, 'Khu trưng bày ngoài trời của bảo tàng nổi bật với gì?'),
 (21, 21, 'Ai là người hỗ trợ thiết kế chính của bảo tàng?'),
 (22, 22, 'Ngoài trưng bày thường xuyên, bảo tàng còn tổ chức gì?'),
-(23, 23, 'Bảo tàng được coi là “ngôi nhà chung” của?');
+(23, 23, '(23, 23, 'Bảo tàng được coi là "ngôi nhà chung" của?');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `option`
+--
+
+CREATE TABLE `option` (
+  `OptionID` int(11) NOT NULL,
+  `QuestionID` int(11) DEFAULT NULL,
+  `TEXT` varchar(255) NOT NULL,
+  `isCorrect` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `option`
+--
+
+INSERT INTO `option` (`OptionID`, `QuestionID`, `TEXT`, `isCorrect`) VALUES
+(1, 1, 'Bảo tàng Cờ đỏ sao vàng', 0),
+(2, 1, 'Bảo tàng Quân sự', 1),
+(3, 1, 'Bảo tàng Quân đội', 0),
+(4, 1, 'Bảo tàng Hồ Gươm', 0),
+(5, 2, '1945', 0),
+(6, 2, '1956', 1),
+(7, 2, '1960', 0),
+(8, 2, '1975', 0),
+(9, 3, 'Tháp Bút', 0),
+(10, 3, 'Cột cờ Hà Nội', 1),
+(11, 3, 'Tháp Rùa', 0),
+(12, 3, 'Tháp Hòa Phong', 0),
+(13, 4, 'MIG-21', 1),
+(14, 4, 'MIG-17', 0),
+(15, 4, 'SU-22', 0),
+(16, 4, 'F-5', 0),
+(17, 5, 'Điện Biên Phủ', 1),
+(18, 5, 'Tràng Tiền', 0),
+(19, 5, 'Lê Duẩn', 0),
+(20, 5, 'Hoàng Diệu', 0),
+(21, 6, 'T-34', 0),
+(22, 6, 'T-54B', 1),
+(23, 6, 'T-90', 0),
+(24, 6, 'PT-76', 0),
+(25, 7, 'Chiến dịch Biên giới 1950', 0),
+(26, 7, 'Chiến dịch Điện Biên Phủ 1954', 1),
+(27, 7, 'Chiến dịch Hồ Chí Minh', 0),
+(28, 7, 'Chiến dịch Tây Nguyên', 0),
+(29, 8, '10', 0),
+(30, 8, '12', 1),
+(31, 8, '15', 0),
+(32, 8, '20', 0),
+(33, 9, 'Nghệ thuật quân sự Việt Nam qua các thời kỳ', 1),
+(34, 9, 'Văn hóa ẩm thực quân đội', 0),
+(35, 9, 'Đồng phục quân đội các nước', 0),
+(36, 9, 'Lịch sử hàng hải', 0),
+(37, 10, '2/9/1990', 1),
+(38, 10, '19/5/1985', 0),
+(39, 10, '30/4/1975', 0),
+(40, 10, '2/9/1945', 0),
+(41, 11, 'Quận Hoàn Kiếm', 0),
+(42, 11, 'Quận Ba Đình', 1),
+(43, 11, 'Quận Hai Bà Trưng', 0),
+(44, 11, 'Quận Tây Hồ', 0),
+(45, 12, 'Hoa sen', 1),
+(46, 12, 'Hoa đào', 0),
+(47, 12, 'Hoa mai', 0),
+(48, 12, 'Hoa cúc', 0),
+(49, 13, 'Nguyễn Văn Linh', 1),
+(50, 13, 'Đỗ Mười', 0),
+(51, 13, 'Trường Chinh', 0),
+(52, 13, 'Lê Khả Phiêu', 0),
+(53, 14, '110 năm', 0),
+(54, 14, '120 năm', 0),
+(55, 14, '90 năm', 0),
+(56, 14, '100 năm', 1),
+(57, 15, 'Chiến thắng Điện Biên Phủ', 0),
+(58, 15, 'Lịch sử Thăng Long – Hà Nội', 0),
+(59, 15, 'Cuộc đời và sự nghiệp của Chủ tịch Hồ Chí Minh', 1),
+(60, 15, 'Văn hóa Việt Nam', 0),
+(61, 16, 'Game 3D', 0),
+(62, 16, 'Âm nhạc hiện đại', 0),
+(63, 16, 'Mô hình, phim tư liệu', 1),
+(64, 16, 'Trò chơi thực tế ảo', 0),
+(65, 17, 'Liên Xô (Nga)', 1),
+(66, 17, 'Pháp', 0),
+(67, 17, 'Trung Quốc', 0),
+(68, 17, 'Cuba', 0),
+(69, 18, '2005', 0),
+(70, 18, '2000', 0),
+(71, 18, '1997', 1),
+(72, 18, '1995', 0),
+(73, 19, '45', 0),
+(74, 19, '54', 1),
+(75, 19, '63', 0),
+(76, 19, '70', 0),
+(77, 20, 'Hang động', 0),
+(78, 20, 'Hồ nước', 0),
+(79, 20, 'Làng cổ', 0),
+(80, 20, 'Nhà sàn, nhà dài, nhà rông', 1),
+(81, 21, 'KTS Nguyễn Cao Luyện', 0),
+(82, 21, 'KTS Hà Đức Lịnh', 0),
+(83, 21, 'KTS Tạ Mỹ Duật', 0),
+(84, 21, 'KTS người Pháp – Veronique Dollfus', 1),
+(85, 22, 'Hội chợ thương mại', 0),
+(86, 22, 'Triển lãm công nghệ', 0),
+(87, 22, 'Trình diễn nghệ thuật dân gian', 1),
+(88, 22, 'Các hội thảo quốc tế', 0),
+(89, 23, 'Du khách quốc tế', 0),
+(90, 23, 'Sinh viên', 0),
+(91, 23, 'Các dân tộc Việt Nam', 1),
+(92, 23, 'Các nhà khoa học', 0);
+
+-- --------------------------------------------------------');
 
 -- --------------------------------------------------------
 
