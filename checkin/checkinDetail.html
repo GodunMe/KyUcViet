@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết Check-in - Vietnamese Memories</title>
+    <link rel="icon" type="image/png" href="/logo.PNG">
+    <link rel="stylesheet" href="../style.css">
+    
+    <style>
+        /* Check-in Detail Styles */
+        body {
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            font-family:                if (!result.success) {
+                    throw new Error(result.message || 'Failed to load check-in detail');
+                }
+
+                checkinData = result.data;
+                console.log('Check-in data loaded:', checkinData); // Debug log
+                displayCheckinDetail(checkinData);e-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .container {
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* Header with museum image */
+        .checkin-header {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+
+        .museum-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.8;
+        }
+
+        .checkin-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            color: white;
+            padding: 20px;
+        }
+
+        .checkin-overlay h2 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .checkin-overlay p {
+            margin: 2px 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .back-button:hover {
+            background: rgba(0,0,0,0.7);
+        }
+
+        /* Content sections */
+        .content-section {
+            background: white;
+            margin: 16px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-content {
+            padding: 16px;
+        }
+
+        /* Info rows */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #333;
+            font-size: 14px;
+            text-align: right;
+            flex: 1;
+            margin-left: 16px;
+        }
+
+        .points-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .points-badge.no-points {
+            background: #9E9E9E;
+            color: white;
+        }
+
+        .points-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .points-note {
+            font-size: 10px;
+            color: #666;
+            margin-top: 2px;
+            font-style: italic;
+        }
+
+        /* Status section */
+        .status-content {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            font-style: italic;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .status-content::before {
+            content: '"';
+            font-size: 20px;
+            color: #4CAF50;
+        }
+
+        .status-content::after {
+            content: '"';
+            font-size: 20px;
+            color: #4CAF50;
+        }
+
+        /* Photo gallery */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .photo-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .photo-item:hover {
+            transform: scale(1.02);
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-counter {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        /* Actions */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .primary-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background: #45a049;
+        }
+
+        .secondary-btn {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .secondary-btn:hover {
+            background: #e0e0e0;
+        }
+
+        /* Photo modal */
+        .photo-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .photo-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .modal-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            font-size: 24px;
+            padding: 16px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .modal-prev {
+            left: -60px;
+        }
+
+        .modal-next {
+            right: -60px;
+        }
+
+        .modal-nav:hover {
+            background: rgba(0,0,0,0.8);
+        }
+
+        /* Loading states */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #f0f0f0;
+            border-top: 2px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #f44336;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .modal-nav {
+                display: none;
+            }
+            
+            .photo-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header with museum image -->
+        <div class="checkin-header" id="checkinHeader">
+            <button class="back-button" onclick="goBack()">← Quay lại</button>
+            <img id="museumImage" class="museum-bg" src="/logo.PNG" alt="Museum">
+            <div class="checkin-overlay">
+                <h2 id="museumName">Loading...</h2>
+                <p id="museumAddress">📍 Loading...</p>
+                <p id="checkinTime">⏰ Loading...</p>
+            </div>
+        </div>
+
+        <!-- Loading state -->
+        <div id="loadingState" class="loading">
+            <div class="loading-spinner"></div>
+            <span>Đang tải chi tiết check-in...</span>
+        </div>
+
+        <!-- Error state -->
+        <div id="errorState" class="error-message" style="display: none;">
+            <p>❌ Không thể tải thông tin check-in</p>
+            <button class="action-btn secondary-btn" onclick="loadCheckinDetail()">Thử lại</button>
+        </div>
+
+        <!-- Check-in info section -->
+        <div class="content-section" id="checkinInfo" style="display: none;">
+            <div class="section-header">
+                📊 Thông tin check-in
+            </div>
+            <div class="section-content">
+                <div class="info-row">
+                    <span class="info-label">Thời gian</span>
+                    <span class="info-value" id="checkinDateTime">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Vị trí</span>
+                    <span class="info-value" id="checkinLocation">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Điểm nhận</span>
+                    <span class="info-value">
+                        <div class="points-info">
+                            <span class="points-badge" id="checkinPoints">0đ</span>
+                            <span class="points-note" id="pointsNote" style="display: none;"></span>
+                        </div>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status section -->
+        <div class="content-section" id="statusSection" style="display: none;">
+            <div class="section-header">
+                💭 Cảm xúc
+            </div>
+            <div class="section-content">
+                <div class="status-content" id="statusContent">
+                    Loading...
+                </div>
+            </div>
+        </div>
+
+        <!-- Photos section -->
+        <div class="content-section" id="photosSection" style="display: none;">
+            <div class="section-header">
+                📷 Ảnh check-in (<span id="photoCount">0</span> ảnh)
+            </div>
+            <div class="section-content">
+                <div class="photo-grid" id="photoGrid">
+                    <!-- Photos will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions section -->
+        <div class="content-section" id="actionsSection" style="display: none;">
+            <div class="section-content">
+                <div class="action-buttons">
+                    <button class="action-btn primary-btn" onclick="viewMuseumDetail()">
+                        🏛️ Xem bảo tàng
+                    </button>
+                    <button class="action-btn secondary-btn" onclick="shareCheckin()">
+                        📤 Chia sẻ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo modal -->
+    <div class="photo-modal" id="photoModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closePhotoModal()">×</button>
+            <button class="modal-nav modal-prev" onclick="prevPhoto()">‹</button>
+            <img class="modal-image" id="modalImage" src="" alt="Photo">
+            <button class="modal-nav modal-next" onclick="nextPhoto()">›</button>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let checkinData = null;
+        let currentPhotoIndex = 0;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCheckinDetail();
+        });
+
+        // Load check-in detail from URL parameter
+        async function loadCheckinDetail() {
+            try {
+                // Show loading state
+                showLoadingState();
+
+                // Get checkin ID from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const checkinId = urlParams.get('id');
+
+                if (!checkinId) {
+                    throw new Error('Không tìm thấy ID check-in');
+                }
+
+                // Fetch check-in detail
+                const response = await fetch(`getCheckinDetail.php?id=${checkinId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.message || 'Không thể tải thông tin check-in');
+                }
+
+                checkinData = result.data;
+                console.log('Check-in data loaded:', checkinData); // Debug log
+                displayCheckinDetail(checkinData);
+
+            } catch (error) {
+                console.error('Error loading check-in detail:', error);
+                showError(error.message);
+            }
+        }
+
+        // Update points display based on earning status
+        function updatePointsDisplay(checkinData) {
+            const pointsBadge = document.getElementById('checkinPoints');
+            const pointsNote = document.getElementById('pointsNote');
+            
+            console.log('Updating points display:', {
+                isFirstCheckinToday: checkinData.isFirstCheckinToday,
+                pointsEarned: checkinData.pointsEarned,
+                totalPoints: checkinData.points
+            });
+            
+            if (checkinData.isFirstCheckinToday && checkinData.pointsEarned > 0) {
+                // First check-in of the day - points earned
+                pointsBadge.textContent = '+' + checkinData.pointsEarned + 'đ';
+                pointsBadge.className = 'points-badge';
+                pointsNote.textContent = 'Lần đầu check-in hôm nay!';
+                pointsNote.style.display = 'block';
+            } else if (!checkinData.isFirstCheckinToday) {
+                // Not first check-in of the day - no points
+                pointsBadge.textContent = '0đ';
+                pointsBadge.className = 'points-badge no-points';
+                pointsNote.textContent = 'Đã check-in tại đây hôm nay';
+                pointsNote.style.display = 'block';
+            } else {
+                // Fallback case - show base points
+                pointsBadge.textContent = checkinData.points + 'đ';
+                pointsBadge.className = 'points-badge';
+                pointsNote.style.display = 'none';
+            }
+        }
+
+        // Display check-in detail
+        function displayCheckinDetail(data) {
+            // Hide loading, show content
+            hideLoadingState();
+
+            // Update header
+            document.getElementById('museumName').textContent = data.museum.name;
+            document.getElementById('museumAddress').textContent = '📍 ' + data.museum.address;
+            document.getElementById('checkinTime').textContent = '⏰ ' + data.checkin.timeFormatted;
+
+            // Set museum image
+            if (data.museum.image) {
+                document.getElementById('museumImage').src = data.museum.image;
+            }
+
+            // Update check-in info
+            document.getElementById('checkinDateTime').textContent = formatDateTime(data.checkin.time);
+            document.getElementById('checkinLocation').textContent = 
+                `${data.location.latitude.toFixed(6)}, ${data.location.longitude.toFixed(6)}`;
+            
+            // Update points display based on whether points were actually earned
+            updatePointsDisplay(data.checkin);
+
+            // Update status section
+            if (data.checkin.status && data.checkin.status.trim()) {
+                document.getElementById('statusContent').textContent = data.checkin.status;
+                document.getElementById('statusSection').style.display = 'block';
+            }
+
+            // Update photos section
+            if (data.photos && data.photos.length > 0) {
+                document.getElementById('photoCount').textContent = data.photos.length;
+                displayPhotos(data.photos);
+                document.getElementById('photosSection').style.display = 'block';
+            }
+
+            // Show all sections
+            document.getElementById('checkinInfo').style.display = 'block';
+            document.getElementById('actionsSection').style.display = 'block';
+        }
+
+        // Display photos in grid
+        function displayPhotos(photos) {
+            const photoGrid = document.getElementById('photoGrid');
+            photoGrid.innerHTML = '';
+
+            photos.forEach((photo, index) => {
+                const photoItem = document.createElement('div');
+                photoItem.className = 'photo-item';
+                photoItem.onclick = () => openPhotoModal(index);
+
+                photoItem.innerHTML = `
+                    <img src="${photo.path}" alt="Check-in photo ${index + 1}">
+                    ${index === 0 ? '<div class="photo-counter">1/' + photos.length + '</div>' : ''}
+                `;
+
+                photoGrid.appendChild(photoItem);
+            });
+        }
+
+        // Photo modal functions
+        function openPhotoModal(index) {
+            if (!checkinData || !checkinData.photos) return;
+
+            currentPhotoIndex = index;
+            updateModalImage();
+            document.getElementById('photoModal').classList.add('active');
+        }
+
+        function closePhotoModal() {
+            document.getElementById('photoModal').classList.remove('active');
+        }
+
+        function prevPhoto() {
+            if (!checkinData || !checkinData.photos) return;
+            currentPhotoIndex = (currentPhotoIndex - 1 + checkinData.photos.length) % checkinData.photos.length;
+            updateModalImage();
+        }
+
+        function nextPhoto() {
+            if (!checkinData || !checkinData.photos) return;
+            currentPhotoIndex = (currentPhotoIndex + 1) % checkinData.photos.length;
+            updateModalImage();
+        }
+
+        function updateModalImage() {
+            if (!checkinData || !checkinData.photos[currentPhotoIndex]) return;
+            document.getElementById('modalImage').src = checkinData.photos[currentPhotoIndex].path;
+        }
+
+        // Action functions
+        function viewMuseumDetail() {
+            if (checkinData && checkinData.museum) {
+                window.location.href = `/museum.html?id=${checkinData.museum.id}`;
+            }
+        }
+
+        function shareCheckin() {
+            if (checkinData) {
+                const shareText = `Tôi đã check-in tại ${checkinData.museum.name}! 🏛️`;
+                const shareUrl = window.location.href;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Check-in tại ' + checkinData.museum.name,
+                        text: shareText,
+                        url: shareUrl
+                    });
+                } else {
+                    // Fallback: copy to clipboard
+                    navigator.clipboard.writeText(shareText + ' ' + shareUrl);
+                    alert('Đã copy link chia sẻ!');
+                }
+            }
+        }
+
+        function goBack() {
+            // Go back to previous page or check-in page
+            if (document.referrer && document.referrer.includes('checkin.html')) {
+                window.history.back();
+            } else {
+                window.location.href = '/checkin/checkin.html';
+            }
+        }
+
+        // Utility functions
+        function showLoadingState() {
+            document.getElementById('loadingState').style.display = 'flex';
+            document.getElementById('errorState').style.display = 'none';
+            hideAllSections();
+        }
+
+        function hideLoadingState() {
+            document.getElementById('loadingState').style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            document.getElementById('errorState').querySelector('p').textContent = '❌ ' + message;
+            hideAllSections();
+        }
+
+        function hideAllSections() {
+            document.getElementById('checkinInfo').style.display = 'none';
+            document.getElementById('statusSection').style.display = 'none';
+            document.getElementById('photosSection').style.display = 'none';
+            document.getElementById('actionsSection').style.display = 'none';
+        }
+
+        function formatDateTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('vi-VN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Close modal on outside click
+        document.getElementById('photoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePhotoModal();
+            }
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('photoModal').classList.contains('active')) {
+                if (e.key === 'Escape') {
+                    closePhotoModal();
+                } else if (e.key === 'ArrowLeft') {
+                    prevPhoto();
+                } else if (e.key === 'ArrowRight') {
+                    nextPhoto();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 <?php
 /**
  * API check-in với upload ảnh
+ * Updated to work with new photo upload system
  */
 header('Content-Type: application/json');
 require_once '../db.php';
@@ -16,15 +17,18 @@ if (!isset($_SESSION['UserToken'])) {
 $museumId = isset($_POST['museumId']) ? intval($_POST['museumId']) : 0;
 $latitude = isset($_POST['latitude']) ? floatval($_POST['latitude']) : 0;
 $longitude = isset($_POST['longitude']) ? floatval($_POST['longitude']) : 0;
+$status = isset($_POST['status']) ? trim($_POST['status']) : '';
 
 if (!$museumId || !$latitude || !$longitude) {
     echo json_encode(['success' => false, 'error' => 'Thiếu thông tin check-in']);
     exit;
 }
 
-// Kiểm tra có ảnh không
-if (!isset($_FILES['photos']) || empty($_FILES['photos']['name'][0])) {
-    echo json_encode(['success' => false, 'error' => 'Cần ít nhất 1 ảnh để check-in']);
+// Lấy thông tin photo paths từ session hoặc POST (được set từ upload API)
+$photoPaths = isset($_POST['photoPaths']) ? json_decode($_POST['photoPaths'], true) : [];
+
+if (empty($photoPaths)) {
+    echo json_encode(['success' => false, 'error' => 'Cần upload ảnh trước khi check-in']);
     exit;
 }
 
@@ -44,37 +48,29 @@ try {
     
     $museum = $result->fetch_assoc();
     
-    // Lưu check-in đơn giản
-    $stmt = $conn->prepare("INSERT INTO checkins (UserToken, MuseumID, Latitude, Longitude, CheckinTime) VALUES (?, ?, ?, ?, NOW())");
-    $stmt->bind_param("sidd", $userToken, $museumId, $latitude, $longitude);
+    // Lưu check-in với status
+    $stmt = $conn->prepare("INSERT INTO checkins (UserToken, MuseumID, Latitude, Longitude, Status, CheckinTime) VALUES (?, ?, ?, ?, ?, NOW())");
+    $stmt->bind_param("sidds", $userToken, $museumId, $latitude, $longitude, $status);
     
     if ($stmt->execute()) {
         $checkinId = $conn->insert_id;
         
-        // Upload và lưu ảnh
+        // Lưu thông tin ảnh vào database từ photoPaths đã upload
         $uploadedPhotos = [];
-        $uploadDir = '../uploads/checkins/';
         
-        // Tạo folder nếu chưa có
-        if (!file_exists($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-        
-        foreach ($_FILES['photos']['tmp_name'] as $index => $tmpName) {
-            if (is_uploaded_file($tmpName)) {
-                $originalName = $_FILES['photos']['name'][$index];
-                $extension = pathinfo($originalName, PATHINFO_EXTENSION);
-                $newFileName = $userToken . '_' . time() . '_' . uniqid() . '.' . $extension;
-                $uploadPath = $uploadDir . $newFileName;
-                
-                if (move_uploaded_file($tmpName, $uploadPath)) {
-                    $uploadedPhotos[] = 'uploads/checkins/' . $newFileName;
-                    
-                    // Lưu thông tin ảnh vào database (nếu có bảng checkin_photos)
-                    // $stmt = $conn->prepare("INSERT INTO checkin_photos (CheckinID, PhotoPath) VALUES (?, ?)");
-                    // $stmt->bind_param("is", $checkinId, $uploadPath);
-                    // $stmt->execute();
-                }
+        foreach ($photoPaths as $index => $photoData) {
+            $photoPath = $photoData['path'];
+            $uploadOrder = $index + 1;
+            $caption = isset($photoData['caption']) ? $photoData['caption'] : '';
+            
+            // Insert vào bảng checkin_photos  
+            $stmt = $conn->prepare("INSERT INTO checkin_photos (CheckinID, PhotoPath, Caption, UploadOrder) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("issi", $checkinId, $photoPath, $caption, $uploadOrder);
+            
+            if ($stmt->execute()) {
+                $uploadedPhotos[] = $photoPath;
+            } else {
+                error_log("Failed to save photo to database: " . $conn->error);
             }
         }
         
