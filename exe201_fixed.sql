@@ -24,10 +24,24 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Drop tables in correct order (child tables first, then parent tables)
+--
+
+DROP TABLE IF EXISTS `useranswer`;
+DROP TABLE IF EXISTS `artifact`;
+DROP TABLE IF EXISTS `museum_media`;
+DROP TABLE IF EXISTS `option`;
+DROP TABLE IF EXISTS `question`;
+DROP TABLE IF EXISTS `quiz`;
+DROP TABLE IF EXISTS `museum`;
+DROP TABLE IF EXISTS `users`;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
-DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `UserToken` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `Username` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -57,7 +71,6 @@ INSERT INTO `users` (`UserToken`, `Username`, `userNumber`, `PASSWORD`, `Role`, 
 -- Table structure for table `museum`
 --
 
-DROP TABLE IF EXISTS `museum`;
 CREATE TABLE `museum` (
   `MuseumID` int NOT NULL,
   `MuseumName` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -84,7 +97,6 @@ INSERT INTO `museum` (`MuseumID`, `MuseumName`, `Address`, `Description`, `Latit
 -- Table structure for table `quiz`
 --
 
-DROP TABLE IF EXISTS `quiz`;
 CREATE TABLE `quiz` (
   `QuizID` int NOT NULL,
   `MuseumID` int DEFAULT NULL,
@@ -97,7 +109,6 @@ CREATE TABLE `quiz` (
 -- Table structure for table `question`
 --
 
-DROP TABLE IF EXISTS `question`;
 CREATE TABLE `question` (
   `QuestionID` int NOT NULL,
   `QuizID` int DEFAULT NULL,
@@ -110,7 +121,6 @@ CREATE TABLE `question` (
 -- Table structure for table `option`
 --
 
-DROP TABLE IF EXISTS `option`;
 CREATE TABLE `option` (
   `OptionID` int NOT NULL,
   `QuestionID` int DEFAULT NULL,
@@ -124,7 +134,6 @@ CREATE TABLE `option` (
 -- Table structure for table `artifact`
 --
 
-DROP TABLE IF EXISTS `artifact`;
 CREATE TABLE `artifact` (
   `ArtifactID` int NOT NULL,
   `MuseumID` int DEFAULT NULL,
@@ -166,7 +175,6 @@ INSERT INTO `artifact` (`ArtifactID`, `MuseumID`, `ArtifactName`, `Description`,
 -- Table structure for table `museum_media`
 --
 
-DROP TABLE IF EXISTS `museum_media`;
 CREATE TABLE `museum_media` (
   `id` int NOT NULL,
   `MuseumId` int NOT NULL,
@@ -211,7 +219,6 @@ INSERT INTO `museum_media` (`id`, `MuseumId`, `file_name`, `mime_type`, `file_pa
 -- Table structure for table `useranswer`
 --
 
-DROP TABLE IF EXISTS `useranswer`;
 CREATE TABLE `useranswer` (
   `UserAnswerID` int NOT NULL,
   `QuizID` int DEFAULT NULL,
