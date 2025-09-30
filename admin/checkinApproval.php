@@ -47,6 +47,10 @@ try {
             getPendingCheckins($conn);
             break;
             
+        case 'getCheckins':
+            getCheckinsByStatus($conn);
+            break;
+            
         case 'approve':
             approveCheckin($conn, $userToken);
             break;
@@ -139,6 +143,132 @@ function getPendingCheckins($conn) {
             'offset' => $offset,
             'hasMore' => ($offset + $limit) < $total
         ]
+    ]);
+}
+
+/**
+ * Get check-ins by status for admin review
+ */
+function getCheckinsByStatus($conn) {
+    $status = $_GET['status'] ?? 'none'; // Default to pending (none)
+    $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 20;
+    $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
+    
+    // Validate status
+    $validStatuses = ['none', 'approved', 'denied', 'all'];
+    if (!in_array($status, $validStatuses)) {
+        echo json_encode(['success' => false, 'error' => 'Invalid status parameter']);
+        return;
+    }
+    
+    // Build WHERE clause based on status
+    $whereClause = "";
+    $params = [];
+    $paramTypes = "";
+    
+    if ($status !== 'all') {
+        $whereClause = "WHERE c.ApprovalStatus = ?";
+        $params[] = $status;
+        $paramTypes = "s";
+    }
+    
+    $stmt = $conn->prepare("
+        SELECT 
+            c.CheckinID,
+            c.UserToken,
+            u.Username,
+            c.MuseumID,
+            m.MuseumName,
+            c.CheckinTime,
+            c.Caption,
+            c.PendingPoints,
+            c.ActualPoints,
+            c.ApprovalStatus,
+            c.ProcessedAt,
+            c.ProcessedBy,
+            c.DeniedReason,
+            c.Latitude,
+            c.Longitude,
+            COUNT(cp.PhotoID) as PhotoCount,
+            admin.Username as ProcessedByName
+        FROM checkins c
+        JOIN users u ON c.UserToken = u.UserToken
+        JOIN museum m ON c.MuseumID = m.MuseumID
+        LEFT JOIN checkin_photos cp ON c.CheckinID = cp.CheckinID
+        LEFT JOIN users admin ON c.ProcessedBy = admin.UserToken
+        $whereClause
+        GROUP BY c.CheckinID
+        ORDER BY c.CheckinTime DESC
+        LIMIT ?, ?
+    ");
+    
+    // Add limit parameters
+    $params[] = $offset;
+    $params[] = $limit;
+    $paramTypes .= "ii";
+    
+    if (!empty($params)) {
+        $stmt->bind_param($paramTypes, ...$params);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $checkins = [];
+    while ($row = $result->fetch_assoc()) {
+        $checkins[] = [
+            'id' => $row['CheckinID'],
+            'user' => [
+                'token' => $row['UserToken'],
+                'name' => $row['Username']
+            ],
+            'museum' => [
+                'id' => $row['MuseumID'],
+                'name' => $row['MuseumName']
+            ],
+            'checkinTime' => $row['CheckinTime'],
+            'caption' => $row['Caption'],
+            'pendingPoints' => $row['PendingPoints'],
+            'actualPoints' => $row['ActualPoints'],
+            'approvalStatus' => $row['ApprovalStatus'],
+            'processedAt' => $row['ProcessedAt'],
+            'processedBy' => $row['ProcessedBy'], // Keep token for backward compatibility
+            'processedByName' => $row['ProcessedByName'], // Admin name
+            'deniedReason' => $row['DeniedReason'],
+            'photoCount' => $row['PhotoCount'],
+            'timeAgo' => getTimeAgo($row['CheckinTime'])
+        ];
+    }
+    
+    // Get total count for status
+    $countWhereClause = "";
+    $countParams = [];
+    $countParamTypes = "";
+    
+    if ($status !== 'all') {
+        $countWhereClause = "WHERE ApprovalStatus = ?";
+        $countParams[] = $status;
+        $countParamTypes = "s";
+    }
+    
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM checkins $countWhereClause");
+    if (!empty($countParams)) {
+        $stmt->bind_param($countParamTypes, ...$countParams);
+    }
+    $stmt->execute();
+    $totalResult = $stmt->get_result();
+    $total = $totalResult->fetch_assoc()['total'];
+    
+    echo json_encode([
+        'success' => true,
+        'data' => $checkins,
+        'pagination' => [
+            'total' => $total,
+            'limit' => $limit,
+            'offset' => $offset,
+            'hasMore' => ($offset + $limit) < $total
+        ],
+        'status' => $status
     ]);
 }
 

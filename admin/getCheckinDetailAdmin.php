@@ -65,10 +65,12 @@ try {
             m.Description as MuseumDescription,
             u.Username,
             u.Role as UserRole,
-            u.Score as UserScore
+            u.Score as UserScore,
+            admin.Username as ProcessedByName
         FROM checkins c
         JOIN museum m ON c.MuseumID = m.MuseumID
         JOIN users u ON c.UserToken = u.UserToken
+        LEFT JOIN users admin ON c.ProcessedBy = admin.UserToken
         WHERE c.CheckinID = ?
     ");
     
@@ -177,7 +179,8 @@ try {
             'pendingPoints' => intval($checkin['PendingPoints']),
             'actualPoints' => intval($checkin['ActualPoints']),
             'processedAt' => $checkin['ProcessedAt'],
-            'processedBy' => $checkin['ProcessedBy'],
+            'processedBy' => $checkin['ProcessedBy'], // Keep token for backward compatibility
+            'processedByName' => $checkin['ProcessedByName'], // Admin name
             'deniedReason' => $checkin['DeniedReason'],
             'points' => intval($checkin['Points']),
             'timeFormatted' => formatTime($checkin['CheckinTime'])

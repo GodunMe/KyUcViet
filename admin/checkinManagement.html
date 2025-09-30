@@ -465,6 +465,99 @@
         .location-link:hover {
             text-decoration: underline;
         }
+
+        /* Tab Navigation Styles */
+        .tab-navigation {
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tab-buttons {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            position: relative;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .tab-button {
+                min-width: 150px;
+                padding: 12px 15px;
+                font-size: 12px;
+            }
+            
+            .tab-buttons {
+                justify-content: space-around;
+            }
+        }
+
+        .tab-button:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content {
+            padding: 20px;
+        }
+
+        /* Status specific styling for check-in items */
+        .checkin-item.status-approved {
+            border-left: 4px solid #27ae60;
+            background: rgba(39, 174, 96, 0.05);
+        }
+
+        .checkin-item.status-denied {
+            border-left: 4px solid #e74c3c;
+            background: rgba(231, 76, 60, 0.05);
+        }
+
+        .checkin-item.status-pending {
+            border-left: 4px solid #f39c12;
+            background: rgba(243, 156, 18, 0.05);
+        }
+
+        .processed-info {
+            color: #7f8c8d;
+            font-size: 0.85em;
+            margin-top: 8px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .deny-reason {
+            color: #e74c3c;
+            font-style: italic;
+            margin-top: 8px;
+            padding: 8px;
+            background: #fdf2f2;
+            border-radius: 4px;
+            border-left: 3px solid #e74c3c;
+        }
     </style>
 </head>
 <body>
@@ -496,10 +589,36 @@
             </div>
         </div>
 
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-status="none" onclick="switchTab('none')">
+                    ⏳ Chờ duyệt (<span id="tab-pending-count">-</span>)
+                </button>
+                <button class="tab-button" data-status="approved" onclick="switchTab('approved')">
+                    ✅ Đã duyệt (<span id="tab-approved-count">-</span>)
+                </button>
+                <button class="tab-button" data-status="denied" onclick="switchTab('denied')">
+                    ❌ Bị từ chối (<span id="tab-denied-count">-</span>)
+                </button>
+                <button class="tab-button" data-status="all" onclick="switchTab('all')">
+                    📋 Tất cả
+                </button>
+            </div>
+            <div class="tab-content">
+                <h2 class="section-title" id="section-title">Check-in Chờ Duyệt</h2>
+                <div id="checkins-container">
+                    <div class="loading">
+                        Đang tải dữ liệu...
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Pending Check-ins Section -->
-        <div class="checkins-section">
+        <div class="checkins-section" style="display: none;">
             <h2 class="section-title">Check-in Chờ Duyệt</h2>
-            <div id="checkins-container">
+            <div id="checkins-container-old">
                 <div class="loading">
                     Đang tải dữ liệu...
                 </div>
@@ -566,11 +685,39 @@
     </div>
 
     <script>
+        // Global state
+        let currentStatus = 'none';
+        let currentOffset = 0;
+        const itemsPerPage = 20;
+
         // Load data when page loads
         document.addEventListener('DOMContentLoaded', function() {
             loadStats();
-            loadPendingCheckins();
+            loadCheckins('none');
         });
+
+        // Switch tab
+        function switchTab(status) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-status="${status}"]`).classList.add('active');
+            
+            // Update section title
+            const titles = {
+                'none': 'Check-in Chờ Duyệt',
+                'approved': 'Check-in Đã Duyệt', 
+                'denied': 'Check-in Bị Từ chối',
+                'all': 'Tất cả Check-in'
+            };
+            document.getElementById('section-title').textContent = titles[status];
+            
+            // Load data for selected status
+            currentStatus = status;
+            currentOffset = 0;
+            loadCheckins(status);
+        }
 
         // Load statistics 
         function loadStats() {
@@ -583,10 +730,16 @@
                 })
                 .then(data => {
                     if (data.success) {
+                        // Update main stats
                         document.getElementById('pending-count').textContent = data.data.none || 0;
                         document.getElementById('approved-count').textContent = data.data.approved || 0;
                         document.getElementById('denied-count').textContent = data.data.denied || 0;
                         document.getElementById('total-points').textContent = data.data.totalPointsAwarded || 0;
+                        
+                        // Update tab counts
+                        document.getElementById('tab-pending-count').textContent = data.data.none || 0;
+                        document.getElementById('tab-approved-count').textContent = data.data.approved || 0;
+                        document.getElementById('tab-denied-count').textContent = data.data.denied || 0;
                     } else {
                         alert('Error loading stats: ' + data.error);
                     }
@@ -596,9 +749,11 @@
                 });
         }
 
-        // Load pending check-ins
-        function loadPendingCheckins() {
-            fetch('checkinApproval.php?action=getPending&limit=20')
+        // Load check-ins by status
+        function loadCheckins(status = 'none', append = false) {
+            const url = `checkinApproval.php?action=getCheckins&status=${status}&limit=${itemsPerPage}&offset=${currentOffset}`;
+            
+            fetch(url)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -607,7 +762,14 @@
                 })
                 .then(data => {
                     if (data.success) {
-                        displayCheckins(data.data);
+                        displayCheckins(data.data, status, append);
+                        
+                        // Show/hide load more button based on pagination
+                        if (data.pagination.hasMore) {
+                            showLoadMoreButton(status);
+                        } else {
+                            hideLoadMoreButton();
+                        }
                     } else {
                         document.getElementById('checkins-container').innerHTML = 
                             '<div class="no-data">Lỗi: ' + data.error + '</div>';
@@ -619,35 +781,85 @@
                 });
         }
 
+        // Load pending check-ins (kept for backward compatibility)
+        function loadPendingCheckins() {
+            loadCheckins('none');
+        }
+
         // Display check-ins
-        function displayCheckins(checkins) {
+        function displayCheckins(checkins, status = 'none', append = false) {
             const container = document.getElementById('checkins-container');
             
-            if (checkins.length === 0) {
-                container.innerHTML = '<div class="no-data">Không có check-in nào đang chờ duyệt</div>';
+            if (checkins.length === 0 && !append) {
+                const statusMessages = {
+                    'none': 'Không có check-in nào đang chờ duyệt',
+                    'approved': 'Không có check-in nào đã được duyệt',
+                    'denied': 'Không có check-in nào bị từ chối',
+                    'all': 'Không có check-in nào'
+                };
+                container.innerHTML = `<div class="no-data">${statusMessages[status] || 'Không có dữ liệu'}</div>`;
                 return;
             }
 
-            let html = '';
+            let html = append ? container.innerHTML : '';
+            
             checkins.forEach(checkin => {
                 // Use client-side time calculation for accuracy
                 const timeAgo = calculateTimeAgo(checkin.checkinTime);
                 
+                // Determine status class and status display
+                const statusClass = `status-${checkin.approvalStatus || 'pending'}`;
+                let statusDisplay = '';
+                let actionsHtml = '';
+                let processedInfoHtml = '';
+                
+                // Build status-specific content
+                switch (checkin.approvalStatus) {
+                    case 'approved':
+                        statusDisplay = `<div style="color: #27ae60; font-weight: bold;">✅ Đã duyệt - ${checkin.actualPoints}đ</div>`;
+                        actionsHtml = `<button class="btn btn-detail" onclick="viewDetail(${checkin.id})">Chi tiết</button>`;
+                        if (checkin.processedAt) {
+                            processedInfoHtml = `<div class="processed-info">Duyệt lúc: ${new Date(checkin.processedAt).toLocaleString('vi-VN')}${checkin.processedByName ? ` bởi ${checkin.processedByName}` : ''}</div>`;
+                        }
+                        break;
+                        
+                    case 'denied':
+                        statusDisplay = `<div style="color: #e74c3c; font-weight: bold;">❌ Bị từ chối</div>`;
+                        actionsHtml = `
+                            <button class="btn btn-detail" onclick="viewDetail(${checkin.id})">Chi tiết</button>
+                            <button class="btn btn-approve" onclick="showApproveModal(${checkin.id}, ${checkin.pendingPoints})">Duyệt lại</button>
+                        `;
+                        if (checkin.processedAt) {
+                            processedInfoHtml = `<div class="processed-info">Từ chối lúc: ${new Date(checkin.processedAt).toLocaleString('vi-VN')}${checkin.processedByName ? ` bởi ${checkin.processedByName}` : ''}</div>`;
+                        }
+                        if (checkin.deniedReason) {
+                            processedInfoHtml += `<div class="deny-reason">Lý do: ${checkin.deniedReason}</div>`;
+                        }
+                        break;
+                        
+                    default: // 'none' or pending
+                        statusDisplay = `<div class="points-info">💎 ${checkin.pendingPoints} điểm (chờ duyệt)</div>`;
+                        actionsHtml = `
+                            <button class="btn btn-detail" onclick="viewDetail(${checkin.id})">Chi tiết</button>
+                            <button class="btn btn-approve" onclick="showApproveModal(${checkin.id}, ${checkin.pendingPoints})">Duyệt</button>
+                            <button class="btn btn-deny" onclick="showDenyModal(${checkin.id})">Từ chối</button>
+                        `;
+                }
+                
                 html += `
-                    <div class="checkin-item">
+                    <div class="checkin-item ${statusClass}">
                         <div class="checkin-header">
                             <div class="checkin-info">
                                 <div class="user-name">${checkin.user.name}</div>
                                 <div class="checkin-id">#${checkin.id}</div>
                                 <div class="museum-name">📍 ${checkin.museum.name}</div>
                                 <div class="checkin-time">⏰ ${timeAgo}</div>
-                                <div class="points-info">💎 ${checkin.pendingPoints} điểm (chờ duyệt)</div>
+                                ${statusDisplay}
                                 ${checkin.photoCount > 0 ? `<div style="color: #3498db;">📷 ${checkin.photoCount} ảnh</div>` : ''}
+                                ${processedInfoHtml}
                             </div>
                             <div class="checkin-actions">
-                                <button class="btn btn-detail" onclick="viewDetail(${checkin.id})">Chi tiết</button>
-                                <button class="btn btn-approve" onclick="showApproveModal(${checkin.id}, ${checkin.pendingPoints})">Duyệt</button>
-                                <button class="btn btn-deny" onclick="showDenyModal(${checkin.id})">Từ chối</button>
+                                ${actionsHtml}
                             </div>
                         </div>
                         ${checkin.caption ? `<div class="checkin-caption">"${checkin.caption}"</div>` : ''}
@@ -656,6 +868,31 @@
             });
             
             container.innerHTML = html;
+        }
+
+        // Show/hide load more functionality
+        function showLoadMoreButton(status) {
+            // Remove existing load more button if any
+            hideLoadMoreButton();
+            
+            const loadMoreHtml = `
+                <div id="load-more-container" style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-detail" onclick="loadMoreCheckins('${status}')">Tải thêm</button>
+                </div>
+            `;
+            document.getElementById('checkins-container').insertAdjacentHTML('afterend', loadMoreHtml);
+        }
+
+        function hideLoadMoreButton() {
+            const loadMoreContainer = document.getElementById('load-more-container');
+            if (loadMoreContainer) {
+                loadMoreContainer.remove();
+            }
+        }
+
+        function loadMoreCheckins(status) {
+            currentOffset += itemsPerPage;
+            loadCheckins(status, true); // append = true
         }
 
         // Calculate time ago from timestamp (client-side for accuracy)
@@ -898,10 +1135,10 @@
                             <div class="detail-value">${new Date(data.checkin.processedAt).toLocaleString('vi-VN')}</div>
                         </div>
                         ` : ''}
-                        ${data.checkin.processedBy ? `
+                        ${data.checkin.processedByName ? `
                         <div class="detail-row">
                             <div class="detail-label">Xử lý bởi:</div>
-                            <div class="detail-value">${data.checkin.processedBy}</div>
+                            <div class="detail-value">${data.checkin.processedByName}</div>
                         </div>
                         ` : ''}
                         ${data.checkin.deniedReason ? `
@@ -964,7 +1201,8 @@
                     alert('Đã phê duyệt check-in thành công!');
                     closeModal('approveModal');
                     loadStats();
-                    loadPendingCheckins();
+                    currentOffset = 0; // Reset pagination
+                    loadCheckins(currentStatus);
                 } else {
                     alert('Lỗi: ' + data.error);
                 }
@@ -992,7 +1230,8 @@
                     alert('Đã từ chối check-in thành công!');
                     closeModal('denyModal');
                     loadStats();
-                    loadPendingCheckins();
+                    currentOffset = 0; // Reset pagination
+                    loadCheckins(currentStatus);
                 } else {
                     alert('Lỗi: ' + data.error);
                 }
