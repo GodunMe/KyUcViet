@@ -27,7 +27,7 @@ try {
 
     $userToken = $_SESSION['UserToken'];
 
-    // Get check-in details with museum information
+    // Get check-in details with museum information (Enhanced for Approval System)
     $stmt = $conn->prepare("
         SELECT 
             c.CheckinID,
@@ -35,9 +35,15 @@ try {
             c.MuseumID,
             c.Latitude,
             c.Longitude,
-            c.Status,
+            c.Caption,
+            c.ApprovalStatus,
+            c.PendingPoints,
+            c.ActualPoints,
+            c.ProcessedAt,
+            c.ProcessedBy,
+            c.DeniedReason,
             c.CheckinTime,
-            c.Points,
+            c.Points,  -- Keep for backward compatibility
             m.MuseumName,
             m.Address as MuseumAddress,
             m.Description as MuseumDescription,
@@ -146,7 +152,25 @@ try {
         $museumImage = $media['file_path'];
     }
     
-    // Format the response
+    // Format approval status for display
+    $approvalStatusText = '';
+    $statusClass = '';
+    switch ($checkin['ApprovalStatus']) {
+        case 'none':
+            $approvalStatusText = 'Chờ duyệt';
+            $statusClass = 'pending';
+            break;
+        case 'approved':
+            $approvalStatusText = 'Đã duyệt';
+            $statusClass = 'approved';
+            break;
+        case 'denied':
+            $approvalStatusText = 'Bị từ chối';
+            $statusClass = 'denied';
+            break;
+    }
+
+    // Format the response (Enhanced for Approval System)
     $checkinDetail = [
         'id' => $checkin['CheckinID'],
         'user' => [
@@ -166,8 +190,16 @@ try {
         ],
         'checkin' => [
             'time' => $checkin['CheckinTime'],
-            'status' => $checkin['Status'],
-            'points' => intval($checkin['Points']),
+            'caption' => $checkin['Caption'],  // Đổi từ status
+            'approvalStatus' => $checkin['ApprovalStatus'],
+            'approvalStatusText' => $approvalStatusText,
+            'statusClass' => $statusClass,
+            'pendingPoints' => intval($checkin['PendingPoints']),
+            'actualPoints' => intval($checkin['ActualPoints']),
+            'processedAt' => $checkin['ProcessedAt'],
+            'processedBy' => $checkin['ProcessedBy'],
+            'deniedReason' => $checkin['DeniedReason'],
+            'points' => intval($checkin['Points']), // Backward compatibility
             'pointsEarned' => $pointsEarned,
             'isFirstCheckinToday' => $isFirstCheckinToday,
             'timeFormatted' => formatTime($checkin['CheckinTime'])
@@ -175,7 +207,10 @@ try {
         'photos' => $photos,
         'stats' => [
             'totalPhotos' => count($photos),
-            'hasStatus' => !empty($checkin['Status'])
+            'hasCaption' => !empty($checkin['Caption']),
+            'isPending' => $checkin['ApprovalStatus'] === 'none',
+            'isApproved' => $checkin['ApprovalStatus'] === 'approved',
+            'isDenied' => $checkin['ApprovalStatus'] === 'denied'
         ]
     ];
 

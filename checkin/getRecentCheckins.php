@@ -29,15 +29,20 @@ $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
 // Giới hạn số lượng tối đa có thể lấy
 if ($limit > 50) $limit = 50;
 
-// Truy vấn danh sách check-in gần đây
+// Truy vấn danh sách check-in gần đây (Enhanced for Approval System)
 $stmt = $conn->prepare("
     SELECT 
         c.CheckinID,
         c.MuseumID,
         m.MuseumName,
         c.CheckinTime,
-        c.Status,
-        c.Points,
+        c.Caption,
+        c.ApprovalStatus,
+        c.PendingPoints,
+        c.ActualPoints,
+        c.ProcessedAt,
+        c.DeniedReason,
+        c.Points,  -- Giữ để backward compatibility
         c.Latitude,
         c.Longitude
     FROM 
@@ -72,6 +77,23 @@ while ($row = $result->fetch_assoc()) {
     while ($photoRow = $photoResult->fetch_assoc()) {
         $photos[] = $photoRow['PhotoPath'];
     }
+    // Định dạng approval status cho hiển thị
+    $approvalStatusText = '';
+    $statusClass = '';
+    switch ($row['ApprovalStatus']) {
+        case 'none':
+            $approvalStatusText = 'Chờ duyệt';
+            $statusClass = 'pending';
+            break;
+        case 'approved':
+            $approvalStatusText = 'Đã duyệt';
+            $statusClass = 'approved';
+            break;
+        case 'denied':
+            $approvalStatusText = 'Bị từ chối';
+            $statusClass = 'denied';
+            break;
+    }
     
     // Định dạng thời gian check-in để hiển thị thân thiện
     $checkInTime = new DateTime($row['CheckinTime']);
@@ -102,8 +124,15 @@ while ($row = $result->fetch_assoc()) {
         'MuseumName' => $row['MuseumName'],
         'CheckinTime' => $row['CheckinTime'],
         'FriendlyTime' => $friendlyTime,
-        'Status' => $row['Status'],
-        'Points' => $row['Points'],
+        'Caption' => $row['Caption'],  // Đổi từ Status
+        'ApprovalStatus' => $row['ApprovalStatus'],
+        'ApprovalStatusText' => $approvalStatusText,
+        'StatusClass' => $statusClass,
+        'PendingPoints' => $row['PendingPoints'],
+        'ActualPoints' => $row['ActualPoints'],
+        'Points' => $row['Points'],  // Backward compatibility
+        'ProcessedAt' => $row['ProcessedAt'],
+        'DeniedReason' => $row['DeniedReason'],
         'Latitude' => $row['Latitude'],
         'Longitude' => $row['Longitude'],
         'photos' => $photos

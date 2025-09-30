@@ -1,7 +1,7 @@
 <?php
 /**
- * API check-in với upload ảnh
- * Updated to work with new photo upload system
+ * API check-in với upload ảnh (Enhanced for Approval Workflow)
+ * Updated to work with new approval system and PendingPoints/ActualPoints
  */
 header('Content-Type: application/json');
 require_once '../db.php';
@@ -17,7 +17,7 @@ if (!isset($_SESSION['UserToken'])) {
 $museumId = isset($_POST['museumId']) ? intval($_POST['museumId']) : 0;
 $latitude = isset($_POST['latitude']) ? floatval($_POST['latitude']) : 0;
 $longitude = isset($_POST['longitude']) ? floatval($_POST['longitude']) : 0;
-$status = isset($_POST['status']) ? trim($_POST['status']) : '';
+$caption = isset($_POST['caption']) ? trim($_POST['caption']) : ''; // Đổi từ status thành caption
 
 if (!$museumId || !$latitude || !$longitude) {
     echo json_encode(['success' => false, 'error' => 'Thiếu thông tin check-in']);
@@ -48,9 +48,27 @@ try {
     
     $museum = $result->fetch_assoc();
     
-    // Lưu check-in với status
-    $stmt = $conn->prepare("INSERT INTO checkins (UserToken, MuseumID, Latitude, Longitude, Status, CheckinTime) VALUES (?, ?, ?, ?, ?, NOW())");
-    $stmt->bind_param("sidds", $userToken, $museumId, $latitude, $longitude, $status);
+    // Lấy quy tắc điểm của bảo tàng
+    $stmt = $conn->prepare("SELECT MaxPointsPerCheckin FROM museum_checkin_rules WHERE MuseumID = ?");
+    $stmt->bind_param("i", $museumId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $maxPoints = 10; // Default
+    if ($result->num_rows > 0) {
+        $rules = $result->fetch_assoc();
+        $maxPoints = $rules['MaxPointsPerCheckin'];
+    }
+    
+    // Lưu check-in với hệ thống approval mới
+    $stmt = $conn->prepare("
+        INSERT INTO checkins (
+            UserToken, MuseumID, Latitude, Longitude, 
+            Caption, ApprovalStatus, PendingPoints, 
+            ActualPoints, CheckinTime, Points
+        ) VALUES (?, ?, ?, ?, ?, 'none', ?, 0, NOW(), 0)
+    ");
+    $stmt->bind_param("siddsi", $userToken, $museumId, $latitude, $longitude, $caption, $maxPoints);
     
     if ($stmt->execute()) {
         $checkinId = $conn->insert_id;
@@ -61,11 +79,14 @@ try {
         foreach ($photoPaths as $index => $photoData) {
             $photoPath = $photoData['path'];
             $uploadOrder = $index + 1;
-            $caption = isset($photoData['caption']) ? $photoData['caption'] : '';
+            $photoCaption = isset($photoData['caption']) ? $photoData['caption'] : '';
             
-            // Insert vào bảng checkin_photos  
-            $stmt = $conn->prepare("INSERT INTO checkin_photos (CheckinID, PhotoPath, Caption, UploadOrder) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("issi", $checkinId, $photoPath, $caption, $uploadOrder);
+            // Insert vào bảng checkin_photos với UserToken
+            $stmt = $conn->prepare("
+                INSERT INTO checkin_photos (CheckinID, UserToken, PhotoPath, Caption, UploadOrder) 
+                VALUES (?, ?, ?, ?, ?)
+            ");
+            $stmt->bind_param("isssi", $checkinId, $userToken, $photoPath, $photoCaption, $uploadOrder);
             
             if ($stmt->execute()) {
                 $uploadedPhotos[] = $photoPath;
@@ -74,36 +95,55 @@ try {
             }
         }
         
-    // Kiểm tra xem đã check-in tại bảo tàng này trong ngày chưa để quyết định cộng điểm
-    $today = date('Y-m-d');
-    $stmt = $conn->prepare("SELECT COUNT(*) as checkin_count FROM checkins WHERE UserToken = ? AND MuseumID = ? AND DATE(CheckinTime) = ?");
-    $stmt->bind_param("sis", $userToken, $museumId, $today);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
-    $isFirstCheckinToday = ($row['checkin_count'] == 1); // Vì check-in đã được insert ở trên
-    
-    $pointsEarned = 0;
-    if ($isFirstCheckinToday) {
-        // Cộng điểm chỉ cho lần check-in đầu tiên trong ngày
-        $pointsEarned = 10;
+        // Cập nhật daily limits tracking
+        $today = date('Y-m-d');
         
-        // Cộng điểm vào user
-        $stmt = $conn->prepare("UPDATE users SET Score = Score + 10 WHERE UserToken = ?");
-        $stmt->bind_param("s", $userToken);
+        // Kiểm tra xem đã có record trong daily_checkin_limits chưa
+        $stmt = $conn->prepare("
+            SELECT CheckinCount 
+            FROM daily_checkin_limits 
+            WHERE UserToken = ? AND MuseumID = ? AND CheckinDate = ?
+        ");
+        $stmt->bind_param("sis", $userToken, $museumId, $today);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            // Cập nhật count hiện tại
+            $stmt = $conn->prepare("
+                UPDATE daily_checkin_limits 
+                SET CheckinCount = CheckinCount + 1, LastCheckinTime = NOW()
+                WHERE UserToken = ? AND MuseumID = ? AND CheckinDate = ?
+            ");
+            $stmt->bind_param("sis", $userToken, $museumId, $today);
+            $stmt->execute();
+        } else {
+            // Tạo record mới
+            $stmt = $conn->prepare("
+                INSERT INTO daily_checkin_limits (UserToken, MuseumID, CheckinDate, CheckinCount, LastCheckinTime)
+                VALUES (?, ?, ?, 1, NOW())
+            ");
+            $stmt->bind_param("sis", $userToken, $museumId, $today);
+            $stmt->execute();
+        }
+        
+        // Tạo audit trail record
+        $stmt = $conn->prepare("
+            INSERT INTO checkin_status_history (CheckinID, OldStatus, NewStatus, OldPoints, NewPoints, Reason)
+            VALUES (?, NULL, 'none', 0, ?, 'Initial check-in created')
+        ");
+        $stmt->bind_param("ii", $checkinId, $maxPoints);
         $stmt->execute();
         
-        // CẬP NHẬT Points vào bảng checkins
-        $stmt = $conn->prepare("UPDATE checkins SET Points = ? WHERE CheckinID = ?");
-        $stmt->bind_param("ii", $pointsEarned, $checkinId);
-        $stmt->execute();
-    }        echo json_encode([
+        echo json_encode([
             'success' => true,
-            'message' => 'Check-in thành công tại ' . $museum['MuseumName'],
+            'message' => 'Check-in thành công tại ' . $museum['MuseumName'] . '. Chờ admin duyệt để nhận điểm.',
             'checkinId' => $checkinId,
-            'points' => $pointsEarned,
-            'isFirstToday' => $isFirstCheckinToday,
-            'photos' => $uploadedPhotos
+            'pendingPoints' => $maxPoints,
+            'actualPoints' => 0,
+            'approvalStatus' => 'none',
+            'photos' => $uploadedPhotos,
+            'note' => 'Check-in đang chờ duyệt. Bạn sẽ nhận được điểm sau khi admin phê duyệt.'
         ]);
     } else {
         echo json_encode(['success' => false, 'error' => 'Lỗi lưu check-in: ' . $conn->error]);
