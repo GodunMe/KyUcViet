@@ -446,6 +446,110 @@
             font-size: 12px;
         }
 
+        .photo-counter {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Photo Modal Styles */
+        .admin-photo-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .admin-photo-modal.active {
+            display: flex;
+        }
+
+        .admin-modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .admin-modal-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            max-height: 80vh;
+        }
+
+        .admin-modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 2001;
+        }
+
+        .admin-modal-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            font-size: 24px;
+            padding: 16px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            z-index: 2001;
+            transition: background 0.3s ease;
+        }
+
+        .admin-modal-prev {
+            left: -60px;
+        }
+
+        .admin-modal-next {
+            right: -60px;
+        }
+
+        .admin-modal-nav:hover {
+            background: rgba(0,0,0,0.8);
+        }
+
+        .admin-photo-info {
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .admin-modal-nav {
+                display: none;
+            }
+            
+            .photos-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
         .caption-display {
             background: #f8f9fa;
             border-left: 4px solid #667eea;
@@ -684,11 +788,26 @@
         </div>
     </div>
 
+    <!-- Admin Photo Modal -->
+    <div class="admin-photo-modal" id="adminPhotoModal">
+        <div class="admin-modal-content">
+            <button class="admin-modal-close" onclick="closeAdminPhotoModal()">×</button>
+            <button class="admin-modal-nav admin-modal-prev" onclick="prevAdminPhoto()">‹</button>
+            <img class="admin-modal-image" id="adminModalImage" src="" alt="Photo">
+            <button class="admin-modal-nav admin-modal-next" onclick="nextAdminPhoto()">›</button>
+            <div class="admin-photo-info" id="adminPhotoInfo">1 / 1</div>
+        </div>
+    </div>
+
     <script>
         // Global state
         let currentStatus = 'none';
         let currentOffset = 0;
         const itemsPerPage = 20;
+        
+        // Photo modal state
+        let currentDetailData = null;
+        let currentPhotoIndex = 0;
 
         // Load data when page loads
         document.addEventListener('DOMContentLoaded', function() {
@@ -986,6 +1105,13 @@
 
         // Display check-in detail in modal
         function displayCheckinDetail(data) {
+            // Store data for photo modal
+            currentDetailData = data;
+            
+            // Debug log to check photos data
+            console.log('Display detail data:', data);
+            console.log('Photos data:', data.photos);
+            
             const timeAgo = calculateTimeAgo(data.checkin.time);
             const checkinDateTime = new Date(data.checkin.time).toLocaleString('vi-VN');
             
@@ -1015,18 +1141,24 @@
             // Build photos section
             let photosHtml = '';
             if (data.photos && data.photos.length > 0) {
+                let photoItems = '';
+                data.photos.forEach((photo, index) => {
+                    const photoPath = photo.path || '/uploads/checkins/default.png';
+                    photoItems += `
+                        <div class="photo-item" onclick="openAdminPhotoModal(${index})">
+                            <img src="${photoPath}" alt="Check-in photo ${index + 1}" onerror="this.src='/uploads/checkins/default.png'">
+                            <div class="photo-counter">${index + 1}/${data.photos.length}</div>
+                        </div>
+                    `;
+                });
+                
                 photosHtml = `
                     <div class="photos-grid">
-                        ${data.photos.map((photo, index) => `
-                            <div class="photo-item" onclick="openPhotoViewer('${photo.path}')">
-                                <img src="${photo.path}" alt="Check-in photo ${index + 1}" onerror="this.src='/uploads/checkins/default.png'">
-                                <div class="photo-overlay">#${index + 1}</div>
-                            </div>
-                        `).join('')}
+                        ${photoItems}
                     </div>
                 `;
             } else {
-                photosHtml = '<div class="no-data">Không có ảnh</div>';
+                photosHtml = '<div class="no-data">Không có ảnh đính kèm</div>';
             }
 
             // Build caption section
@@ -1184,6 +1316,51 @@
             window.open(photoPath, '_blank');
         }
 
+        // Admin Photo Modal Functions
+        function openAdminPhotoModal(index) {
+            console.log('Opening photo modal for index:', index);
+            console.log('Current detail data:', currentDetailData);
+            
+            if (!currentDetailData || !currentDetailData.photos) {
+                console.error('No photo data available');
+                return;
+            }
+
+            currentPhotoIndex = index;
+            updateAdminModalImage();
+            document.getElementById('adminPhotoModal').classList.add('active');
+        }
+
+        function closeAdminPhotoModal() {
+            document.getElementById('adminPhotoModal').classList.remove('active');
+        }
+
+        function prevAdminPhoto() {
+            if (!currentDetailData || !currentDetailData.photos) return;
+            currentPhotoIndex = (currentPhotoIndex - 1 + currentDetailData.photos.length) % currentDetailData.photos.length;
+            updateAdminModalImage();
+        }
+
+        function nextAdminPhoto() {
+            if (!currentDetailData || !currentDetailData.photos) return;
+            currentPhotoIndex = (currentPhotoIndex + 1) % currentDetailData.photos.length;
+            updateAdminModalImage();
+        }
+
+        function updateAdminModalImage() {
+            if (!currentDetailData || !currentDetailData.photos[currentPhotoIndex]) {
+                console.error('No photo data for index:', currentPhotoIndex);
+                return;
+            }
+            
+            const photo = currentDetailData.photos[currentPhotoIndex];
+            console.log('Loading photo:', photo.path);
+            
+            document.getElementById('adminModalImage').src = photo.path;
+            document.getElementById('adminPhotoInfo').textContent = 
+                `${currentPhotoIndex + 1} / ${currentDetailData.photos.length}`;
+        }
+
         // Handle approve form submission
         document.getElementById('approveForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1247,6 +1424,7 @@
             const approveModal = document.getElementById('approveModal');
             const denyModal = document.getElementById('denyModal');
             const detailModal = document.getElementById('detailModal');
+            const adminPhotoModal = document.getElementById('adminPhotoModal');
             
             if (event.target === approveModal) {
                 approveModal.style.display = 'none';
@@ -1257,7 +1435,23 @@
             if (event.target === detailModal) {
                 detailModal.style.display = 'none';
             }
+            if (event.target === adminPhotoModal) {
+                closeAdminPhotoModal();
+            }
         }
+
+        // Keyboard navigation for photo modal
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('adminPhotoModal').classList.contains('active')) {
+                if (e.key === 'Escape') {
+                    closeAdminPhotoModal();
+                } else if (e.key === 'ArrowLeft') {
+                    prevAdminPhoto();
+                } else if (e.key === 'ArrowRight') {
+                    nextAdminPhoto();
+                }
+            }
+        });
     </script>
 </body>
 </html>
