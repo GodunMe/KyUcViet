@@ -74,7 +74,9 @@ CREATE TABLE `museum` (
 INSERT INTO `museum` (`MuseumID`, `MuseumName`, `Address`, `Description`, `Latitude`, `Longitude`) VALUES
 (3, 'Bảo tàng Lịch Sử Quân sự Việt Nam', 'Km6+500, CT03, Xuân Phương, Hà Nội', 'Bảo tàng Lịch sử Quân sự Việt Nam là một trong 6 bảo tàng cấp quốc gia và là bảo tàng đầu hệ của hệ thống bảo tàng quân đội, được thành lập ngày 17/7/1956, địa chỉ tại số 28A đường Điện Biên Phủ, quận Ba Đình, thành phố Hà Nội. Bảo tàng hiện đang trưng bày và lưu giữ hàng vạn hiện vật, trong đó có 4 bảo vật quốc gia, bao gồm: (Máy bay MiG-21 số hiệu 4324; Máy bay MiG-21 số hiệu 5121, Tấm Bản đồ Quyết tâm chiến dịch Hồ Chí Minh; Xe tăng T-54B số hiệu 843).', 21.0086136, 105.7556136),
 (4, 'Bảo tàng Hồ Chí Minh', '19 P. Ngọc Hà, Đội Cấn, Ba Đình, Hà Nội 100000, Việt Nam', 'Bảo tàng Hồ Chí Minh là bảo tàng ở Hà Nội tập trung chủ yếu vào việc trưng bày những hiện vật, tư liệu về cuộc đời và con người Hồ Chí Minh. Nằm trong khu vực có nhiều di tích như: Lăng Chủ tịch Hồ Chí Minh, Khu di tích Phủ Chủ tịch, Chùa Một Cột,... tạo thành một quần thể các di tích thu hút khách tham quan trong và ngoài nước. Bảo tàng tọa lạc tại số 19 phố Ngọc Hà, phường Đội Cấn, quận Ba Đình, thành phố Hà Nội, nằm phía sau Lăng Chủ tịch Hồ Chí Minh và cạnh công viên Bách Thảo. Bảo tàng Hồ Chí Minh là bảo tàng lớn và hiện đại nhất Việt Nam.', 21.0372081, 105.8330520),
-(5, 'Bảo tàng Dân tộc học', 'Đ. Nguyễn Văn Huyên, Quan Hoa, Cầu Giấy, Hà Nội', 'Ngày 12 tháng 11 năm 1997, tại Hà Nội diễn ra một sự kiện quan trọng: Phó Chủ tịch nước Cộng hòa xã hội chủ nghĩa Việt Nam Nguyễn Thị Bình và Tổng thống Cộng hòa Pháp Jacques Chirac cắt băng khai trương Bảo tàng Dân tộc học Việt Nam.', 21.0405575, 105.7986764);
+(5, 'Bảo tàng Dân tộc học', 'Đ. Nguyễn Văn Huyên, Quan Hoa, Cầu Giấy, Hà Nội', 'Ngày 12 tháng 11 năm 1997, tại Hà Nội diễn ra một sự kiện quan trọng: Phó Chủ tịch nước Cộng hòa xã hội chủ nghĩa Việt Nam Nguyễn Thị Bình và Tổng thống Cộng hòa Pháp Jacques Chirac cắt băng khai trương Bảo tàng Dân tộc học Việt Nam.', 21.0405575, 105.7986764),
+(6, 'Bảo tàng Hà Nội', 'Phạm Hùng, Mễ Trì, Nam Từ Liêm, Hà Nội', 'Để kỷ niệm đại lễ 1000 năm Thăng Long - Hà Nội, một dự án xây dựng mới bảo tàng Hà Nội đã được thực hiện với số tiền đầu tư rất lớn, Bảo tàng Hà Nội mới nằm trong khu vực xây dựng Trung tâm Hội nghị Quốc gia Việt Nam tại phường Mễ Trì, quận Nam Từ Liêm; có kết cấu hình kim tự tháp ngược, trong đó tầng 4 có diện tích lớn nhất, các tầng dưới nhỏ dần. Thiết kế của Liên doanh tư vấn GMP - ILAG (Đức); được xây dựng trên tổng diện tích khoảng 54.000 m², cao 30,7 mét. Công trình gồm 4 tầng nổi và 2 tầng hầm; diện tích xây dựng xấp xỉ 12.000 m², diện tích sàn hơn 30.000 m² (kể cả tầng hầm và tầng mái). Bảo tàng đã được khánh thành vào ngày 6 tháng 10 năm 2010. Ước tính có 50.000 hiện vật được trưng bày tại đây.', 21.0107591, 105.7866290),
+(7, 'Bảo tàng Phòng không - Không quân', '173C Đ. Trường Chinh, Khương Mai, Thanh Xuân, Hà Nội', 'Bảo tàng Phòng không – Không quân trực thuộc Cục Chính trị, Quân chủng Phòng không – Không quân, Quân đội nhân dân Việt Nam, tiền thân là Phòng Truyền thống Bộ đội Phòng không thành lập năm 1958. Bảo tàng được xếp hạng Hai trong hệ thống bảo tàng tại Việt Nam. Bảo tàng được xây dựng vào năm 2004, khánh thành ngày 28 tháng 8 năm 2007, là nơi lưu giữ những hình ảnh, tư liệu, hiện vật minh chứng cho quá trình ra đời, xây dựng, chiến đấu, trưởng thành và chiến thắng của bộ đội Phòng không – Không quân Việt Nam. Bảo tàng tọa lạc tại 173C, Trường Chinh, Khương Mai, Thanh Xuân, Hà Nội, Việt Nam.', 21.0040742, 105.8293036);
 
 -- --------------------------------------------------------
 
@@ -152,7 +154,11 @@ INSERT INTO `artifact` (`ArtifactID`, `MuseumID`, `ArtifactName`, `Description`,
 (16, 3, 'Bệ phóng tên lửa SAM-2 bắn rơi B-52 giữa lòng Hà Nội', 'Trưng bày ngoài trời của Bảo tàng Chiến thắng B-52 (Bộ Tư lệnh Thủ đô) giới thiệu hai bệ phóng tên lửa SAM-2 đã từng bắn rơi tại chỗ hai máy bay B-52 trên bầu trời Hà Nội vào ngày 18 và 27/12/1972. Đây cũng là chiếc B-52 đầu tiên và cuối cùng bị bắn rơi trong chiến thắng oanh liệt “Hà Nội-Điện Biên Phủ trên không” cuối năm 1972 đập tan cuộc tập kích đường không chiến lược bằng B-52 của Mỹ vào Hà Nội, Hải Phòng và một số tỉnh, thành miền Bắc buộc đế quốc Mỹ phải quay trở lại bàn đàm phán với Việt Nam.', '/uploads/artifacts/16.1.png', 'image/png', '/artifact_detail/16.html'),
 (17, 3, 'Súng trung liên và chiến công của Anh hùng Cao Thế Chiến', 'Khẩu súng trung liên vẫn còn khá nguyên vẹn hiện đang được trưng bày tại Bảo tàng Binh đoàn Hương Giang (thuộc Bảo tàng, Cục Chính trị Quân đoàn 12). Đây là kỷ vật gắn liền với chiến công của Anh hùng Lực lượng vũ trang nhân dân (LLVTND), liệt sĩ Cao Thế Chiến, sử dụng chiến đấu trong chiến dịch Trung Lào năm 1954.', '/uploads/artifacts/17.3.png', 'image/png', '/artifact_detail/17.html'),
 (18, 3, 'Tượng điêu khắc trưng bày tại Bảo tàng Lịch sử Quân sự Việt Nam', 'Tham quan Bảo tàng Lịch sử Quân sự Việt Nam người xem sẽ bắt gặp nhiều loại hình, tài liệu hiện vật phong phú tái hiện lại dòng chảy lịch sử dựng nước và giữ nước của dân tộc; Trong đó, khách tham quan được chiêm ngưỡng rất nhiều tác phẩm hội họa, điêu khắc về đề tài Lực lượng vũ trang,', '/uploads/artifacts/18.3.png', 'image/png', '/artifact_detail/18.html'),
-(19, 3, 'Huy hiệu Bác Hồ - Biểu tượng của thời đại', 'Điều đặc biệt trên Huy hiệu Bác Hồ là có hình chân dung của Chủ tịch Hồ Chí Minh và do chính Người trao tặng cho những cá nhân lập thành tích trong chiến đấu, lao động, công tác từ năm 1946 - 1969. Được nhận Huy hiệu Bác Hồ là vinh dự lớn lao của mỗi cá nhân và phần thưởng này trở thành kỷ vật thiêng liêng trong cuộc đời mỗi người.', '\\uploads\\artifacts\\19.4.png', 'image/png', 'artifact_detail/19.html');
+(19, 3, 'Huy hiệu Bác Hồ - Biểu tượng của thời đại', 'Điều đặc biệt trên Huy hiệu Bác Hồ là có hình chân dung của Chủ tịch Hồ Chí Minh và do chính Người trao tặng cho những cá nhân lập thành tích trong chiến đấu, lao động, công tác từ năm 1946 - 1969. Được nhận Huy hiệu Bác Hồ là vinh dự lớn lao của mỗi cá nhân và phần thưởng này trở thành kỷ vật thiêng liêng trong cuộc đời mỗi người.', '\\uploads\\artifacts\\19.4.png', 'image/png', 'artifact_detail/19.html'),
+(20, 3, 'Kỷ vật của người anh hùng tại "cánh cửa thép Xuân Lộc"', 'Trong rất nhiều hiện vật, hình ảnh được trưng bày tại Bảo tàng Quân khu 4 có 2 kỉ vật đã thu hút sự chú ý của đông đảo cán bộ, chiến sỹ và khách tham quan. Đó là chiếc bi đông có khắc chữ "LÁI" và chiếc hộp được làm từ mảnh xác máy bay của tiểu đội phó Phạm Văn Lái thuộc Trung đoàn 266, Sư đoàn 341 được phong tặng danh hiệu Anh hùng lực lượng vũ trang nhân dân vì những chiến công xuất sắc tại "cánh cửa thép Xuân Lộc" trong Chiến dịch Hồ Chí Minh.', 'uploads/artifacts/20.3.png', 'image/png', 'uploads/artifact_detail/1759022084_20.html'),
+(21, 3, 'Một số cờ thưởng tiêu biểu trong giai đoạn kháng chiến chống thực dân Pháp (1945 – 1954)', 'Trong cuộc kháng chiến chống thực dân Pháp, nhiều loại cờ đã được sử dụng làm giải thưởng để động viên, khích lệ các đơn vị có thành tích trong chiến đấu, phục vụ chiến đấu và xây dựng đất nước. Bảo tàng Lịch sử Quân sự Việt Nam trân trọng giới thiệu một số hiện vật cờ tiêu biểu đang được trưng bày, lưu giữ tại Bảo tàng gắn với nội dung này.', 'uploads/artifacts/1759023229_21.3.png', 'image/png', 'uploads/artifact_detail/1759023229_21.html'),
+(23, 3, 'Bảo tàng Lịch sử Quân sự Việt Nam với Mỹ thuật đề tài "Lực lượng vũ trang – Chiến tranh cách mạng"', 'Lịch sử đã trôi qua nhưng sự tích anh hùng của các thế hệ còn lưu vang mãi trong tâm hồn bao thế hệ và là niềm tự hào dân tộc. Qua 60 năm xây dựng và phát triển, Bảo tàng Lịch sử Quân sự Việt Nam mãi xứng đáng với sự khen tặng của Chủ tịch Hồ Chí Minh nhân dịp Người tới thăm và duyệt hệ thống trưng bày của Bảo tàng ngày 12/12/1959: Bảo tàngQuân đội (nay là Bảo tàng Lịch sử Quân sự Việt Nam) là một "cuốn sử sống" lưu truyền mãi mãi, có tác dụng to lớn đến việc giáo dục truyền thống tốt đẹp của dân tộc ta, nhất là thế hệ trẻ.', 'uploads/artifacts/22.png', 'image/png', 'uploads/artifact_detail/1759024401_22.html'),
+(24, 3, 'Chủ tịch Hồ Chí Minh với sự nghiệp xây dựng Quân đội nhân dân Việt Nam qua các tài liệu, hiện vật', 'Chủ tịch Hồ Chí Minh người Cha thân yêu của lực lượng vũ trang nhân dân Việt Nam, Người đã sáng lập, giáo dục và rèn luyện Quân đội ta trở thành một quân đội kiểu mới, một quân đội chính quy, tinh nhuệ và từng bước hiện đại. Sự quan tâm đặc biệt của Chủ tịch Hồ Chí Minh đối với Quân đội nhân dân Việt Nam được thể hiện trong rất nhiều các tài liệu, hiện vật lưu giữ tại Bảo tàng Lịch sử Quân sự Việt Nam.', 'uploads/artifacts/1759026090_24.5.png', 'image/png', 'uploads/artifact_detail/1759026090_24.html');
 
 -- --------------------------------------------------------
 
@@ -184,7 +190,20 @@ INSERT INTO `museum_media` (`id`, `MuseumId`, `file_name`, `mime_type`, `file_pa
 (11, 3, 'Bao tang Lich su Quan su Viẹt Nam\r\n', 'video/mp4', '/uploads/museums/Có_gì_tại_Bảo_tàng_Lịch_sử_Quân_sự_Việt_Nam_Hanoi_Review.mp4'),
 (12, 3, 'Bao tang Lich su Quan su Viẹt Nam\r\n', 'image/png', '/uploads/museums/bao-tang-lich-su-quan-su-viet-nam-banner.png'),
 (13, 3, 'Bao tang Lich su Quan su Viẹt Nam\r\n', 'image/png', '/uploads/museums/bao-tang-lich-su-quan-su-16-3727.png'),
-(14, 3, 'Bao tang Lich su Quan su Viẹt Nam\r\n', 'video/mp4', '/uploads/museums/Nét_mới_ở_Bảo_tàng_lịch_sử_ quân_sự_Việt_Nam_Hà_Nội_đẹp_và_chưa_đẹp.mp4');
+(14, 3, 'Bao tang Lich su Quan su Viẹt Nam\r\n', 'video/mp4', '/uploads/museums/Nét_mới_ở_Bảo_tàng_lịch_sử_ quân_sự_Việt_Nam_Hà_Nội_đẹp_và_chưa_đẹp.mp4'),
+(15, 6, 'm_68d9e6920ef5b.png', 'image/jpeg', '/uploads/museums/m_68d9e6920ef5b.png'),
+(16, 6, 'Bảo tàng Hà Nội', 'image/png', '/uploads/museums/bao-tang-ha-noi-hoi.png'),
+(17, 6, 'Bảo tàng Hà Nội', 'image/png', '/uploads/museums/bao-tang-ha-noi-hoi-1.png'),
+(18, 6, 'Bảo tàng Hà Nội', 'image/png', '/uploads/museums/bao-tang-ha-noi-hoi-2.png'),
+(19, 6, 'Bảo tàng Hà Nội', 'image/png', '/uploads/museums/bao-tang-ha-noi-hoi-3.png'),
+(20, 6, 'Bảo tàng Hà Nội', 'image/png', '/uploads/museums/bao-tang-ha-noi-hoi-4.png'),
+(21, 7, 'm_68d9ea6dc1409.png', 'image/jpeg', '/uploads/museums/m_68d9ea6dc1409.png'),
+(22, 7, 'Bảo tàng Phòng không - Không quân', 'image/png', '/uploads/museums/bao-tang-phong-khong-khong-quan-1.png'),
+(23, 7, 'Bảo tàng Phòng không - Không quân', 'image/png', '/uploads/museums/bao-tang-phong-khong-khong-quan-2.png'),
+(24, 7, 'Bảo tàng Phòng không - Không quân', 'image/png', '/uploads/museums/bao-tang-phong-khong-khong-quan-3.png'),
+(25, 4, 'Bảo tàng Hồ Chí Minh', 'image/png', '/uploads/museums/bao_tang_ho_chi_minh_1.png'),
+(26, 4, 'Bảo tàng Hồ Chí Minh', 'image/png', '/uploads/museums/bao_tang_ho_chi_minh_2.png'),
+(27, 4, 'Bảo tàng Hồ Chí Minh', 'image/png', '/uploads/museums/bao_tang_ho_chi_minh_3.png');
 
 -- --------------------------------------------------------
 
@@ -272,7 +291,7 @@ ALTER TABLE `useranswer`
 -- AUTO_INCREMENT for table `museum`
 --
 ALTER TABLE `museum`
-  MODIFY `MuseumID` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `MuseumID` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `quiz`
@@ -296,13 +315,13 @@ ALTER TABLE `option`
 -- AUTO_INCREMENT for table `artifact`
 --
 ALTER TABLE `artifact`
-  MODIFY `ArtifactID` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `ArtifactID` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `museum_media`
 --
 ALTER TABLE `museum_media`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `useranswer`
