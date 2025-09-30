@@ -708,6 +708,12 @@
             font-style: italic;
         }
 
+        .checkin-approval-status {
+            font-size: 13px;
+            margin-top: 3px;
+            font-weight: 500;
+        }
+
         .detail-btn {
             background: #4CAF50;
             color: white;
@@ -1093,19 +1099,19 @@
                                 </button>
                             </div>
                             
-                            <!-- Nhập trạng thái/cảm xúc -->
+                            <!-- Nhập mô tả/cảm xúc (đổi từ status thành caption) -->
                             <div style="margin-bottom: 15px;">
-                                <label for="statusText" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">
+                                <label for="captionText" style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">
                                     💭 Chia sẻ cảm xúc của bạn:
                                 </label>
                                 <textarea 
-                                    id="statusText" 
+                                    id="captionText" 
                                     placeholder="Viết về trải nghiệm của bạn tại bảo tàng này..."
                                     style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; resize: vertical; min-height: 60px; font-family: inherit; font-size: 14px;"
                                     maxlength="500"
                                 ></textarea>
                                 <div style="text-align: right; font-size: 12px; color: #666; margin-top: 5px;">
-                                    <span id="statusCounter">0</span>/500 ký tự
+                                    <span id="captionCounter">0</span>/500 ký tự
                                 </div>
                             </div>
                             
@@ -1131,20 +1137,31 @@
                     </div>
                 </div>
 
-                <!-- Success Message -->
+                <!-- Success Message (Enhanced for Approval Workflow) -->
                 <div class="content-section" id="successMessage" style="display: none;">
                     <div style="text-align: center; padding: 20px;">
-                        <div style="font-size: 48px; margin-bottom: 20px;">🎉</div>
+                        <div style="font-size: 48px; margin-bottom: 20px;">⏳</div>
                         <h3>Check-in thành công!</h3>
                         <p>Bạn đã check-in tại <span id="successMuseumName"></span></p>
-                        <div id="pointsInfo" class="points-earned" style="display: none;">
-                            <span id="pointsEarned">+10 điểm</span>
-                            <br><small>Lần đầu check-in hôm nay!</small>
+                        
+                        <!-- Approval Status Info -->
+                        <div id="approvalStatusInfo" class="points-earned" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white;">
+                            <div style="font-size: 20px; margin-bottom: 10px;">🔄</div>
+                            <span id="pendingPointsDisplay">+10 điểm</span>
+                            <br><small>Đang chờ admin duyệt</small>
+                            <div style="margin-top: 10px; font-size: 14px; opacity: 0.9;">
+                                Check-in của bạn sẽ được admin xem xét và phê duyệt.<br>
+                                Bạn sẽ nhận được điểm sau khi được duyệt.
+                            </div>
                         </div>
-                        <div id="noPointsInfo" style="display: none; background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin: 20px 0;">
-                            <span>Bạn đã check-in tại đây hôm nay rồi</span>
-                            <br><small>Không cộng thêm điểm</small>
+                        
+                        <!-- Note about new system -->
+                        <div style="background: rgba(52, 152, 219, 0.1); border: 1px solid #3498db; border-radius: 8px; padding: 15px; margin: 15px 0; font-size: 14px; color: #2c3e50;">
+                            <strong>🆕 Hệ thống mới:</strong><br>
+                            Tất cả check-in cần được admin phê duyệt để đảm bảo chất lượng.<br>
+                            Bạn có thể theo dõi trạng thái trong mục "Check-in gần đây".
                         </div>
+                        
                         <button class="btn" onclick="goHome()">Thoát</button>
                     </div>
                 </div>
@@ -1245,22 +1262,22 @@
             const photoInput = document.getElementById('photoInput');
             photoInput.addEventListener('change', handlePhotoSelection);
             
-            // Setup status counter
-            const statusText = document.getElementById('statusText');
-            const statusCounter = document.getElementById('statusCounter');
+            // Setup caption counter (updated from status)
+            const captionText = document.getElementById('captionText');
+            const captionCounter = document.getElementById('captionCounter');
             
-            if (statusText && statusCounter) {
-                statusText.addEventListener('input', function() {
+            if (captionText && captionCounter) {
+                captionText.addEventListener('input', function() {
                     const length = this.value.length;
-                    statusCounter.textContent = length;
+                    captionCounter.textContent = length;
                     
                     // Change color when approaching limit
                     if (length > 450) {
-                        statusCounter.style.color = '#f44336';
+                        captionCounter.style.color = '#f44336';
                     } else if (length > 400) {
-                        statusCounter.style.color = '#ff9800';
+                        captionCounter.style.color = '#ff9800';
                     } else {
-                        statusCounter.style.color = '#666';
+                        captionCounter.style.color = '#666';
                     }
                 });
             }
@@ -1713,7 +1730,7 @@
                 checkinFormData.append('museumId', selectedMuseum.MuseumID);
                 checkinFormData.append('latitude', userLocation.latitude);
                 checkinFormData.append('longitude', userLocation.longitude);
-                checkinFormData.append('status', document.getElementById('statusText')?.value || '');
+                checkinFormData.append('caption', document.getElementById('captionText')?.value || '');
                 checkinFormData.append('photoPaths', JSON.stringify(uploadData.data.files));
                 
                 console.log('Submitting check-in to basicCheckin.php with photo paths');
@@ -1731,7 +1748,7 @@
                 console.log('Check-in response:', checkinData);
                 
                 if (checkinData && checkinData.success) {
-                    showSuccess(selectedMuseum.MuseumName, checkinData.points, checkinData.isFirstToday);
+                    showSuccess(selectedMuseum.MuseumName, checkinData.pendingPoints, checkinData.approvalStatus);
                     // Reset photos
                     selectedPhotos = [];
                     // Reload recent checkins
@@ -1813,22 +1830,21 @@
             document.getElementById('initialPhotoButton').style.display = 'block';
         }
 
-        function showSuccess(museumName, points, isFirstToday) {
+        function showSuccess(museumName, pendingPoints, approvalStatus) {
             document.getElementById('checkinProcess').style.display = 'none';
             document.getElementById('successMessage').style.display = 'block';
             document.getElementById('successMuseumName').textContent = museumName;
             
-            // Hiển thị thông tin điểm
-            const pointsInfo = document.getElementById('pointsInfo');
-            const noPointsInfo = document.getElementById('noPointsInfo');
+            // Hiển thị thông tin điểm chờ duyệt
+            const pendingPointsDisplay = document.getElementById('pendingPointsDisplay');
+            if (pendingPointsDisplay) {
+                pendingPointsDisplay.textContent = `+${pendingPoints} điểm`;
+            }
             
-            if (isFirstToday && points > 0) {
-                pointsInfo.style.display = 'block';
-                noPointsInfo.style.display = 'none';
-                document.getElementById('pointsEarned').textContent = `+${points} điểm`;
-            } else {
-                pointsInfo.style.display = 'none';
-                noPointsInfo.style.display = 'block';
+            // Luôn hiển thị approval status info vì đây là hệ thống mới
+            const approvalStatusInfo = document.getElementById('approvalStatusInfo');
+            if (approvalStatusInfo) {
+                approvalStatusInfo.style.display = 'block';
             }
         }
 
@@ -1923,6 +1939,21 @@
                             ? checkin.photos[0] 
                             : 'uploads/checkins/default.png';
                         
+                        // Enhanced approval status display
+                        let approvalStatusDisplay = '';
+                        let pointsDisplay = '';
+                        
+                        if (checkin.ApprovalStatus === 'approved') {
+                            approvalStatusDisplay = '<span style="color: #27ae60; font-weight: bold;">✅ Đã duyệt</span>';
+                            pointsDisplay = `${checkin.ActualPoints}đ`;
+                        } else if (checkin.ApprovalStatus === 'denied') {
+                            approvalStatusDisplay = '<span style="color: #e74c3c; font-weight: bold;">❌ Bị từ chối</span>';
+                            pointsDisplay = '0đ';
+                        } else {
+                            approvalStatusDisplay = '<span style="color: #f39c12; font-weight: bold;">⏳ Chờ duyệt</span>';
+                            pointsDisplay = `${checkin.PendingPoints}đ (chờ)`;
+                        }
+                        
                         checkinItem.innerHTML = `
                             <div class="checkin-photos">
                                 <img src="${photoUrl}" alt="Check-in photo" onerror="this.src='uploads/checkins/default.png'">
@@ -1931,8 +1962,10 @@
                             </div>
                             <div class="checkin-info">
                                 <div class="checkin-museum">${checkin.MuseumName}</div>
-                                <div class="checkin-time">${checkin.FriendlyTime || formatDate(checkin.CheckinTime)} • ${checkin.Points}đ</div>
-                                ${checkin.Status ? `<div class="checkin-status">"${checkin.Status}"</div>` : ''}
+                                <div class="checkin-time">${checkin.FriendlyTime || formatDate(checkin.CheckinTime)} • ${pointsDisplay}</div>
+                                <div class="checkin-approval-status">${approvalStatusDisplay}</div>
+                                ${checkin.Caption ? `<div class="checkin-status">"${checkin.Caption}"</div>` : ''}
+                                ${checkin.DeniedReason ? `<div style="color: #e74c3c; font-size: 12px; margin-top: 5px;">Lý do từ chối: ${checkin.DeniedReason}</div>` : ''}
                             </div>
                             <button class="detail-btn" onclick="viewCheckinDetail(${checkin.CheckinID})">
                                 👁️ Chi tiết
