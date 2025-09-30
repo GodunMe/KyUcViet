@@ -2,6 +2,12 @@
 session_start();
 require 'db.php'; // file kết nối tới MySQL
 
+// Redirect logged-in users to index page
+if (isset($_SESSION['UserToken']) && !empty($_SESSION['UserToken'])) {
+    header("Location: index.php");
+    exit();
+}
+
 if (!isset($_GET['token'])) {
     header("Location: nfc_required.html");
     exit();

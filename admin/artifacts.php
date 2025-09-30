@@ -3,33 +3,41 @@ require_once __DIR__ . '/../auth_check.php';
 require_once "../db.php";
 
 // Handle add artifact
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add') {
+if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['action']) && $_POST['action']==='add') {
     $museumID = (int)$_POST['museum_id'];
-    $name     = trim($_POST['ArtifactName']);
-    $desc     = trim($_POST['Description']);
-    $mime     = trim($_POST['MimeType']);
+    $name = trim($_POST['ArtifactName']);
+    $desc = trim($_POST['Description']);
+    $mime = trim($_POST['MimeType']);
 
+    // Upload ảnh
     $imgPath = null;
-    if (!empty($_FILES['Image']['name'])) {
-        $targetDir = "../uploads/artifacts/";
-        if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
-        $fname = time() . "_" . basename($_FILES["Image"]["name"]);
-        $targetFile = $targetDir . $fname;
-
-        if (move_uploaded_file($_FILES["Image"]["tmp_name"], $targetFile)) {
-            $imgPath = "uploads/artifacts/" . $fname;
+    if (!empty($_FILES['Image']['name']) && $_FILES['Image']['error'] === UPLOAD_ERR_OK) {
+        $allowedImg = ['image/jpeg','image/png','image/gif'];
+        $mimeCheck = mime_content_type($_FILES['Image']['tmp_name']);
+        if (in_array($mimeCheck, $allowedImg)) {
+            $targetDir = "../uploads/artifacts/";
+            if (!is_dir($targetDir)) mkdir($targetDir,0755,true);
+            $fname = uniqid("art_") . "_" . basename($_FILES["Image"]["name"]);
+            $targetFile = $targetDir . $fname;
+            if (move_uploaded_file($_FILES["Image"]["tmp_name"], $targetFile)) {
+                $imgPath = "uploads/artifacts/" . $fname;
+            }
         }
     }
 
+    // Upload file detail (html)
     $detailPath = null;
-    if (!empty($_FILES['ArtifactDetail']['name'])) {
-        $targetDir = "../uploads/artifact_detail/";
-        if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
-        $fname = time() . "_" . basename($_FILES["ArtifactDetail"]["name"]);
-        $targetFile = $targetDir . $fname;
-
-        if (move_uploaded_file($_FILES["ArtifactDetail"]["tmp_name"], $targetFile)) {
-            $detailPath = "uploads/artifact_detail/" . $fname;
+    if (!empty($_FILES['ArtifactDetail']['name']) && $_FILES['ArtifactDetail']['error'] === UPLOAD_ERR_OK) {
+        $allowedDetail = ['text/html'];
+        $mimeCheck = mime_content_type($_FILES['ArtifactDetail']['tmp_name']);
+        if (in_array($mimeCheck, $allowedDetail)) {
+            $targetDir = "../artifact_detail/";
+            if (!is_dir($targetDir)) mkdir($targetDir,0755,true);
+            $fname = basename($_FILES["ArtifactDetail"]["name"]);
+            $targetFile = $targetDir . $fname;
+            if (move_uploaded_file($_FILES["ArtifactDetail"]["tmp_name"], $targetFile)) {
+                $detailPath = "artifact_detail/" . $fname;
+            }
         }
     }
 
@@ -37,19 +45,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $stmt->bind_param("isssss", $museumID, $name, $desc, $imgPath, $mime, $detailPath);
     $stmt->execute();
     $stmt->close();
-
     header("Location: artifacts.php");
     exit;
 }
 
 // Fetch artifacts list
-$artifacts = [];
-$sql = "SELECT a.ArtifactID,a.ArtifactName,a.Description,a.Image,a.MimeType,a.artifact_detail,m.MuseumName
-        FROM artifact a 
-        LEFT JOIN museum m ON a.MuseumID=m.MuseumID
-        ORDER BY a.ArtifactID DESC";
-if ($res = $conn->query($sql)) {
-    $artifacts = $res->fetch_all(MYSQLI_ASSOC);
+$artifacts=[];
+$sql="SELECT a.ArtifactID,a.ArtifactName,a.Description,a.Image,a.MimeType,a.artifact_detail,m.MuseumName
+      FROM artifact a LEFT JOIN museum m ON a.MuseumID=m.MuseumID
+      ORDER BY a.ArtifactID DESC";
+if($res=$conn->query($sql)){
+    $artifacts=$res->fetch_all(MYSQLI_ASSOC);
     $res->free();
 }
 $conn->close();
@@ -62,8 +68,8 @@ $conn->close();
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style>
-.small-preview { max-width:80px; max-height:60px; object-fit:cover }
-#museum_suggestions { position:absolute; z-index:1000; width:100%; }
+.small-preview{max-width:80px;max-height:60px;object-fit:cover}
+#museum_suggestions{position:absolute;z-index:1000;width:100%;}
 </style>
 </head>
 <body class="container my-4">
@@ -89,10 +95,10 @@ $conn->close();
     </div>
     <div class="mb-2">
         <label>Image</label>
-        <input type="file" name="Image" class="form-control">
+        <input type="file" name="Image" class="form-control" accept="image/*">
     </div>
     <div class="mb-2">
-        <label>Artifact Detail (HTML file)</label>
+        <label>Detail (HTML file)</label>
         <input type="file" name="ArtifactDetail" class="form-control" accept=".html,.htm">
     </div>
     <div class="mb-2">
@@ -104,9 +110,10 @@ $conn->close();
 
 <!-- List -->
 <table class="table table-bordered">
-<thead><tr>
+<thead>
+<tr>
     <th>ID</th><th>Name</th><th>Museum</th><th>Description</th>
-    <th>Image</th><th>Mime</th><th>Detail</th>
+    <th>Image</th><th>Mime</th><th>Detail</th><th>Actions</th>
 </tr></thead>
 <tbody>
 <?php foreach($artifacts as $a): ?>
@@ -121,6 +128,12 @@ $conn->close();
     <?php if($a['artifact_detail']): ?>
       <a href="../<?= htmlspecialchars($a['artifact_detail']) ?>" target="_blank">View Detail</a>
     <?php endif; ?>
+  </td>
+  <td>
+    <a href="editArtifact.php?id=<?= $a['ArtifactID'] ?>" class="btn btn-sm btn-warning">Edit</a>
+    <a href="deleteArtifact.php?id=<?= $a['ArtifactID'] ?>" 
+       onclick="return confirm('Delete this artifact?')" 
+       class="btn btn-sm btn-danger">Delete</a>
   </td>
 </tr>
 <?php endforeach; ?>

@@ -8,20 +8,21 @@ if (!isset($_SESSION['Username'])) {
 }
 $currentUser = $_SESSION['Username'];
 
-// Lấy tất cả QuizID có trong bảng question
-$resultQuiz = $conn->query("SELECT DISTINCT QuizID FROM question");
-$quizIds = [];
-if ($resultQuiz && $resultQuiz->num_rows > 0) {
-    while ($row = $resultQuiz->fetch_assoc()) {
-        $quizIds[] = $row['QuizID'];
-    }
+// Lấy museumId từ URL
+$museumId = isset($_GET['museumId']) ? intval($_GET['museumId']) : 0;
+if ($museumId <= 0) {
+    die("❌ Museum ID không hợp lệ.");
 }
 
-// Chọn quiz ngẫu nhiên
-if (!empty($quizIds)) {
-    $quizId = $quizIds[array_rand($quizIds)];
+// Lấy quiz theo museumId từ bảng quiz
+$sqlQuiz = "SELECT QuizID FROM quiz WHERE MuseumID = $museumId";
+$resultQuiz = $conn->query($sqlQuiz);
+
+if ($resultQuiz && $resultQuiz->num_rows > 0) {
+    $quizRow = $resultQuiz->fetch_assoc();
+    $quizId = $quizRow['QuizID'];
 } else {
-    die("❌ Không có quiz nào trong cơ sở dữ liệu.");
+    die("❌ Bảo tàng này chưa có quiz nào.");
 }
 
 // Lấy 1 câu hỏi ngẫu nhiên trong quiz đã chọn
@@ -35,8 +36,8 @@ if ($result && $result->num_rows > 0) {
     $question = $result->fetch_assoc();
     $questionId = $question['QuestionID'];
 
-    // Lấy các option
-    $sqlOpt = "SELECT * FROM option WHERE QuestionID = $questionId";
+    // Lấy các option (wrap 'option' trong backticks vì là reserved keyword)
+    $sqlOpt = "SELECT * FROM `option` WHERE QuestionID = $questionId";
     $resOpt = $conn->query($sqlOpt);
     if ($resOpt && $resOpt->num_rows > 0) {
         while ($row = $resOpt->fetch_assoc()) {
@@ -51,8 +52,8 @@ if ($result && $result->num_rows > 0) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['optionID'])) {
     $optionID = intval($_POST['optionID']);
 
-    // Kiểm tra xem option có đúng không
-    $resCheck = $conn->query("SELECT isCorrect FROM option WHERE OptionID = $optionID");
+    // Kiểm tra xem option có đúng không (wrap 'option' trong backticks)
+    $resCheck = $conn->query("SELECT isCorrect FROM `option` WHERE OptionID = $optionID");
     if ($resCheck && $resCheck->num_rows > 0) {
         $row = $resCheck->fetch_assoc();
         $isCorrect = $row['isCorrect'] == 1;
@@ -130,7 +131,7 @@ body { font-family: Arial, sans-serif; padding: 10px; background: #f9f9f9; }
     </form>
 
     <div class="result"></div>
-    <button class="back-btn" onclick="window.location.href='index.php'">⬅️ Trở về</button>
+    <button class="back-btn" onclick="window.location.href='museum.html?id=<?= $museumId ?>'">⬅️ Trở về</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>

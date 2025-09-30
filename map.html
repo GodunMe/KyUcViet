@@ -59,6 +59,48 @@
       font-size: 13px;
       color: #666;
     }
+
+    /* Hide default Leaflet routing collapse button */
+    .leaflet-routing-container-hide,
+    .leaflet-routing-collapse-btn {
+      display: none !important;
+    }
+
+    /* Custom close button for routing panel */
+    .custom-close-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      background: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .custom-close-btn:hover {
+      background: #cc0000;
+      transform: scale(1.1);
+    }
+
+    .custom-close-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Ensure routing container has relative positioning for absolute close button */
+    .leaflet-routing-container {
+      position: relative !important;
+    }
     
   </style>
 </head>
@@ -101,8 +143,11 @@
         <button class="control-btn" onclick="locateUser()" title="Tìm vị trí của tôi">
           📍 Vị trí của tôi
         </button>
-        <button class="control-btn" onclick="toggleMarkerList()" title="Danh sách điểm">
-          📋 Danh sách
+        <button id="routingToggleBtn" class="control-btn" onclick="toggleRoutingPanel()" title="Ẩn/hiện hướng dẫn">
+          📋 Hướng dẫn
+        </button>
+        <button id="cancelRouteBtn" class="control-btn" onclick="cancelRoute()" title="Hủy chỉ đường" style="display: none; background-color: #ff4444; color: white;">
+          ❌ Hủy chỉ đường
         </button>
       </div>
     </div>
@@ -146,6 +191,8 @@
     let userMarker;
     let markers = [];
     let currentUserLocation = null;
+    let routingControl = null;
+    let destinationMarker = null;
 
     // Museum data - loaded from database
     let museumMarkers = [];
@@ -392,6 +439,54 @@
       }
     }
 
+    // Cancel route and clear directions
+    function cancelRoute() {
+      // Remove routing control if exists
+      if (routingControl) {
+        map.removeControl(routingControl);
+        routingControl = null;
+      }
+      
+      // Remove destination marker if exists
+      if (destinationMarker) {
+        map.removeLayer(destinationMarker);
+        destinationMarker = null;
+      }
+      
+      // Hide cancel route button and reset routing toggle button
+      document.getElementById('cancelRouteBtn').style.display = 'none';
+      document.getElementById('routingToggleBtn').innerHTML = '📋 Hướng dẫn';
+      document.getElementById('routingToggleBtn').title = 'Ẩn/hiện hướng dẫn';
+      
+      // Optionally return to user location
+      if (currentUserLocation) {
+        map.setView(currentUserLocation, 14);
+      }
+    }
+
+    // Toggle routing panel visibility
+    function toggleRoutingPanel() {
+      if (routingControl) {
+        const routingContainer = document.querySelector('.leaflet-routing-container');
+        if (routingContainer) {
+          const isHidden = routingContainer.style.display === 'none';
+          routingContainer.style.display = isHidden ? 'block' : 'none';
+          
+          // Update button text
+          const toggleBtn = document.getElementById('routingToggleBtn');
+          if (isHidden) {
+            toggleBtn.innerHTML = '📋 Hướng dẫn';
+            toggleBtn.title = 'Ẩn hướng dẫn';
+          } else {
+            toggleBtn.innerHTML = '📋 Hiện hướng dẫn';
+            toggleBtn.title = 'Hiện hướng dẫn';
+          }
+        }
+      } else {
+        // No routing active - show message
+        alert('Chưa có chỉ đường nào được tạo. Hãy chọn "Chỉ đường" từ một bảo tàng để bắt đầu.');
+      }
+    }
 
     async function reverseGeocode(lat, lng) {
       try {
@@ -441,8 +536,11 @@
       if (params.route && params.lat && params.lng && currentUserLocation) {
         const destination = [parseFloat(params.lat), parseFloat(params.lng)];
         
+        // Clear existing route if any
+        cancelRoute();
+        
         // Highlight destination marker
-        const destinationMarker = L.marker(destination, {
+        destinationMarker = L.marker(destination, {
           icon: L.divIcon({
             className: 'highlight-marker',
             html: '<div style="background: #ff4444; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4);">🏛️</div>',
@@ -456,7 +554,7 @@
         // Try to create route if routing library is available
         if (typeof L.Routing !== 'undefined') {
           try {
-            const routingControl = L.Routing.control({
+            routingControl = L.Routing.control({
               waypoints: [
                 L.latLng(currentUserLocation[0], currentUserLocation[1]),
                 L.latLng(destination[0], destination[1])
@@ -468,6 +566,36 @@
                 styles: [{ color: '#007bff', weight: 6, opacity: 0.8 }]
               }
             }).addTo(map);
+            
+            // Hide routing panel by default and add close button
+            setTimeout(() => {
+              const routingContainer = document.querySelector('.leaflet-routing-container');
+              if (routingContainer) {
+                routingContainer.style.display = 'none';
+                
+                // Add custom close button if not already exists
+                if (!routingContainer.querySelector('.custom-close-btn')) {
+                  const closeBtn = document.createElement('button');
+                  closeBtn.className = 'custom-close-btn';
+                  closeBtn.innerHTML = '✕';
+                  closeBtn.title = 'Đóng hướng dẫn';
+                  closeBtn.onclick = function() {
+                    routingContainer.style.display = 'none';
+                    // Update toggle button text
+                    document.getElementById('routingToggleBtn').innerHTML = '📋 Hiện hướng dẫn';
+                    document.getElementById('routingToggleBtn').title = 'Hiện hướng dẫn';
+                  };
+                  
+                  // Insert close button at the top of routing container
+                  routingContainer.insertBefore(closeBtn, routingContainer.firstChild);
+                }
+              }
+            }, 100);
+            
+            // Show cancel route button and update routing toggle button
+            document.getElementById('cancelRouteBtn').style.display = 'block';
+            document.getElementById('routingToggleBtn').innerHTML = '📋 Hiện hướng dẫn';
+            document.getElementById('routingToggleBtn').title = 'Hiện hướng dẫn';
           } catch (error) {
             console.warn('Routing not available:', error);
           }

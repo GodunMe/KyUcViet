@@ -1207,7 +1207,7 @@ input[type="checkbox"]:checked + .toggle-switch::before {
 
 .artifacts-section {
   padding: 20px;
-  margin-bottom: 80px;
+  margin-bottom: 40px;
 }
 
 .artifacts-section h2 {

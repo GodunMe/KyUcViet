@@ -87,6 +87,21 @@
       </div>
     </div>
 
+    <!-- Quiz Button (hidden initially, shows when scrolled to bottom) -->
+    <div class="quiz-section" id="quizSection" style="display: none;">
+      <div class="quiz-container">
+        <div class="quiz-header">
+          <h3>🧠 Thử thách kiến thức</h3>
+          <p>Bạn đã khám phá xong bảo tàng này chưa? Hãy thử sức với quiz để kiểm tra kiến thức của mình.</p>
+        </div>
+        <button class="quiz-btn" id="quizBtn" onclick="startQuiz()">
+          <span class="quiz-icon">🎯</span>
+          <span class="quiz-text">Làm Quiz</span>
+          <span class="quiz-arrow">→</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Loading State -->
     <div class="loading-state" id="loadingState">
       <div class="loading-spinner"></div>
@@ -751,6 +766,44 @@
       }
     });
 
+    // Quiz functionality
+    let quizShown = false;
+
+    // Detect scroll to bottom and show quiz button
+    window.addEventListener('scroll', function() {
+      if (quizShown) return; // Already shown, no need to check again
+      
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      
+      // Check if user scrolled to near bottom (within 100px)
+      if (scrollTop + windowHeight >= documentHeight - 100) {
+        showQuizSection();
+      }
+    });
+
+    function showQuizSection() {
+      const quizSection = document.getElementById('quizSection');
+      if (quizSection && currentMuseumId) {
+        quizSection.style.display = 'block';
+        // Add visible class after a small delay for animation
+        setTimeout(() => {
+          quizSection.classList.add('visible');
+        }, 100);
+        quizShown = true;
+      }
+    }
+
+    function startQuiz() {
+      if (currentMuseumId) {
+        // Navigate to quiz page with museum ID
+        window.location.href = `doquiz.php?museumId=${currentMuseumId}`;
+      } else {
+        alert('Không thể xác định bảo tàng. Vui lòng thử lại.');
+      }
+    }
+
     // Museum Description Expansion System
     let descriptionChunks = [];
     let currentChunkIndex = 0;
@@ -1039,6 +1092,115 @@
     .description-chunk.visible {
       opacity: 1;
       transform: translateY(0);
+    }
+
+    /* Quiz Section Styles */
+    .quiz-section {
+      margin: 15px 0 15px 0;
+      padding: 0 20px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.5s ease;
+    }
+
+    .quiz-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .quiz-container {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .quiz-container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(180deg); }
+    }
+
+    .quiz-header {
+      position: relative;
+      z-index: 2;
+      margin-bottom: 20px;
+    }
+
+    .quiz-header h3 {
+      color: white;
+      margin: 0 0 12px 0;
+      font-size: 24px;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .quiz-header p {
+      color: rgba(255,255,255,0.9);
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .quiz-btn {
+      background: white;
+      color: #667eea;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 32px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 0 auto;
+      min-width: 200px;
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+
+    .quiz-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      background: #f8f9ff;
+    }
+
+    .quiz-btn:active {
+      transform: translateY(0);
+    }
+
+    .quiz-icon {
+      font-size: 20px;
+    }
+
+    .quiz-text {
+      font-size: 16px;
+    }
+
+    .quiz-arrow {
+      font-size: 16px;
+      transition: transform 0.3s ease;
+    }
+
+    .quiz-btn:hover .quiz-arrow {
+      transform: translateX(4px);
     }
   </style>
 </body>
