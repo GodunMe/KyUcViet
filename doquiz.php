@@ -84,7 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $selectedOption = intval($_POST['option']);
 
     // Kiểm tra đáp án đúng
-    $optionCheckSql = "SELECT isCorrect FROM option WHERE OptionID = ?";
+    $optionCheckSql = "SELECT isCorrect FROM 'option' WHERE OptionID = ?";
     $optionCheckStmt = $conn->prepare($optionCheckSql);
     $optionCheckStmt->bind_param("i", $selectedOption);
     $optionCheckStmt->execute();
