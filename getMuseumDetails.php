@@ -65,22 +65,25 @@ try {
     
     $media = [];
     while ($row = $mediaResult->fetch_assoc()) {
-        // Ensure file_path is properly formatted for web access
-        if (!empty($row['file_path'])) {
-            // If it's not a full URL, make it a relative path from web root
-            if (!str_starts_with($row['file_path'], 'http')) {
-                // Remove leading slash if exists, then add it back for consistency
-                $path = ltrim($row['file_path'], '/');
-                $row['file_path'] = '/' . $path;
-                
-                // If path doesn't start with uploads/, assume it's in uploads/museums/
-                if (!str_starts_with($row['file_path'], '/uploads/')) {
-                    $row['file_path'] = '/uploads/museums/' . basename($row['file_path']);
-                }
+        if (isset($row['mime_type']) && strpos($row['mime_type'], 'video/') === 0) {
+            // file_path là file_id của video
+            if (!empty($row['file_path'])) {
+                $row['google_drive_url'] = 'https://drive.google.com/file/d/' . $row['file_path'] . '/preview';
             }
+            unset($row['file_path']); // Không trả về file_path cho video
         } else {
-            // Default image if no file_path
-            $row['file_path'] = '/uploads/museums/default.png';
+            // Ảnh: file_path là đường dẫn như cũ
+            if (!empty($row['file_path'])) {
+                if (!str_starts_with($row['file_path'], 'http')) {
+                    $path = ltrim($row['file_path'], '/');
+                    $row['file_path'] = '/' . $path;
+                    if (!str_starts_with($row['file_path'], '/uploads/')) {
+                        $row['file_path'] = '/uploads/museums/' . basename($row['file_path']);
+                    }
+                }
+            } else {
+                $row['file_path'] = '/uploads/museums/default.png';
+            }
         }
         $media[] = $row;
     }

@@ -286,32 +286,41 @@
       const mediaGallery = document.getElementById('mediaGallery');
       
       mediaGallery.innerHTML = '';
-      
       // Store all media items for gallery navigation (including videos)
       window.galleryItems = mediaItems;
-      
+
       mediaItems.forEach((media, index) => {
         const mediaItem = document.createElement('div');
         mediaItem.className = 'media-item';
-        
+
         if (media.mime_type.startsWith('image/')) {
           mediaItem.innerHTML = `
             <img src="${BASE_URL + media.file_path}" alt="Museum Media" onclick="openGalleryModal(${index})">
           `;
         } else if (media.mime_type.startsWith('video/')) {
-          mediaItem.innerHTML = `
-            <div class="video-thumbnail" onclick="openGalleryModal(${index})">
-              <video muted>
-                <source src="${BASE_URL + media.file_path}" type="${media.mime_type}">
-              </video>
-              <div class="play-overlay">▶</div>
-            </div>
-          `;
+          // If Google Drive URL is present, use iframe
+          if (media.google_drive_url) {
+            mediaItem.innerHTML = `
+              <div class="video-thumbnail center-thumbnail" onclick="openGalleryModal(${index})">
+                <iframe src="${media.google_drive_url}" frameborder="0" allowfullscreen style="width:100%;height:180px;display:block;margin:auto;"></iframe>
+              </div>
+            `;
+          } else {
+            // Fallback to local video (if any)
+            mediaItem.innerHTML = `
+              <div class="video-thumbnail center-thumbnail" onclick="openGalleryModal(${index})">
+                <video muted style="display:block;margin:auto;">
+                  <source src="${BASE_URL + media.file_path}" type="${media.mime_type}">
+                </video>
+                <div class="play-overlay">▶</div>
+              </div>
+            `;
+          }
         }
-        
+
         mediaGallery.appendChild(mediaItem);
       });
-      
+
       mediaSection.style.display = 'block';
     }
 
@@ -417,15 +426,8 @@
       if (artifact) {
         // Save current state before navigating
         saveCurrentState();
-        
-        // Check if artifact has a custom detail page
-        if (artifact.artifact_detail && artifact.artifact_detail.trim() !== '') {
-          // Use the custom HTML file path from database
-          window.location.href = artifact.artifact_detail;
-        } else {
-          // Show alert that artifact needs custom HTML file
-          alert(`Hiện vật "${artifact.ArtifactName}" chưa có trang chi tiết. Vui lòng sử dụng Text Converter để tạo file HTML cho hiện vật này.`);
-        }
+        // Chuyển hướng đến file chi tiết theo id
+        window.location.href = `artifact_detail/${artifact.ArtifactID}.html`;
       }
     }
 
@@ -516,35 +518,34 @@
           </div>
           
           <div class="gallery-content">
-            <button class="gallery-nav gallery-nav-left" onclick="previousImage()" ${window.galleryItems.length <= 1 ? 'style="display:none"' : ''}>
+            <button class="gallery-nav gallery-nav-left" onclick="previousImage()" ${window.galleryItems.length <= 1 ? 'style=\"display:none\"' : ''}>
               &#10094;
             </button>
             
             <div class="gallery-image-container" id="galleryMediaContainer">
               ${window.galleryItems[currentGalleryIndex].mime_type.startsWith('image/') 
-                ? `<img id="galleryImage" src="${BASE_URL + window.galleryItems[currentGalleryIndex].file_path}" alt="Gallery Image">`
-                : `<video id="galleryVideo" controls>
-                     <source src="${BASE_URL + window.galleryItems[currentGalleryIndex].file_path}" type="${window.galleryItems[currentGalleryIndex].mime_type}">
-                     Trình duyệt không hỗ trợ video.
-                   </video>`}
+                ? `<img id=\"galleryImage\" src=\"${BASE_URL + window.galleryItems[currentGalleryIndex].file_path}\" alt=\"Gallery Image\">`
+                : (window.galleryItems[currentGalleryIndex].google_drive_url
+                    ? `<iframe src=\"${window.galleryItems[currentGalleryIndex].google_drive_url}\" frameborder=\"0\" allowfullscreen style=\"width:100%;height:400px;\"></iframe>`
+                    : `<video id=\"galleryVideo\" controls>
+                         <source src=\"${BASE_URL + window.galleryItems[currentGalleryIndex].file_path}\" type=\"${window.galleryItems[currentGalleryIndex].mime_type}\">
+                         Trình duyệt không hỗ trợ video.
+                       </video>`)}
             </div>
             
-            <button class="gallery-nav gallery-nav-right" onclick="nextImage()" ${window.galleryItems.length <= 1 ? 'style="display:none"' : ''}>
+            <button class="gallery-nav gallery-nav-right" onclick="nextImage()" ${window.galleryItems.length <= 1 ? 'style=\"display:none\"' : ''}>
               &#10095;
             </button>
           </div>
           
-          <div class="gallery-thumbnails" ${window.galleryItems.length <= 1 ? 'style="display:none"' : ''}>
+          <div class="gallery-thumbnails" ${window.galleryItems.length <= 1 ? 'style=\"display:none\"' : ''}>
             ${window.galleryItems.map((item, index) => `
               <div class="gallery-thumb ${index === currentGalleryIndex ? 'active' : ''}" onclick="goToImage(${index})">
                 ${item.mime_type.startsWith('image/') 
-                  ? `<img src="${BASE_URL + item.file_path}" alt="Thumbnail ${index + 1}">`
-                  : `<div class="video-thumb">
-                       <video muted>
-                         <source src="${BASE_URL + item.file_path}" type="${item.mime_type}">
-                       </video>
-                       <div class="play-icon">▶</div>
-                     </div>`}
+                  ? `<img src=\"${BASE_URL + item.file_path}\" alt=\"Thumbnail ${index + 1}\">`
+                  : (item.google_drive_url
+                      ? `<div class=\"video-thumb\"><iframe src=\"${item.google_drive_url}\" frameborder=\"0\" allowfullscreen style=\"width:100px;height:60px;\"></iframe><div class=\"play-icon\">▶</div></div>`
+                      : `<div class=\"video-thumb\"><video muted><source src=\"${BASE_URL + item.file_path}\" type=\"${item.mime_type}\"></video><div class=\"play-icon\">▶</div></div>`)}
               </div>
             `).join('')}
           </div>
@@ -595,19 +596,23 @@
       
       if (mediaContainer && window.galleryItems[currentGalleryIndex]) {
         const currentItem = window.galleryItems[currentGalleryIndex];
-        
+
         // Update media content
         if (currentItem.mime_type.startsWith('image/')) {
           mediaContainer.innerHTML = `<img id="galleryImage" src="${BASE_URL + currentItem.file_path}" alt="Gallery Image">`;
         } else if (currentItem.mime_type.startsWith('video/')) {
-          mediaContainer.innerHTML = `<video id="galleryVideo" controls>
+          if (currentItem.google_drive_url) {
+            mediaContainer.innerHTML = `<iframe src="${currentItem.google_drive_url}" frameborder="0" allowfullscreen style="width:100%;height:400px;"></iframe>`;
+          } else {
+            mediaContainer.innerHTML = `<video id="galleryVideo" controls>
                                         <source src="${BASE_URL + currentItem.file_path}" type="${currentItem.mime_type}">
                                         Trình duyệt không hỗ trợ video.
                                       </video>`;
+          }
         }
-        
+
         currentIndexSpan.textContent = currentGalleryIndex + 1;
-        
+
         // Update thumbnail active state
         thumbnails.forEach((thumb, index) => {
           thumb.classList.toggle('active', index === currentGalleryIndex);
@@ -1055,57 +1060,66 @@
       border: none;
       padding: 10px 20px;
       border-radius: 25px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      margin-top: 15px;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
     }
 
+    .video-thumbnail {
+      position: relative;
+      cursor: pointer;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.15);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .center-thumbnail {
+      justify-content: center;
+      align-items: center;
+    }
+    .video-thumbnail video,
+    .video-thumbnail iframe {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+      margin: auto;
+    }
     .expand-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
       background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
     }
 
-    .expand-btn * {
-      color: white !important;
-    }
+      .expand-btn.collapsed .expand-icon {
+        transform: rotate(180deg);
+      }
 
-    .expand-icon {
-      transition: transform 0.3s ease;
-      font-size: 12px;
-    }
+      .description-chunk {
+        margin-bottom: 15px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+      }
 
-    .expand-btn.collapsed .expand-icon {
-      transform: rotate(180deg);
-    }
+      .description-chunk.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
 
-    .description-chunk {
-      margin-bottom: 15px;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: all 0.3s ease;
-    }
-
-    .description-chunk.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* Quiz Section Styles */
-    .quiz-section {
-      margin: 15px 0 15px 0;
-      padding: 0 20px;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.5s ease;
-    }
-
-    .quiz-section.visible {
-      opacity: 1;
-      transform: translateY(0);
+    .play-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 32px;
+      border-radius: 50%;
+      padding: 10px 18px;
+      pointer-events: none;
+      z-index: 2;
+      transition: background 0.2s;
     }
 
     .quiz-container {
@@ -1202,6 +1216,20 @@
     .quiz-btn:hover .quiz-arrow {
       transform: translateX(4px);
     }
+      /* Quiz Section Styles */
+      .quiz-section {
+        width: 100%;
+        margin: 40px 0 0 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        min-height: 120px;
+      }
+      .quiz-section.visible {
+        opacity: 1;
+      }
   </style>
 </body>
 </html>
