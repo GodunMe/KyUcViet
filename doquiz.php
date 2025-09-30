@@ -24,7 +24,7 @@ $checkDoneStmt->execute();
 $checkDone = $checkDoneStmt->get_result()->num_rows > 0;
 
 // Lấy 5 quiz đầu tiên của bảo tàng
-$quizSql = "SELECT * FROM quiz WHERE MuseumID = ? ORDER BY QuizID ASC LIMIT 5";
+$quizSql = "SELECT * FROM quiz WHERE MuseumID = ? ORDER BY RAND() LIMIT 5";
 $quizStmt = $conn->prepare($quizSql);
 $quizStmt->bind_param("i", $museumId);
 $quizStmt->execute();
