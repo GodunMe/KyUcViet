@@ -73,7 +73,7 @@ $questionResult = $questionStmt->get_result();
 $question = $questionResult->fetch_assoc();
 
 // Lấy các lựa chọn
-$optionsSql = "SELECT * FROM option WHERE QuestionID = ?";
+$optionsSql = "SELECT * FROM 'option' WHERE QuestionID = ?";
 $optionsStmt = $conn->prepare($optionsSql);
 $optionsStmt->bind_param("i", $question['QuestionID']);
 $optionsStmt->execute();
