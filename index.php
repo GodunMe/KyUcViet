@@ -166,7 +166,7 @@ function navigateToPage(page) {
       window.location.href = '/leaderboard.html';
       break;
     case 'profile':
-      window.location.href = '/profile.html';
+      window.location.href = '/profile/profile.html';
       break;
     default:
       console.log('Unknown page:', page);

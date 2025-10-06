@@ -198,7 +198,7 @@
     // Load user info on page load
     async function loadUserInfo() {
       try {
-        const response = await fetch('getUserInfo.php');
+        const response = await fetch('/../getUserInfo.php');
         if (response.ok) {
           const data = await response.json();
           
@@ -226,7 +226,7 @@
       
       // Update user avatar
       const avatarElement = document.getElementById('userAvatar');
-      avatarElement.src = userData.avatarRelative || 'avatar/default.png';
+      avatarElement.src = userData.avatarRelative || '/../avatar/default.png';
       
       // Update user name
       const nameElement = document.getElementById('userName');
@@ -241,7 +241,7 @@
       if (profileName) profileName.textContent = userData.username || 'Guest User';
       
       const profileAvatar = document.getElementById('profileAvatar');
-      if (profileAvatar) profileAvatar.src = userData.avatarRelative || 'avatar/default.png';
+      if (profileAvatar) profileAvatar.src = userData.avatarRelative || '/../avatar/default.png';
     }
 
     function showUserNotLoggedInState() {
@@ -262,10 +262,10 @@
   if (tokenFromUrl || tokenFromStorage) {
     // Có token, chuyển đến trang login
     const token = tokenFromUrl || tokenFromStorage;
-    window.location.href = `/login.php?token=${token}`;
+    window.location.href = `/../login.php?token=${token}`;
   } else {
     // Không có token, chuyển đến trang thông báo NFC
-    window.location.href = '/nfc_required.html';
+    window.location.href = '/../nfc_required.html';
   }
 }
 
@@ -279,16 +279,16 @@
       
       switch(page) {
         case 'home':
-          window.location.href = '/index.php';
+          window.location.href = '/../index.php';
           break;
         case 'map':
-          window.location.href = '/map.html';
+          window.location.href = '/../map.html';
           break;
         case 'checkin':
-          window.location.href = '/checkin/checkin.html';
+          window.location.href = '/../checkin/checkin.html';
           break;
         case 'leaderboard':
-          window.location.href = '/leaderboard.html';
+          window.location.href = '/../leaderboard.html';
           break;
         case 'profile':
           // Already on profile page
@@ -395,7 +395,7 @@
         });
         
         // Redirect to logout.php to clear server-side session
-        window.location.href = '/logout.php';
+        window.location.href = '/../logout.php';
       }
     }
 
