@@ -79,7 +79,7 @@ require 'auth_check.php';
 // Load user info on page load
 async function loadUserInfo() {
   try {
-    const response = await fetch('getUserInfo.php');
+    const response = await fetch('profile/getUserInfo.php');
     if (response.ok) {
       const data = await response.json();
       
@@ -111,6 +111,16 @@ function showUserLoggedInState(data) {
   // Update user name
   const nameElement = document.getElementById('userName');
   nameElement.textContent = data.username || 'Guest User';
+  
+  // Apply role-based styling
+  // First, remove any existing role classes
+  nameElement.classList.remove('admin', 'customerpre', 'customer');
+  avatarElement.classList.remove('admin', 'customerpre', 'customer');
+  
+  // Add appropriate class based on role
+  const role = data.role ? data.role.toLowerCase() : 'customer';
+  nameElement.classList.add(role);
+  avatarElement.classList.add(role);
   
   // Update user points
   const pointsElement = document.getElementById('userPoints');
@@ -369,7 +379,7 @@ function viewMuseumDetails(event, museumId) {
   event.stopPropagation();
   
   // Check if user is logged in first
-  fetch('getUserInfo.php')
+  fetch('profile/getUserInfo.php')
     .then(response => response.json())
     .then(data => {
       if (data.loggedIn) {

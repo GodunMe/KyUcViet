@@ -4,8 +4,160 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Profile - Vietnamese Memories</title>
-  <link rel="icon" type="image/png" href="/../logo.PNG" />
-  <link rel="stylesheet" href="/../style.css" />
+  <link rel="icon" type="image/png" href="../logo.PNG" />
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    /* Cải tiến giao diện profile header */
+    .profile-header {
+      background: linear-gradient(135deg, rgba(94, 53, 177, 0.9), rgba(103, 58, 183, 0.85));
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .profile-header-content {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .profile-avatar {
+      position: relative;
+      margin-right: 15px;
+    }
+
+    .profile-avatar img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .change-avatar-btn {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .profile-info {
+      flex: 1;
+    }
+
+    .profile-info-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .username-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .profile-info h2 {
+      margin: 0;
+      color: white;
+      font-size: 24px;
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+
+    .profile-points {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 16px;
+      margin: 2px 0 8px 10px;
+    }
+
+    .profile-info p {
+      margin: 5px 0 0 10px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+    }
+
+    .edit-profile-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      min-width: 35px; /* Đảm bảo không bị co lại */
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.2s;
+      margin-left: 10px;
+    }
+
+    .edit-profile-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+    
+    /* Style cho nút lưu khi đang chỉnh sửa */
+    .edit-mode .edit-profile-btn {
+      background: rgba(46, 204, 113, 0.7);
+      border-color: rgba(46, 204, 113, 0.8);
+    }
+    
+    .edit-mode .edit-profile-btn:hover {
+      background: rgba(46, 204, 113, 0.9);
+    }
+
+    /* Ẩn header ở trên */
+    .user-header {
+      display: none !important;
+    }
+    
+    /* Style cho chế độ chỉnh sửa */
+    .profile-input {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    #bioInput {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    .username-history-container {
+      margin: 10px 0;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      color: white;
+      font-size: 14px;
+    }
+
+
+    
+    /* Username container styling */
+    .username-container {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -14,7 +166,7 @@
       <!-- User logged in state -->
       <div id="userLoggedIn" class="user-logged-in" style="display: none;">
         <div class="user-info">
-          <img id="userAvatar" src="/../avatar/default.png" alt="User" class="user-icon">
+          <img id="userAvatar" src="../avatar/default.png" alt="User" class="user-icon">
           <span id="userName" class="user-name">Loading...</span>
         </div>
         <div class="user-points">
@@ -35,13 +187,22 @@
 
     <!-- Profile Header -->
     <div class="profile-header">
-      <div class="profile-avatar">
-        <img src="/../avatar/default.png" alt="User Avatar" id="profileAvatar">
-        <button class="change-avatar-btn" onclick="changeAvatar()">📷</button>
+      <div class="profile-header-content">
+        <div class="profile-avatar">
+          <img src="../avatar/default.png" alt="User Avatar" id="profileAvatar">
+          <button class="change-avatar-btn" onclick="changeAvatar()">📷</button>
+        </div>
+        <div class="profile-info">
+          <div class="profile-info-top">
+            <div class="username-container">
+              <h2 id="profileName">Nguyen Van A</h2>
+            </div>
+            <button class="edit-profile-btn" onclick="toggleEditMode()" title="Chỉnh sửa">✏️</button>
+          </div>
+          <div class="profile-points"><span id="profilePoints">0 điểm</span></div>
+          <p id="profileBio">Người đam mê khám phá văn hóa Việt Nam</p>
+        </div>
       </div>
-      <h2 id="profileName">Nguyen Van A</h2>
-      <p id="profileBio">Người đam mê khám phá văn hóa Việt Nam</p>
-      <button class="edit-profile-btn" onclick="toggleEditMode()">✏️ Chỉnh sửa</button>
     </div>
 
     <!-- Stats Section -->
@@ -198,7 +359,7 @@
     // Load user info on page load
     async function loadUserInfo() {
       try {
-        const response = await fetch('/../getUserInfo.php');
+        const response = await fetch('getUserInfo.php');
         if (response.ok) {
           const data = await response.json();
           
@@ -216,6 +377,8 @@
       }
     }
 
+
+    
     function showUserLoggedInState(userData) {
       const loggedInDiv = document.getElementById('userLoggedIn');
       const notLoggedInDiv = document.getElementById('usernotLoggedIn');
@@ -226,7 +389,7 @@
       
       // Update user avatar
       const avatarElement = document.getElementById('userAvatar');
-      avatarElement.src = userData.avatarRelative || '/../avatar/default.png';
+      avatarElement.src = userData.avatarRelative || '../avatar/default.png';
       
       // Update user name
       const nameElement = document.getElementById('userName');
@@ -236,12 +399,55 @@
       const pointsElement = document.getElementById('userPoints');
       pointsElement.textContent = (userData.score || 0) + 'đ';
       
+      // Update profile points
+      const profilePointsElement = document.getElementById('profilePoints');
+      if (profilePointsElement) {
+        profilePointsElement.textContent = (userData.score || 0) + ' điểm';
+      }
+      
+      // Thêm verified badge dựa trên role
+      const userRole = userData.role ? userData.role.toLowerCase() : 'customer';
+      console.log('User role:', userRole);
+      
       // Update profile information
       const profileName = document.getElementById('profileName');
-      if (profileName) profileName.textContent = userData.username || 'Guest User';
+      if (profileName) {
+        profileName.textContent = userData.username || 'Guest User';
+        // Remove any existing role classes from profile name
+        profileName.classList.remove('admin', 'customerpre', 'customer');
+      }
       
       const profileAvatar = document.getElementById('profileAvatar');
-      if (profileAvatar) profileAvatar.src = userData.avatarRelative || '/../avatar/default.png';
+      if (profileAvatar) profileAvatar.src = userData.avatarRelative || '../avatar/default.png';
+      
+      // Apply role-based styling
+      // First, remove any existing role classes
+      nameElement.classList.remove('admin', 'customerpre', 'customer');
+      avatarElement.classList.remove('admin', 'customerpre', 'customer');
+      
+      if (profileAvatar) {
+        const profileAvatarContainer = document.querySelector('.profile-avatar');
+        if (profileAvatarContainer) {
+          profileAvatarContainer.classList.remove('admin', 'customerpre', 'customer');
+        }
+      }
+      
+      // Then apply the appropriate class based on user's role
+      // Add appropriate class based on role
+      nameElement.classList.add(userRole);
+      avatarElement.classList.add(userRole);
+      
+      // Thêm class role vào profileName để có cùng style với userName
+      if (profileName) profileName.classList.add(userRole);
+      
+      if (profileAvatar) {
+        const profileAvatarContainer = document.querySelector('.profile-avatar');
+        if (profileAvatarContainer) {
+          profileAvatarContainer.classList.add(userRole);
+        }
+      }
+      
+      console.log('Applied styling for role:', userRole);
     }
 
     function showUserNotLoggedInState() {
@@ -262,10 +468,10 @@
   if (tokenFromUrl || tokenFromStorage) {
     // Có token, chuyển đến trang login
     const token = tokenFromUrl || tokenFromStorage;
-    window.location.href = `/../login.php?token=${token}`;
+    window.location.href = `../login.php?token=${token}`;
   } else {
     // Không có token, chuyển đến trang thông báo NFC
-    window.location.href = '/../nfc_required.html';
+    window.location.href = '../nfc_required.html';
   }
 }
 
@@ -279,16 +485,16 @@
       
       switch(page) {
         case 'home':
-          window.location.href = '/../index.php';
+          window.location.href = '../index.php';
           break;
         case 'map':
-          window.location.href = '/../map.html';
+          window.location.href = '../map.html';
           break;
         case 'checkin':
-          window.location.href = '/../checkin/checkin.html';
+          window.location.href = '../checkin/checkin.html';
           break;
         case 'leaderboard':
-          window.location.href = '/../leaderboard.html';
+          window.location.href = '../leaderboard.html';
           break;
         case 'profile':
           // Already on profile page
@@ -306,11 +512,15 @@
       }
     }
 
-    function enterEditMode() {
+    async function enterEditMode() {
       document.body.classList.add('edit-mode');
       const name = document.getElementById('profileName');
       const bio = document.getElementById('profileBio');
       const editBtn = document.querySelector('.edit-profile-btn');
+      
+      // Lấy và lưu trữ role để dùng sau khi thoát chế độ chỉnh sửa
+      const userRole = name.classList.contains('admin') ? 'admin' : 
+                      name.classList.contains('customerpre') ? 'customerpre' : 'customer';
       
       const nameInput = document.createElement('input');
       nameInput.type = 'text';
@@ -323,45 +533,211 @@
       bioInput.id = 'bioInput';
       bioInput.className = 'profile-input';
       
+      // Tạo container cho lịch sử username
+      const usernameHistoryContainer = document.createElement('div');
+      usernameHistoryContainer.id = 'usernameHistoryContainer';
+      usernameHistoryContainer.className = 'username-history-container';
+      usernameHistoryContainer.innerHTML = '<p>Đang tải lịch sử username...</p>';
+      
+      // Thay thế các phần tử
       name.replaceWith(nameInput);
       bio.replaceWith(bioInput);
-      editBtn.innerHTML = '💾 Lưu';
+      
+      // Chèn container lịch sử username sau nameInput
+      nameInput.parentNode.insertBefore(usernameHistoryContainer, nameInput.nextSibling);
+      
+      // Cập nhật nút lưu
+      editBtn.innerHTML = '💾';
+      
+      // Lấy lịch sử username từ server
+      try {
+        const response = await fetch('getUsernameHistory.php');
+        const data = await response.json();
+        
+        if (data.success) {
+          let historyContent = '';
+          
+          // Kiểm tra có thể đổi username hay không
+          if (!data.canChangeUsername) {
+            historyContent = `<div class="username-change-restriction">
+              <p>⏰ Bạn có thể đổi username sau ${data.daysRemaining} ngày nữa</p>
+            </div>`;
+            
+            // Disable nameInput nếu chưa đủ 90 ngày
+            nameInput.disabled = true;
+            nameInput.title = `Bạn chỉ có thể đổi username sau ${data.daysRemaining} ngày nữa`;
+          }
+          
+          // Thêm lịch sử username nếu có
+          if (data.history.length > 0) {
+            historyContent += '<div class="username-history-list"><h4>Lịch sử username cũ:</h4><ul>';
+            
+            data.history.forEach(item => {
+              // Định dạng ngày tháng
+              const date = new Date(item.changeDate);
+              const formattedDate = date.toLocaleDateString('vi-VN') + ' ' + 
+                                   date.toLocaleTimeString('vi-VN');
+              
+              historyContent += `<li>${formattedDate} - ${item.username}</li>`;
+            });
+            
+            historyContent += '</ul></div>';
+          }
+          
+          // Cập nhật nội dung container
+          if (historyContent) {
+            usernameHistoryContainer.innerHTML = historyContent;
+          } else {
+            usernameHistoryContainer.style.display = 'none';
+          }
+        } else {
+          usernameHistoryContainer.innerHTML = '<p>Không thể tải lịch sử username</p>';
+        }
+      } catch (error) {
+        console.error('Lỗi khi tải lịch sử username:', error);
+        usernameHistoryContainer.innerHTML = '<p>Đã xảy ra lỗi khi tải lịch sử</p>';
+      }
     }
 
-    function exitEditMode() {
-      document.body.classList.remove('edit-mode');
+    async function exitEditMode() {
       const nameInput = document.getElementById('nameInput');
       const bioInput = document.getElementById('bioInput');
       const editBtn = document.querySelector('.edit-profile-btn');
       
+      // Xóa container lịch sử username
+      const usernameHistoryContainer = document.getElementById('usernameHistoryContainer');
+      if (usernameHistoryContainer) {
+        usernameHistoryContainer.remove();
+      }
+      
+      // Lưu giá trị hiện tại để khôi phục nếu cần
+      const currentNameValue = nameInput.value.trim();
+      const currentBioValue = bioInput.value.trim();
+      
+      // Lấy tên hiện tại từ phần tử userName
+      const currentUsername = document.getElementById('userName').textContent;
+      
+      // Lấy role hiện tại để tạo lại badge
+      const userRole = document.getElementById('userName').classList.contains('admin') ? 'admin' : 
+                      document.getElementById('userName').classList.contains('customerpre') ? 'customerpre' : 'customer';
+      
+      // Kiểm tra nếu username thay đổi
+      if (currentNameValue !== currentUsername) {
+        try {
+          // Gửi yêu cầu cập nhật username
+          const response = await fetch('updateUsername.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username: currentNameValue })
+          });
+          
+          const data = await response.json();
+          
+          if (!data.success) {
+            // Hiển thị thông báo lỗi
+            alert(data.message);
+            
+            // Khôi phục tên cũ
+            nameInput.value = currentUsername;
+            return; // Không thoát khỏi chế độ chỉnh sửa
+          } else {
+            // Cập nhật thành công, hiển thị thông báo
+            alert('Tên người dùng đã được cập nhật thành công!');
+            
+            // Cập nhật tên trong toàn bộ giao diện
+            document.getElementById('userName').textContent = currentNameValue;
+          }
+        } catch (error) {
+          console.error('Lỗi khi cập nhật tên người dùng:', error);
+          alert('Đã xảy ra lỗi khi cập nhật tên người dùng');
+          return; // Không thoát khỏi chế độ chỉnh sửa
+        }
+      }
+      
+      // Thoát khỏi chế độ chỉnh sửa
+      document.body.classList.remove('edit-mode');
+      
       const name = document.createElement('h2');
       name.id = 'profileName';
-      name.innerText = nameInput.value;
+      name.innerText = currentNameValue;
+      name.classList.add(userRole); // Thêm lại class role
       
       const bio = document.createElement('p');
       bio.id = 'profileBio';
-      bio.innerText = bioInput.value;
+      bio.innerText = currentBioValue;
       
       nameInput.replaceWith(name);
       bioInput.replaceWith(bio);
-      editBtn.innerHTML = '✏️ Chỉnh sửa';
+      editBtn.innerHTML = '✏️';
       
-      // Here you would save to server
-      console.log('Profile saved:', { name: name.innerText, bio: bio.innerText });
+
+      
+      // TODO: Lưu bio vào server (chức năng này sẽ được phát triển sau)
+      console.log('Profile saved:', { name: currentNameValue, bio: currentBioValue });
     }
 
     function changeAvatar() {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = 'image/*';
-      input.onchange = function(e) {
+      input.accept = 'image/jpeg,image/png,image/gif';
+      input.onchange = async function(e) {
         const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            document.getElementById('profileAvatar').src = e.target.result;
-          };
-          reader.readAsDataURL(file);
+        if (!file) return;
+        
+        // Kiểm tra kích thước file (giới hạn 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+          alert('Kích thước file quá lớn. Giới hạn 2MB');
+          return;
+        }
+        
+        // Hiển thị trước ảnh
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('profileAvatar').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+        
+        // Tạo FormData để gửi lên server
+        const formData = new FormData();
+        formData.append('avatar', file);
+        
+        try {
+          // Hiển thị trạng thái đang tải lên
+          const profileAvatar = document.getElementById('profileAvatar');
+          const originalSrc = profileAvatar.src;
+          const originalStyle = profileAvatar.style.opacity;
+          profileAvatar.style.opacity = '0.5';
+          
+          // Gửi dữ liệu lên server
+          const response = await fetch('uploadAvatar.php', {
+            method: 'POST',
+            body: formData
+          });
+          
+          const data = await response.json();
+          
+          // Khôi phục trạng thái avatar
+          profileAvatar.style.opacity = originalStyle;
+          
+          if (data.success) {
+            // Cập nhật avatar mới
+            document.getElementById('profileAvatar').src = data.avatarUrl;
+            document.getElementById('userAvatar').src = data.avatarUrl;
+            
+            // Thông báo thành công
+            alert('Ảnh đại diện đã được cập nhật thành công');
+          } else {
+            // Hiển thị lỗi và khôi phục avatar cũ
+            alert('Lỗi khi cập nhật ảnh đại diện: ' + data.message);
+            document.getElementById('profileAvatar').src = originalSrc;
+          }
+        } catch (error) {
+          console.error('Lỗi khi tải lên avatar:', error);
+          alert('Đã xảy ra lỗi khi tải lên ảnh đại diện');
+          // Khôi phục trạng thái avatar
+          document.getElementById('profileAvatar').style.opacity = originalStyle;
         }
       };
       input.click();
@@ -395,7 +771,7 @@
         });
         
         // Redirect to logout.php to clear server-side session
-        window.location.href = '/../logout.php';
+        window.location.href = '../logout.php';
       }
     }
 

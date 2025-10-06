@@ -159,7 +159,7 @@
     // Load user info on page load
     async function loadUserInfo() {
       try {
-        const response = await fetch('getUserInfo.php');
+        const response = await fetch('profile/getUserInfo.php');
         if (response.ok) {
           const data = await response.json();
           

@@ -1,6 +1,6 @@
 <?php
 session_start();
-require 'db.php'; // file kết nối tới MySQL
+require '../db.php'; // Updated path to db.php
 
 // Kiểm tra session UserToken có tồn tại không
 if (!isset($_SESSION['UserToken'])) {
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['isFirstLogin'] = 0;
             $success = "Đổi mật khẩu thành công! Đang chuyển hướng về trang chủ...";
             // Redirect về index.php sau 2 giây
-            header("refresh:2;url=index.php");
+            header("refresh:2;url=../index.php");
         } else {
             $error = "Có lỗi xảy ra, vui lòng thử lại.";
         }
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Đổi mật khẩu - Ký Ức Việt</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="icon" type="image/png" href="logo.PNG" />
+  <link rel="icon" type="image/png" href="../logo.PNG" />
   <style>
     body {
       margin: 0;

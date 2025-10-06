@@ -175,7 +175,7 @@
     // Load user info on page load
     async function loadUserInfo() {
       try {
-        const response = await fetch('getUserInfo.php');
+        const response = await fetch('profile/getUserInfo.php');
         if (response.ok) {
           const data = await response.json();
           
@@ -208,6 +208,16 @@
       // Update user name
       const nameElement = document.getElementById('userName');
       nameElement.textContent = userData.username || 'Guest User';
+      
+      // Apply role-based styling
+      // First, remove any existing role classes
+      nameElement.classList.remove('admin', 'customerpre', 'customer');
+      avatarElement.classList.remove('admin', 'customerpre', 'customer');
+      
+      // Add appropriate class based on role
+      const role = userData.role ? userData.role.toLowerCase() : 'customer';
+      nameElement.classList.add(role);
+      avatarElement.classList.add(role);
       
       // Update user points
       const pointsElement = document.getElementById('userPoints');

@@ -861,6 +861,9 @@ body {
 .profile-header h2 {
   margin: 0 0 5px 0;
   font-size: 24px;
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
 }
 
 .profile-header p {
@@ -1693,4 +1696,92 @@ input[type="checkbox"]:checked + .toggle-switch::before {
   .gallery-content {
     padding: 50px 10px 10px;
   }
+}
+
+/* Định dạng màu tên người dùng theo vai trò */
+.user-name.admin, #profileName.admin {
+  color: #F44336; /* Đỏ material */
+  font-weight: bold;
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
+.user-name.customerpre, #profileName.customerpre {
+  color: #FFC107; /* Vàng amber */
+  font-weight: bold;
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+.user-name.customer, #profileName.customer {
+  color: #2196F3; /* Xanh material */
+  font-weight: bold; /* Thêm font chữ đậm giống admin và customerpre */
+  background-color: rgba(33, 150, 243, 0.1);
+}
+
+/* Định dạng viền avatar theo vai trò */
+.profile-avatar.admin img, 
+.user-icon.admin {
+  border: 3px solid #F44336;
+  box-shadow: 0 0 8px rgba(244, 67, 54, 0.5);
+}
+
+.profile-avatar.customerpre img,
+.user-icon.customerpre {
+  border: 3px solid #FFC107;
+  box-shadow: 0 0 8px rgba(255, 193, 7, 0.5);
+}
+
+.profile-avatar.customer img,
+.user-icon.customer {
+  border: 2px solid #2196F3;
+  box-shadow: 0 0 8px rgba(33, 150, 243, 0.3);
+}
+
+/* Định dạng cho phần lịch sử username */
+.username-history-container {
+  margin: 10px 0;
+  font-size: 14px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.username-history-list h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: #555;
+}
+
+.username-history-list ul {
+  list-style: none;
+  padding-left: 10px;
+  margin: 0;
+}
+
+.username-history-list li {
+  margin-bottom: 5px;
+  padding: 4px 0;
+  border-bottom: 1px dotted #ddd;
+}
+
+.username-change-restriction {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  border-left: 3px solid #ffc107;
+}
+
+/* Định dạng cho phần input trong profile */
+.profile-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+#bioInput {
+  min-height: 100px;
+  resize: vertical;
 }
