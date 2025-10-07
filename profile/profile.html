@@ -637,19 +637,19 @@
     <!-- Stats Section -->
     <div class="stats-section">
       <div class="stat-card">
-        <div class="stat-number">189</div>
+        <div class="stat-number">N/a</div>
         <div class="stat-label">Điểm</div>
       </div>
       <div class="stat-card">
-        <div class="stat-number">8</div>
+        <div class="stat-number">N/a</div>
         <div class="stat-label">Check-ins</div>
       </div>
       <div class="stat-card">
-        <div class="stat-number">5</div>
+        <div class="stat-number">N/a</div>
         <div class="stat-label">Bảo tàng</div>
       </div>
       <div class="stat-card">
-        <div class="stat-number">#7</div>
+        <div class="stat-number">#N/a</div>
         <div class="stat-label">Xếp hạng</div>
       </div>
     </div>
@@ -722,15 +722,12 @@
     <div class="settings-section">
       <h3>⚙️ Cài đặt</h3>
       <div class="settings-list">
-        <div class="setting-item" onclick="toggleNotifications()">
+        <div class="setting-item" onclick="showEditProfileModal()">
           <div class="setting-info">
-            <div class="setting-name">Thông báo</div>
-            <div class="setting-desc">Nhận thông báo về hoạt động mới</div>
+            <div class="setting-name">Chỉnh sửa thông tin cá nhân</div>
+            <div class="setting-desc">Thay đổi avatar và tên hiển thị</div>
           </div>
-          <div class="setting-toggle">
-            <input type="checkbox" id="notifications" checked>
-            <label for="notifications" class="toggle-switch"></label>
-          </div>
+          <div class="setting-arrow">▶</div>
         </div>
         <div class="setting-item" onclick="toggleLocation()">
           <div class="setting-info">
@@ -741,27 +738,22 @@
             <input type="checkbox" id="location" checked>
             <label for="location" class="toggle-switch"></label>
           </div>
+          <div class="setting-arrow">▶</div>
         </div>
-        <div class="setting-item" onclick="showPrivacySettings()">
+        <div class="setting-item" onclick="showAboutUs()">
           <div class="setting-info">
-            <div class="setting-name">Quyền riêng tư</div>
-            <div class="setting-desc">Quản lý quyền riêng tư</div>
+            <div class="setting-name">Giới thiệu</div>
+            <div class="setting-desc">Thông tin về ứng dụng</div>
           </div>
           <div class="setting-arrow">▶</div>
         </div>
-        <div class="setting-item" onclick="showEditProfileModal()">
-          <div class="setting-info">
-            <div class="setting-name">Chỉnh sửa thông tin cá nhân</div>
-            <div class="setting-desc">Thay đổi avatar và tên hiển thị</div>
-          </div>
-          <div class="setting-arrow">▶</div>
-        </div>
+        
         <div class="setting-item logout-item" onclick="logout()">
           <div class="setting-info">
             <div class="setting-name">Đăng xuất</div>
             <div class="setting-desc">Thoát khỏi tài khoản</div>
           </div>
-          <div class="setting-arrow">🚪</div>
+          <div class="setting-arrow">▶</div>
         </div>
       </div>
     </div>
@@ -1355,11 +1347,6 @@
       editAvatar();
     }
 
-    function toggleNotifications() {
-      const checkbox = document.getElementById('notifications');
-      checkbox.checked = !checkbox.checked;
-      console.log('Notifications:', checkbox.checked);
-    }
 
     function toggleLocation() {
       const checkbox = document.getElementById('location');
@@ -1367,8 +1354,8 @@
       console.log('Location:', checkbox.checked);
     }
 
-    function showPrivacySettings() {
-      alert('Cài đặt quyền riêng tư sẽ được phát triển trong phiên bản tiếp theo');
+    function showAboutUs() {
+      alert('Thông tin về ứng dụng sẽ được phát triển trong phiên bản tiếp theo');
     }
     
     function showEditProfileModal() {
