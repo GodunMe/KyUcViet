@@ -3,14 +3,6 @@ session_start();
 require_once 'db.php';
 error_log("quiz_completed: " . (isset($_SESSION['quiz_completed']) ? ($_SESSION['quiz_completed'] ? 'true' : 'false') : 'not set'));
 
-// Hàm reset session quiz
-function resetQuizSession() {
-    unset($_SESSION['quiz_index']);
-    unset($_SESSION['quiz_list']);
-    unset($_SESSION['quiz_result']);
-    $_SESSION['quiz_completed'] = false;  // Luôn reset trạng thái hoàn thành khi reset quiz
-}
-
 // Lấy biến bảo tàng và token người dùng
 $museumId = isset($_GET['museumId']) ? intval($_GET['museumId']) : 0;
 $userToken = isset($_SESSION['UserToken']) ? $_SESSION['UserToken'] : '';
@@ -19,6 +11,46 @@ $userToken = isset($_SESSION['UserToken']) ? $_SESSION['UserToken'] : '';
 if (!$userToken) {
     header("Location: nfc_required.html");
     exit;
+}
+
+// Kiểm tra người dùng đã check in bảo tàng này chưa
+$checkinStmt = $conn->prepare("SELECT * FROM checkins WHERE UserToken = ? AND MuseumID = ?");
+$checkinStmt->bind_param("si", $userToken, $museumId);
+$checkinStmt->execute();
+$hasCheckedIn = $checkinStmt->get_result()->num_rows > 0;
+if (!$hasCheckedIn) {
+    header("Location: not_checked_in.html");
+    exit;
+}
+
+// Khởi tạo quiz list nếu chưa có
+if (!isset($_SESSION['quiz_list'])) {
+    $quizSql = "SELECT * FROM quiz WHERE MuseumID = ? ORDER BY RAND() LIMIT 5";
+    $quizStmt = $conn->prepare($quizSql);
+    $quizStmt->bind_param("i", $museumId);
+    $quizStmt->execute();
+    $quizResult = $quizStmt->get_result();
+    $quizzes = $quizResult->fetch_all(MYSQLI_ASSOC);
+
+    // Nếu không có quiz nào cho bảo tàng này thì chuyển hướng luôn
+    if (!$quizzes || count($quizzes) < 5) {
+        header("Location: no_quiz_available.html");
+        exit;
+    }
+
+    $_SESSION['quiz_list'] = $quizzes;
+    $_SESSION['quiz_index'] = 0;
+    $_SESSION['quiz_completed'] = false;
+} else {
+    $quizzes = $_SESSION['quiz_list'];
+}
+
+// Hàm reset session quiz
+function resetQuizSession() {
+    unset($_SESSION['quiz_index']);
+    unset($_SESSION['quiz_list']);
+    unset($_SESSION['quiz_result']);
+    $_SESSION['quiz_completed'] = false;  // Luôn reset trạng thái hoàn thành khi reset quiz
 }
 
 // Reset quiz khi có lệnh reset hoặc restart
@@ -39,33 +71,6 @@ $checkDoneStmt = $conn->prepare("SELECT * FROM user_do_quiz WHERE UserToken = ? 
 $checkDoneStmt->bind_param("si", $userToken, $museumId);
 $checkDoneStmt->execute();
 $checkDone = $checkDoneStmt->get_result()->num_rows > 0;
-
-// Khởi tạo quiz list nếu chưa có
-if (!isset($_SESSION['quiz_list'])) {
-    $quizSql = "SELECT * FROM quiz WHERE MuseumID = ? ORDER BY RAND() LIMIT 5";
-    $quizStmt = $conn->prepare($quizSql);
-    $quizStmt->bind_param("i", $museumId);
-    $quizStmt->execute();
-    $quizResult = $quizStmt->get_result();
-    $quizzes = $quizResult->fetch_all(MYSQLI_ASSOC);
-
-    if (!$quizzes || count($quizzes) < 5) {
-        echo "Không đủ câu hỏi quiz cho bảo tàng này.";
-        exit;
-    }
-
-    $_SESSION['quiz_list'] = $quizzes;
-    $_SESSION['quiz_index'] = 0;
-    $_SESSION['quiz_completed'] = false;
-} else {
-    $quizzes = $_SESSION['quiz_list'];
-}
-
-// Kiểm tra quiz tồn tại
-if (!$quizzes) {
-    echo "Không có quiz cho bảo tàng này.";
-    exit;
-}
 
 // Xác định câu hỏi hiện tại ưu tiên từ quiz_result
 if (isset($_SESSION['quiz_result'])) {
