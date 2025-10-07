@@ -73,7 +73,7 @@ $questionResult = $questionStmt->get_result();
 $question = $questionResult->fetch_assoc();
 
 // Lấy các lựa chọn
-$optionsSql = "SELECT * FROM option WHERE QuestionID = ?";
+$optionsSql = "SELECT * FROM 'option' WHERE QuestionID = ?";
 $optionsStmt = $conn->prepare($optionsSql);
 $optionsStmt->bind_param("i", $question['QuestionID']);
 $optionsStmt->execute();
@@ -84,7 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $selectedOption = intval($_POST['option']);
 
     // Kiểm tra đáp án đúng
-    $optionCheckSql = "SELECT isCorrect FROM option WHERE OptionID = ?";
+    $optionCheckSql = "SELECT isCorrect FROM 'option' WHERE OptionID = ?";
     $optionCheckStmt = $conn->prepare($optionCheckSql);
     $optionCheckStmt->bind_param("i", $selectedOption);
     $optionCheckStmt->execute();
@@ -125,7 +125,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Làm Quiz</title>
+<title>Ký ức Việt</title>
+<link rel="icon" type="image/png" href="logo.PNG" />
 <style>
 body { font-family: Arial, sans-serif; padding: 10px; background: #f9f9f9; }
 .quiz-box { background: white; border-radius: 12px; padding: 20px; max-width: 500px; margin: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
