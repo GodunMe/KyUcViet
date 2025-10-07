@@ -1,90 +1,110 @@
 <?php
 session_start();
+require_once 'db.php';
+error_log("quiz_completed: " . (isset($_SESSION['quiz_completed']) ? ($_SESSION['quiz_completed'] ? 'true' : 'false') : 'not set'));
 
-// Kiểm tra nếu đã hoàn thành quiz lần trước, xóa để cho phép làm lại
-if (isset($_SESSION['quiz_completed']) && $_SESSION['quiz_completed'] === true) {
-    unset($_SESSION['quiz_completed']);
+// Hàm reset session quiz
+function resetQuizSession() {
     unset($_SESSION['quiz_index']);
+    unset($_SESSION['quiz_list']);
+    unset($_SESSION['quiz_result']);
+    $_SESSION['quiz_completed'] = false;  // Luôn reset trạng thái hoàn thành khi reset quiz
 }
 
-if (!isset($_SESSION['UserToken']) || empty($_SESSION['UserToken'])) {
+// Lấy biến bảo tàng và token người dùng
+$museumId = isset($_GET['museumId']) ? intval($_GET['museumId']) : 0;
+$userToken = isset($_SESSION['UserToken']) ? $_SESSION['UserToken'] : '';
+
+// Kiểm tra đăng nhập NFC bắt buộc
+if (!$userToken) {
     header("Location: nfc_required.html");
     exit;
 }
 
-require_once 'db.php';
+// Reset quiz khi có lệnh reset hoặc restart
+if ((isset($_GET['reset']) && $_GET['reset'] == 1) || isset($_GET['restart'])) {
+    resetQuizSession();
+    header("Location: doquiz.php?museumId=$museumId");
+    exit;
+}
 
-$museumId = isset($_GET['museumId']) ? intval($_GET['museumId']) : 0;
-$userToken = $_SESSION['UserToken'];
+// Kiểm tra quiz đã hoàn thành trước đó
+if (isset($_SESSION['quiz_completed']) && $_SESSION['quiz_completed'] === true) {
+    header("Location: quiz_complete.html?museumId=$museumId");
+    exit;
+}
 
-// Kiểm tra lần đầu làm quiz bảo tàng này
+// Kiểm tra người dùng đã làm quiz bảo tàng này chưa
 $checkDoneStmt = $conn->prepare("SELECT * FROM user_do_quiz WHERE UserToken = ? AND MuseumID = ?");
 $checkDoneStmt->bind_param("si", $userToken, $museumId);
 $checkDoneStmt->execute();
 $checkDone = $checkDoneStmt->get_result()->num_rows > 0;
 
-// Lấy 5 quiz đầu tiên của bảo tàng
-$quizSql = "SELECT * FROM quiz WHERE MuseumID = ? ORDER BY RAND() LIMIT 5";
-$quizStmt = $conn->prepare($quizSql);
-$quizStmt->bind_param("i", $museumId);
-$quizStmt->execute();
-$quizResult = $quizStmt->get_result();
-$quizzes = $quizResult->fetch_all(MYSQLI_ASSOC);
+// Khởi tạo quiz list nếu chưa có
+if (!isset($_SESSION['quiz_list'])) {
+    $quizSql = "SELECT * FROM quiz WHERE MuseumID = ? ORDER BY RAND() LIMIT 5";
+    $quizStmt = $conn->prepare($quizSql);
+    $quizStmt->bind_param("i", $museumId);
+    $quizStmt->execute();
+    $quizResult = $quizStmt->get_result();
+    $quizzes = $quizResult->fetch_all(MYSQLI_ASSOC);
 
+    if (!$quizzes || count($quizzes) < 5) {
+        echo "Không đủ câu hỏi quiz cho bảo tàng này.";
+        exit;
+    }
+
+    $_SESSION['quiz_list'] = $quizzes;
+    $_SESSION['quiz_index'] = 0;
+    $_SESSION['quiz_completed'] = false;
+} else {
+    $quizzes = $_SESSION['quiz_list'];
+}
+
+// Kiểm tra quiz tồn tại
 if (!$quizzes) {
     echo "Không có quiz cho bảo tàng này.";
     exit;
 }
 
-// Lấy vị trí quiz hiện tại (câu hỏi thứ mấy) từ session hoặc query param
-$currentIndex = isset($_SESSION['quiz_index']) ? $_SESSION['quiz_index'] : 0;
-if (isset($_GET['index'])) {
-    $indexGet = intval($_GET['index']);
-    if ($indexGet >= 0 && $indexGet < count($quizzes)) {
-        $currentIndex = $indexGet;
-        $_SESSION['quiz_index'] = $currentIndex;
-    }
+// Xác định câu hỏi hiện tại ưu tiên từ quiz_result
+if (isset($_SESSION['quiz_result'])) {
+    $currentIndex = $_SESSION['quiz_result']['currentIndex'];
+} else if (isset($_GET['index'])) {
+    $currentIndex = intval($_GET['index']);
+    $_SESSION['quiz_index'] = $currentIndex;
+} else {
+    $currentIndex = isset($_SESSION['quiz_index']) ? $_SESSION['quiz_index'] : 0;
 }
 
-// Xử lý khi ấn nút trả về để reset quiz_index
-if (isset($_GET['reset']) && $_GET['reset'] == 1) {
-    unset($_SESSION['quiz_index']);
-    header("Location: museum.html?id=$museumId");
-    exit;
-}
-
-// Kiểm tra nếu hoàn thành quiz, chuyển sang page hoàn thành một lần và set flag completed
+// Kiểm tra hết quiz
 if ($currentIndex >= count($quizzes)) {
-    unset($_SESSION['quiz_index']);
-    unset($_SESSION['quiz_completed']);
-    //$_SESSION['quiz_completed'] = true;
+    $_SESSION['quiz_completed'] = true;
     header("Location: quiz_complete.html?museumId=$museumId");
     exit;
 }
 
 $currentQuiz = $quizzes[$currentIndex];
 
-// Lấy câu hỏi hiện tại
+// Lấy câu hỏi
 $questionSql = "SELECT * FROM question WHERE QuizID = ?";
 $questionStmt = $conn->prepare($questionSql);
 $questionStmt->bind_param("i", $currentQuiz['QuizID']);
 $questionStmt->execute();
-$questionResult = $questionStmt->get_result();
-$question = $questionResult->fetch_assoc();
+$question = $questionStmt->get_result()->fetch_assoc();
 
-// Lấy các lựa chọn
-$optionsSql = "SELECT * FROM 'option' WHERE QuestionID = ?";
+// Lấy các đáp án
+$optionsSql = "SELECT * FROM `option` WHERE QuestionID = ? ORDER BY RAND()";
 $optionsStmt = $conn->prepare($optionsSql);
 $optionsStmt->bind_param("i", $question['QuestionID']);
 $optionsStmt->execute();
-$optionsResult = $optionsStmt->get_result();
-$options = $optionsResult->fetch_all(MYSQLI_ASSOC);
+$options = $optionsStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
+// Xử lý POST (trả JSON)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $selectedOption = intval($_POST['option']);
 
-    // Kiểm tra đáp án đúng
-    $optionCheckSql = "SELECT isCorrect FROM 'option' WHERE OptionID = ?";
+    $optionCheckSql = "SELECT isCorrect FROM `option` WHERE OptionID = ?";
     $optionCheckStmt = $conn->prepare($optionCheckSql);
     $optionCheckStmt->bind_param("i", $selectedOption);
     $optionCheckStmt->execute();
@@ -99,23 +119,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $updateScoreStmt->execute();
     }
 
-    if ($currentIndex == count($quizzes) - 1 && !$checkDone) {
+    if ($currentIndex == count($quizzes) - 1 && $isFirstTime) {
         $insertUserDoQuiz = $conn->prepare("INSERT INTO user_do_quiz (UserToken, MuseumID) VALUES (?, ?)");
         $insertUserDoQuiz->bind_param("si", $userToken, $museumId);
         $insertUserDoQuiz->execute();
     }
 
+    $_SESSION['quiz_result'] = [
+        'isCorrect' => (bool)$isCorrect,
+        'question' => $question['QuestionText'],
+        'explaination' => isset($currentQuiz['Explaination']) ? $currentQuiz['Explaination'] : '',
+        'currentIndex' => $currentIndex,
+        'total' => count($quizzes),
+        'isLast' => ($currentIndex == count($quizzes) - 1)
+    ];
+
     $_SESSION['quiz_index'] = $currentIndex + 1;
 
-    // Trả kết quả JSON cho ajax
     header('Content-Type: application/json');
-    echo json_encode([
-        'success' => true,
-        'isCorrect' => (bool)$isCorrect,
-        'next' => $currentIndex < count($quizzes) - 1,
-        'isFirstTime' => $isFirstTime
-    ]);
+    echo json_encode(['success' => true, 'showResultPage' => true]);
     exit;
+}
+
+function renderTextAndImage($str) {
+    // Chỉ cho phép <img> và <br>
+    return preg_replace('/<(?!img|br).*?>/', '', $str);
 }
 
 ?>
@@ -137,160 +165,121 @@ body { font-family: Arial, sans-serif; padding: 10px; background: #f9f9f9; }
 .back-btn { background: gray;}
 .timer { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 15px; color: #333; }
 .result { margin-top: 10px; font-size: 18px; font-weight: bold; text-align: center;}
-.big-x {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%) scale(0.5);
-    font-size: 120px; color: red; font-weight: bold;
-    opacity: 0; z-index: 9999;
-    transition: all 0.6s ease;
-}
-.big-x.show {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 1;
-}
 </style>
 </head>
 <body>
+
+<?php
+if (isset($_SESSION['quiz_result'])) {
+    $qr = $_SESSION['quiz_result'];
+?>
+<div class="quiz-box">
+    <div class="result" style="font-size:22px;margin-bottom:18px;">
+        <?php if ($qr['isCorrect']): ?>
+            <span style="color:green;">🎉 Chính xác!</span>
+        <?php else: ?>
+            <span style="color:red;">❌ Sai rồi!</span>
+        <?php endif; ?>
+    </div>
+    <div class="question" style="margin-bottom:10px;"><b>Câu hỏi:</b><br><?php echo renderTextAndImage($qr['question']); ?></div>
+    <?php if (!empty($qr['explaination'])): ?>
+    <div class="explaination" style="margin-bottom:18px;color:#555;font-size:15px;">
+        <b>Giải thích:</b><br><?php echo renderTextAndImage($qr['explaination']); ?>
+    </div>
+    <?php endif; ?>
+    <?php if ($qr['isLast']): ?>
+        <button class="submit-btn" onclick="window.location.href='quiz_complete.html?museumId=<?= $museumId ?>'">Hoàn thành</button>
+    <?php else: ?>
+        <button class="submit-btn" onclick="window.location.href='doquiz.php?museumId=<?= $museumId ?>&index=<?= $qr['currentIndex']+1 ?>'">Câu tiếp theo</button>
+    <?php endif; ?>
+</div>
+
+<?php
+    unset($_SESSION['quiz_result']);
+} else {
+?>
 <div class="quiz-box">
     <div class="timer">⏳ Thời gian còn lại: <span id="countdown">15</span>s</div>
     <form id="quizForm">
-        <div class="question"><?= htmlspecialchars($question['QuestionText']) ?></div>
+        <div class="question"><?php echo renderTextAndImage($question['QuestionText']); ?></div>
         <?php foreach ($options as $opt): ?>
         <div class="option">
             <label>
                 <input type="radio" name="option" value="<?= $opt['OptionID'] ?>">
-                <?= htmlspecialchars($opt['TEXT']) ?>
+                <?php echo renderTextAndImage($opt['TEXT']); ?>
             </label>
         </div>
         <?php endforeach; ?>
         <div class="result"></div>
         <button type="submit" id="submitBtn" class="submit-btn" disabled>Nộp bài</button>
     </form>
-    <button class="back-btn" onclick="window.location.href='doquiz.php?museumId=<?= $museumId ?>&reset=1'">⬅️ Trở về</button>
+    <button class="back-btn" onclick="window.location.href='museum.html?id=<?= $museumId ?>'">⬅️ Trở về</button>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<?php
+}
+?>
+
 <script>
-let timeLeft = 15;
-let stopped = false;
-const countdown = document.getElementById("countdown");
-const resultDiv = document.querySelector(".result");
-const submitBtn = document.getElementById("submitBtn");
-let currentIndex = <?= $currentIndex ?>;
-
-function disableAll() {
-    document.querySelectorAll("input[type=radio]").forEach(r => r.disabled = true);
-    submitBtn.disabled = true;
-}
-
-function fireConfetti() {
-    const duration = 1000;
-    const end = Date.now() + duration;
-    (function frame() {
-        confetti({
-            particleCount: 5,
-            spread: 70,
-            origin: { y: 0 }
+if (document.getElementById("quizForm")) {
+    document.querySelectorAll("input[name='option']").forEach(radio => {
+        radio.addEventListener("change", () => {
+            document.getElementById("submitBtn").disabled = false;
         });
-        if (Date.now() < end) {
-            requestAnimationFrame(frame);
-        }
-    })();
-}
-
-let timer = setInterval(() => {
-    if (stopped) return;
-    countdown.innerText = timeLeft;
-    if (timeLeft <= 0) {
-        clearInterval(timer);
-        showResult(false, "⏰ Hết thời gian! Bạn trả lời sai.");
-        setTimeout(() => {
-            stopped = true;
-            currentIndex++;
-            if (currentIndex >= <?= count($quizzes) ?>) {
-                window.location.href = "quiz_complete.html?museumId=<?= $museumId ?>";
-            } else {
-                window.location.href = `doquiz.php?museumId=<?= $museumId ?>&index=${currentIndex}`;
-            }
-        }, 2000);
-    }
-    timeLeft--;
-}, 1000);
-
-document.querySelectorAll("input[name='option']").forEach(radio => {
-    radio.addEventListener("change", () => {
-        submitBtn.disabled = false;
     });
-});
 
-document.getElementById("quizForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-    if (stopped) return;
-
-    const selected = document.querySelector("input[name=option]:checked");
-    if (!selected) return;
-
-    const option = selected.value;
-
-    fetch("doquiz.php?museumId=<?= $museumId ?>", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: "option=" + encodeURIComponent(option)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            let msg = "";
-            if (data.isCorrect) {
-                msg = data.isFirstTime ? "🎉 Chính xác! +10 điểm" : "🎉 Chính xác!";
-            } else {
-                msg = "❌ Sai rồi!";
-            }
-
+    let timeLeft = 15;
+    let stopped = false;
+    const countdown = document.getElementById("countdown");
+    let timer = setInterval(() => {
+        if (stopped) return;
+        countdown.innerText = timeLeft;
+        if (timeLeft <= 0) {
             clearInterval(timer);
-            showResult(data.isCorrect, msg);
-
-            if (data.next) {
-                currentIndex++;
-                setTimeout(() => {
-                    window.location.href = `doquiz.php?museumId=<?= $museumId ?>&index=${currentIndex}`;
-                }, 2000);
-            } else {
-                setTimeout(() => {
-                    window.location.href = "quiz_complete.html?museumId=<?= $museumId ?>";
-                }, 2000);
-            }
-        } else {
-            alert("Có lỗi xảy ra. Vui lòng thử lại.");
+            stopped = true;
+            fetch("doquiz.php?museumId=<?= $museumId ?>", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "option=0"
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.showResultPage) {
+                    window.location.reload();
+                } else {
+                    alert("Có lỗi xảy ra. Vui lòng thử lại.");
+                }
+            });
         }
-    })
-    .catch(err => console.error(err));
-});
+        timeLeft--;
+    }, 1000);
 
-function showBigX() {
-    const xElem = document.createElement("div");
-    xElem.className = "big-x";
-    xElem.innerText = "X";
-    document.body.appendChild(xElem);
+    document.getElementById("quizForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        if (stopped) return;
 
-    setTimeout(() => xElem.classList.add("show"), 50);
+        const selected = document.querySelector("input[name='option']:checked");
+        if (!selected) return;
 
-    setTimeout(() => {
-        xElem.style.opacity = "0";
-        setTimeout(() => xElem.remove(), 500);
-    }, 1200);
-}
+        const option = selected.value;
 
-function showResult(isCorrect, msg) {
-    stopped = true;
-    disableAll();
-    resultDiv.innerHTML = `<p style="color:${isCorrect ? 'green' : 'red'};">${msg}</p>`;
-    if (isCorrect) {
-        fireConfetti();
-    } else {
-        showBigX();
-    }
+        fetch("doquiz.php?museumId=<?= $museumId ?>", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "option=" + encodeURIComponent(option)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.showResultPage) {
+                clearInterval(timer);
+                window.location.reload();
+            } else {
+                alert("Có lỗi xảy ra. Vui lòng thử lại.");
+            }
+        })
+        .catch(err => console.error(err));
+    });
 }
 </script>
+
 </body>
 </html>
