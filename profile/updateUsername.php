@@ -50,11 +50,11 @@ try {
             $currentTimestamp = time();
             $daysSinceLastChange = floor(($currentTimestamp - $lastChangeTimestamp) / (60 * 60 * 24));
             
-            if ($daysSinceLastChange < 90) {
-                $daysRemaining = 90 - $daysSinceLastChange;
+            if ($daysSinceLastChange < 7) {
+                $daysRemaining = 7 - $daysSinceLastChange;
                 echo json_encode([
-                    'success' => false, 
-                    'message' => "Bạn chỉ có thể đổi username sau 90 ngày kể từ lần thay đổi gần nhất. Vui lòng đợi thêm {$daysRemaining} ngày nữa."
+                    'success' => false,
+                    'message' => "Bạn chỉ có thể đổi username sau 7 ngày kể từ lần thay đổi gần nhất. Vui lòng đợi thêm {$daysRemaining} ngày nữa."
                 ]);
                 exit;
             }
