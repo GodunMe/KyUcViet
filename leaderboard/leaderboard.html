@@ -111,86 +111,8 @@
     </div>
 
     <!-- Leaderboard List -->
-    <div class="leaderboard-section">
-      <div id="leaderboardList" class="leaderboard-list">
-        <!-- Top 3 Podium -->
-        <div class="podium">
-          <div class="podium-item second">
-            <div class="podium-avatar">
-              <img src="avatar/default.png" alt="User 2">
-              <div class="rank-number">2</div>
-            </div>
-            <h4>Trần Thị B</h4>
-            <p>298 điểm</p>
-          </div>
-          <div class="podium-item first">
-            <div class="podium-avatar">
-              <img src="avatar/default.png" alt="User 1">
-              <div class="rank-number crown">👑</div>
-            </div>
-            <h4>Lê Văn C</h4>
-            <p>342 điểm</p>
-          </div>
-          <div class="podium-item third">
-            <div class="podium-avatar">
-              <img src="avatar/default.png" alt="User 3">
-              <div class="rank-number">3</div>
-            </div>
-            <h4>Phạm Minh D</h4>
-            <p>276 điểm</p>
-          </div>
-        </div>
+    <div id="leaderboardList" class="leaderboard-list"></div>
 
-        <!-- Regular Rankings -->
-        <div class="ranking-list">
-          <div class="ranking-item">
-            <div class="rank-number">4</div>
-            <img src="avatar/default.png" alt="User" class="rank-avatar">
-            <div class="rank-info">
-              <h4>Hoàng Thị E</h4>
-              <p>245 điểm • 12 check-ins</p>
-            </div>
-            <div class="rank-badge trending-up">📈</div>
-          </div>
-          <div class="ranking-item">
-            <div class="rank-number">5</div>
-            <img src="avatar/default.png" alt="User" class="rank-avatar">
-            <div class="rank-info">
-              <h4>Nguyễn Văn F</h4>
-              <p>223 điểm • 9 check-ins</p>
-            </div>
-            <div class="rank-badge">-</div>
-          </div>
-          <div class="ranking-item">
-            <div class="rank-number">6</div>
-            <img src="avatar/default.png" alt="User" class="rank-avatar">
-            <div class="rank-info">
-              <h4>Lý Thị G</h4>
-              <p>201 điểm • 11 check-ins</p>
-            </div>
-            <div class="rank-badge trending-down">📉</div>
-          </div>
-          <div class="ranking-item current-user">
-            <div class="rank-number highlight">7</div>
-            <img src="avatar/default.png" alt="User" class="rank-avatar">
-            <div class="rank-info">
-              <h4>Nguyen Van A (Bạn)</h4>
-              <p>189 điểm • 8 check-ins</p>
-            </div>
-            <div class="rank-badge">-</div>
-          </div>
-          <div class="ranking-item">
-            <div class="rank-number">8</div>
-            <img src="avatar/default.png" alt="User" class="rank-avatar">
-            <div class="rank-info">
-              <h4>Đặng Văn H</h4>
-              <p>165 điểm • 7 check-ins</p>
-            </div>
-            <div class="rank-badge trending-up">📈</div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Bottom Navigation -->
@@ -305,7 +227,7 @@
 
       // Update user points
       const pointsElement = document.getElementById('userPoints');
-      pointsElement.textContent = (userData.score || 0) + 'đ';
+      pointsElement.textContent = (userData.score || 0);
     }
 
     function showUserNotLoggedInState() {
@@ -362,96 +284,78 @@
 
     // Load leaderboard từ DB
     async function loadLeaderboard() {
-      try {
-        const response = await fetch('./getLeaderboard.php');
-        if (response.ok) {
-          const data = await response.json();
-          const leaderboardList = document.getElementById('leaderboardList');
-          leaderboardList.innerHTML = "";
+  try {
+    const response = await fetch('./getLeaderboard.php');
+    if (!response.ok) throw new Error('Không thể tải dữ liệu');
+    const data = await response.json();
+    const leaderboardList = document.getElementById('leaderboardList');
+    leaderboardList.innerHTML = "";
 
-          // Lọc bỏ Admin khỏi bảng xếp hạng
-          const filtered = data.filter(u => u.Role !== 'Admin');
+    // Lọc bỏ Admin
+    const filtered = data.filter(u => u.Role !== 'Admin');
 
-          // Top 3 podium
-          let podiumHtml = '<div class="podium">';
-          if (filtered[1]) {
-            podiumHtml += `
-    <div class="podium-item second ${filtered[1].Role === 'CustomerPre' ? 'flame' : ''}">
-      <div class="podium-avatar">
-        <img src="${filtered[1].avatar || '../avatar/default.png'}" alt="User 2">
-        <div class="rank-number">2</div>
-      </div>
-      <div class="rank-name">${filtered[1].Username}</div>
-      <div class="rank-score">${filtered[1].Score}</div>
-      ${filtered[1].Role === 'CustomerPre' ? `
-      <video class="flame-video" src="output.webm" style="background:none" autoplay muted loop playsinline></video>
-    ` : ''}
-    </div>`;
-          }
-          if (filtered[0]) {
-            podiumHtml += `
-    <div class="podium-item first ${filtered[0].Role === 'CustomerPre' ? 'flame' : ''}">
-      <div class="podium-avatar">
-        <span class="crown-icon">👑</span>
-        <img src="${filtered[0].avatar || '../avatar/default.png'}" alt="User 1">
-        <div class="rank-number">1</div>
-      </div>
-      <div class="rank-name">${filtered[0].Username}</div>
-      <div class="rank-score">${filtered[0].Score}</div>
-      ${filtered[0].Role === 'CustomerPre' ? `
-      <video class="flame-video" src="output.webm" style="background:none" autoplay muted loop playsinline></video>
-    ` : ''}
-    </div>`;
-          }
-          if (filtered[2]) {
-            podiumHtml += `
-    <div class="podium-item third ${filtered[2].Role === 'CustomerPre' ? 'flame' : ''}">
-      <div class="podium-avatar">
-        <img src="${filtered[2].avatar || '../avatar/default.png'}" alt="User 3">
-        <div class="rank-number">3</div>
-      </div>
-      <div class="rank-name">${filtered[2].Username}</div>
-      <div class="rank-score">${filtered[2].Score}</div>
-      ${filtered[2].Role === 'CustomerPre' ? `
-      <video class="flame-video" src="output.webm" style="background:none" autoplay muted loop playsinline></video>
-    ` : ''}
-    </div>`;
-          }
-          podiumHtml += '</div>';
-          leaderboardList.innerHTML += podiumHtml;
+    // Tách podium và danh sách còn lại
+    const podiumHtml = renderPodium(filtered.slice(0, 3));
+    const rankingHtml = renderRanking(filtered.slice(3));
+    leaderboardList.innerHTML = podiumHtml + rankingHtml;
 
+  } catch (err) {
+    document.getElementById('leaderboardList').innerHTML = `<p>Lỗi: ${err.message}</p>`;
+  }
+}
 
-          // Những người còn lại (từ hạng 4 trở đi)
-          let rankingHtml = '<div class="ranking-list">';
-          for (let i = 3; i < filtered.length; i++) {
-            rankingHtml += `
-  <div class="ranking-item ${filtered[i].Role === 'CustomerPre' ? 'flame' : ''}">
-    <span class="rank-list-id">${i + 1}</span>
-    <img src="${filtered[i].avatar || '../avatar/default.png'}" alt="User" class="rank-avatar">
-    <span class="rank-list-name">${filtered[i].Username}</span>
-    <span class="rank-list-score">${filtered[i].Score}</span>
-    ${filtered[i].Role === 'CustomerPre' ? `
-      <video class="flame-video-top-4" src="output.webm" style="background:none" autoplay muted loop playsinline></video>
-    ` : ''}
-  </div>`;
+// Render top 3 podium
+function renderPodium(top3) {
+  let html = '<div class="podium">';
+  const titles = ['first', 'second', 'third'];
+  for (let i = 0; i < 3; i++) {
+    const u = top3[i];
+    if (!u) continue;
+    html += `
+      <div class="podium-item ${titles[i]} ${u.Role === 'CustomerPre' ? 'flame' : ''}">
+        <div class="podium-avatar">
+          <img src="${u.avatar || '../avatar/default.png'}" alt="User ${i+1}">
+          ${i === 0 ? `<span class="crown-icon">👑</span>` : ""}
+          <div class="rank-number">${i+1}</div>
+        </div>
+        <div class="rank-name">${u.Username}</div>
+        <div class="rank-score">${u.Score}</div>
+        ${u.Role === 'CustomerPre' ? `
+            <video class="flame-video" src="output.webm" style="background:none" autoplay muted loop playsinline></video>
+        ` : ''}
+      </div>`;
+  }
+  html += '</div>';
+  return html;
+}
 
-          }
-          rankingHtml += '</div>';
-          leaderboardList.innerHTML += rankingHtml;
-        } else {
-          leaderboardList.innerHTML = '<p>Không thể tải bảng xếp hạng.</p>';
-        }
-      } catch (error) {
-        const leaderboardList = document.getElementById('leaderboardList');
-        leaderboardList.innerHTML = '<p>Lỗi khi tải bảng xếp hạng.</p>';
-        console.error("Lỗi load leaderboard:", error);
-      }
-    }
+// Render từ hạng 4 trở đi
+function renderRanking(others) {
+  let html = '<div class="ranking-list">';
+  for (let i = 0; i < others.length; i++) {
+    const u = others[i];
+    html += `
+      <div class="ranking-item ${u.Role === 'CustomerPre' ? 'flame' : ''}">
+        <span class="rank-list-id">${i+4}</span>
+        <div class="rank-avatar-w">
+          <img src="${u.avatar || '../avatar/default.png'}" class="rank-avatar" alt="User">
+        </div>
+        <span class="rank-list-name">${u.Username}</span>
+        <span class="rank-list-score">${u.Score}</span>
+        ${u.Role === 'CustomerPre' ? `
+            <video class="flame-video-top-4" src="output.webm" style="background:none" autoplay muted loop playsinline></video>
+        ` : ''}
+      </div>`;
+  }
+  html += '</div>';
+  return html;
+}
 
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function () {
-      loadUserInfo();
-      loadLeaderboard();
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function () {
+  loadUserInfo();
+
+  loadLeaderboard();
     });
   </script>
 </body>

@@ -234,7 +234,7 @@
       
       // Update user points
       const pointsElement = document.getElementById('userPoints');
-      pointsElement.textContent = (userData.score || 0) + 'đ';
+      pointsElement.textContent = (userData.score || 0);
       
       // Update profile information
       const profileName = document.getElementById('profileName');
@@ -288,7 +288,7 @@
           window.location.href = '/checkin/checkin.html';
           break;
         case 'leaderboard':
-          window.location.href = '/leaderboard.html';
+          window.location.href = '/leaderboard/leaderboard.html';
           break;
         case 'profile':
           // Already on profile page

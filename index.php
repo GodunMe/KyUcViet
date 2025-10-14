@@ -114,7 +114,7 @@ function showUserLoggedInState(data) {
   
   // Update user points
   const pointsElement = document.getElementById('userPoints');
-  pointsElement.textContent = (data.score || 0) + 'đ';
+  pointsElement.textContent = (data.score || 0);
 }
 
 // Show user not logged in state
@@ -163,7 +163,7 @@ function navigateToPage(page) {
       window.location.href = '/checkin/checkin.html';
       break;
     case 'leaderboard':
-      window.location.href = '/leaderboard.html';
+      window.location.href = '/leaderboard/leaderboard.html';
       break;
     case 'profile':
       window.location.href = '/profile.html';

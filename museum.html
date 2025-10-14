@@ -116,6 +116,136 @@
       <button class="retry-btn" onclick="loadMuseumData()">Thử lại</button>
     </div>
   </div>
+  <!-- Nút mở VR360 (luôn hiển thị ở góc phải màn hình trên mobile) -->
+<button id="openVrBtn" class="vr-btn-mobile">🕶️ Xem VR360</button>
+
+<!-- Modal VR360 -->
+<div id="vrModal" class="vr-modal" aria-hidden="true" role="dialog" aria-label="VR360 Viewer">
+  <div class="vr-modal__backdrop" id="vrBackdrop"></div>
+  <div class="vr-modal__content" role="document">
+    <button id="vrClose" class="vr-modal__close" aria-label="Đóng">✕</button>
+    <div class="vr-modal__container">
+      <iframe id="vrIframe" src="" frameborder="0" allowfullscreen loading="lazy"></iframe>
+
+      <div id="vrFallback" class="vr-fallback" style="display:none;">
+        <p>⚠️ Trang VR360 này không cho phép nhúng trực tiếp.</p>
+        <p>
+          <a id="openNewTab" href="#" target="_blank" rel="noopener" class="vr-fallback-link">
+            Mở trong tab mới
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CSS cho modal và nút -->
+<style>
+/* --- Nút mở VR360 --- */
+.vr-btn-mobile {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  z-index: 9999;
+  background: linear-gradient(135deg, #007bff, #00bfff);
+  color: white;
+  border: none;
+  padding: 14px 18px;
+  border-radius: 50px;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.vr-btn-mobile:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+/* --- Modal chung --- */
+.vr-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  font-family: system-ui, sans-serif;
+}
+.vr-modal[aria-hidden="false"] { display: block; }
+.vr-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+}
+.vr-modal__content {
+  position: relative;
+  width: 95%;
+  max-width: 1200px;
+  height: 90vh;
+  margin: 5vh auto;
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+}
+.vr-modal__container {
+  flex: 1;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.vr-modal__container iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #000;
+}
+.vr-modal__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10002;
+  background: rgba(255,255,255,0.95);
+  color: #000;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+}
+.vr-fallback {
+  color: #fff;
+  text-align: center;
+  padding: 20px;
+  background: #111;
+}
+.vr-fallback-link {
+  color: #00bfff;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+/* --- Responsive cho mobile nhỏ --- */
+@media (max-width: 768px) {
+  .vr-modal__content {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border-radius: 0;
+  }
+  .vr-modal__container {
+    border-radius: 0;
+  }
+  .vr-modal__close {
+    top: 12px;
+    right: 12px;
+    font-size: 20px;
+    padding: 10px 14px;
+  }
+}
+</style>
 
   <!-- Bottom Navigation -->
   <div class="bottom-nav">
@@ -142,6 +272,64 @@
   </div>
 
   <script>
+    //VR
+    (function(){
+  const openBtn = document.getElementById('openVrBtn');
+  const modal = document.getElementById('vrModal');
+  const backdrop = document.getElementById('vrBackdrop');
+  const closeBtn = document.getElementById('vrClose');
+  const iframe = document.getElementById('vrIframe');
+  const fallback = document.getElementById('vrFallback');
+  const openNewTab = document.getElementById('openNewTab');
+
+  const targetUrl = 'https://vr360.yoolife.vn/bao-tang-lich-su-quan-su-viet-nam-zmuseumc118u26724';
+  const IFRAME_TIMEOUT = 2500;
+  let iframeTimer = null;
+
+  function openModal() {
+    iframe.src = '';
+    fallback.style.display = 'none';
+    iframe.style.display = 'block';
+    modal.setAttribute('aria-hidden', 'false');
+    openNewTab.href = targetUrl;
+
+    setTimeout(() => {
+      iframe.src = targetUrl;
+      watchIframeLoad();
+    }, 50);
+  }
+
+  function closeModal() {
+    modal.setAttribute('aria-hidden', 'true');
+    iframe.src = 'about:blank';
+    clearTimeout(iframeTimer);
+  }
+
+  function watchIframeLoad() {
+    clearTimeout(iframeTimer);
+    function onLoadSuccess() {
+      clearTimeout(iframeTimer);
+      iframe.removeEventListener('load', onLoadSuccess);
+    }
+    iframe.addEventListener('load', onLoadSuccess);
+    iframeTimer = setTimeout(() => {
+      iframe.removeEventListener('load', onLoadSuccess);
+      iframe.style.display = 'none';
+      fallback.style.display = 'block';
+    }, IFRAME_TIMEOUT);
+  }
+
+  openBtn.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    openModal();
+  });
+
+  backdrop.addEventListener('click', closeModal);
+  closeBtn.addEventListener('click', closeModal);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') closeModal();
+  });
+})();
     const BASE_URL = "";
     let currentMuseumId = null;
     
@@ -155,6 +343,18 @@
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get('id');
     }
+        // Chỉ hiển thị nút VR360 khi museumId=3
+        document.addEventListener('DOMContentLoaded', function() {
+          var museumId = getMuseumIdFromUrl();
+          var vrBtn = document.getElementById('openVrBtn');
+          if (vrBtn) {
+            if (museumId !== '3') {
+              vrBtn.style.display = 'none';
+            } else {
+              vrBtn.style.display = '';
+            }
+          }
+        });
 
     // Load user info on page load
     async function loadUserInfo() {
@@ -195,7 +395,7 @@
       
       // Update user points
       const pointsElement = document.getElementById('userPoints');
-      pointsElement.textContent = (userData.score || 0) + 'đ';
+      pointsElement.textContent = (userData.score || 0);
     }
 
     function showUserNotLoggedInState() {
@@ -454,6 +654,9 @@
           // Clear any saved states and scroll to top
           sessionStorage.removeItem('museumPageState');
           sessionStorage.removeItem('artifactDetailState');
+          currentPage = 1;
+          displayArtifactsPage();
+          setupPagination();
           window.scrollTo(0, 0);
           return;
         }
@@ -755,7 +958,7 @@
           window.location.href = './checkin/checkin.html';
           break;
         case 'leaderboard':
-          window.location.href = '/leaderboard.html';
+          window.location.href = '/leaderboard/leaderboard.html';
           break;
         case 'profile':
           window.location.href = '/profile.html';
