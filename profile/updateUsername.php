@@ -33,33 +33,6 @@ if (!preg_match('/^[a-zA-Z0-9_\s]+$/', $newUsername)) {
 }
 
 try {
-    // Kiểm tra xem đã đủ 90 ngày kể từ lần đổi username gần nhất chưa
-    $sql = "SELECT LastUsernameChange FROM users WHERE UserToken = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $userToken);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result && $result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        $lastChangeDate = $row['LastUsernameChange'];
-        
-        if ($lastChangeDate !== null) {
-            // Tính khoảng cách thời gian
-            $lastChangeTimestamp = strtotime($lastChangeDate);
-            $currentTimestamp = time();
-            $daysSinceLastChange = floor(($currentTimestamp - $lastChangeTimestamp) / (60 * 60 * 24));
-            
-            if ($daysSinceLastChange < 7) {
-                $daysRemaining = 7 - $daysSinceLastChange;
-                echo json_encode([
-                    'success' => false,
-                    'message' => "Bạn chỉ có thể đổi username sau 7 ngày kể từ lần thay đổi gần nhất. Vui lòng đợi thêm {$daysRemaining} ngày nữa."
-                ]);
-                exit;
-            }
-        }
-    }
     
     // Lấy username hiện tại
     $sql = "SELECT Username FROM users WHERE UserToken = ?";
@@ -93,17 +66,8 @@ try {
         exit;
     }
     
-    // Bắt đầu transaction
-    $conn->begin_transaction();
-    
-    // Lưu lịch sử username cũ
-    $sql = "INSERT INTO username_history (UserToken, OldUsername, ChangeDate) VALUES (?, ?, NOW())";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ss", $userToken, $currentUsername);
-    $stmt->execute();
-    
-    // Cập nhật username mới và thời gian thay đổi
-    $sql = "UPDATE users SET Username = ?, LastUsernameChange = NOW() WHERE UserToken = ?";
+    // Cập nhật username mới
+    $sql = "UPDATE users SET Username = ? WHERE UserToken = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ss", $newUsername, $userToken);
     $stmt->execute();
