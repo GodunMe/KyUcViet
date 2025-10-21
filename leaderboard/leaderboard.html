@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bảng xếp hạng - Vietnamese Memories</title>
+  <link rel="icon" type="image/png" href="logo.PNG" />
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .flame {
+      position: relative;
+      animation: flameGlow 1s infinite alternate;
+    }
+
+    .flame::after {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 28px;
+      pointer-events: none;
+    }
+
+    @keyframes flameGlow {
+      0% {
+        box-shadow: 0 0 8px 2px #ff9800;
+      }
+
+      100% {
+        box-shadow: 0 0 24px 8px #ff5722;
+      }
+    }
+
+    .left-rank {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #fff;
+      color: #ff9800;
+      font-size: 20px;
+      font-weight: bold;
+      border: 2px solid #ff9800;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      box-shadow: 0 0 8px 2px #ff980022;
+    }
+
+    .ranking-item {
+      position: relative;
+      padding-left: 50px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- User Header -->
+    <div class="user-header" id="userHeader">
+      <!-- User logged in state -->
+      <div id="userLoggedIn" class="user-logged-in" style="display: none;">
+        <div class="user-info">
+          <img id="userAvatar" src="avatar/default.png" alt="User" class="user-icon">
+          <span id="userName" class="user-name">Loading...</span>
+        </div>
+        <div class="user-points">
+          <span id="userPoints">0đ</span>
+        </div>
+      </div>
+
+      <!-- User not logged in state -->
+      <div id="usernotLoggedIn" class="user-not-logged-in" style="display: none;">
+        <div class="login-prompt">
+          <span class="login-text">Đăng nhập để xem bảng xếp hạng</span>
+        </div>
+        <button class="login-btn" onclick="goToLogin()">
+          🔑 Đăng nhập
+        </button>
+      </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1>🏆 Bảng xếp hạng</h1>
+      <p>Xem thứ hạng của bạn và cạnh tranh với những người khám phá khác</p>
+    </div>
+    <!-- User Rank Card -->
+    <div class="user-rank-card">
+      <div class="rank-badge">#--</div>
+
+      <div class="user-info-rank">
+        <img src="../avatar/default.png" alt="User" class="rank-avatar">
+        <div>
+          <h3>Đang tải...</h3>
+          <p>0 điểm</p>
+        </div>
+      </div>
+
+      <div class="rank-progress">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 0%;"></div>
+        </div>
+        <p>Đang tải...</p>
+      </div>
+    </div>
+
+    <!-- Leaderboard List -->
+    <div id="leaderboardList" class="leaderboard-list"></div>
+
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="navigateToPage('home')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('map')">
+      <div class="nav-icon">🗺️</div>
+      <div class="nav-label">Map</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('checkin')">
+      <div class="nav-icon">📍</div>
+      <div class="nav-label">Check-in</div>
+    </div>
+    <div class="nav-item active" onclick="navigateToPage('leaderboard')">
+      <div class="nav-icon">🏆</div>
+      <div class="nav-label">Bảng xếp hạng</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('profile')">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">Profile</div>
+    </div>
+  </div>
+
+  <script>
+    // Load user info on page load
+    async function loadUserInfo() {
+      try {
+        const response = await fetch('../getUserInfo.php'); // Sửa đường dẫn cho đúng
+        if (response.ok) {
+          const data = await response.json();
+
+          if (data.loggedIn) {
+            showUserLoggedInState(data);
+          } else {
+            showUserNotLoggedInState();
+          }
+        } else {
+          showUserNotLoggedInState();
+        }
+      } catch (error) {
+        console.error('Error loading user info:', error);
+        showUserNotLoggedInState();
+      }
+    }
+    async function loadUserRankCard() {
+      // Lấy username từ getUserInfo.php
+      let username = null;
+      try {
+        const userRes = await fetch('../getUserInfo.php');
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          if (userData.loggedIn) {
+            username = userData.username;
+          }
+        }
+      } catch (e) { }
+
+      if (!username) return; // Không đăng nhập
+
+      // Gọi API lấy rank
+      try {
+        const res = await fetch(`./getUserRank.php?username=${encodeURIComponent(username)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.error) return;
+
+          // Hiển thị vào card
+          document.querySelector('.user-rank-card .rank-badge').textContent = `#${data.rank}`;
+          document.querySelector('.user-rank-card h3').textContent = data.username;
+          document.querySelector('.user-rank-card p').textContent = `${data.score} điểm`;
+          // Tiến trình lên hạng
+          let percent = 0;
+          if (data.need > 0) {
+            percent = Math.min(100, Math.round((data.score / (data.score + data.need)) * 100));
+            document.querySelector('.user-rank-card .rank-progress p').textContent =
+              `Còn ${data.need} điểm để lên hạng ${data.rank - 1}`;
+          } else {
+            percent = 100;
+            document.querySelector('.user-rank-card .rank-progress p').textContent = `Bạn đang ở hạng cao nhất!`;
+          }
+          document.querySelector('.user-rank-card .progress-fill').style.width = percent + '%';
+        }
+      } catch (e) { }
+    }
+
+    // Thêm vào DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', function () {
+      loadUserInfo();
+      loadLeaderboard();
+      loadUserRankCard();
+    });
+
+
+    function showUserLoggedInState(userData) {
+      const loggedInDiv = document.getElementById('userLoggedIn');
+      const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+
+      // Show logged in state, hide not logged in state
+      loggedInDiv.style.display = 'flex';
+      notLoggedInDiv.style.display = 'none';
+
+      // Update user avatar
+      const avatarElement = document.getElementById('userAvatar');
+      avatarElement.src = userData.avatarRelative || 'avatar/default.png';
+
+      // Update user name
+      const nameElement = document.getElementById('userName');
+      nameElement.textContent = userData.username || 'Guest User';
+
+      // Update user points
+      const pointsElement = document.getElementById('userPoints');
+      pointsElement.textContent = (userData.score || 0);
+    }
+
+    function showUserNotLoggedInState() {
+      const loggedInDiv = document.getElementById('userLoggedIn');
+      const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+
+      // Show not logged in state, hide logged in state
+      loggedInDiv.style.display = 'none';
+      notLoggedInDiv.style.display = 'flex';
+    }
+
+    function goToLogin() {
+      // Redirect to login page
+      window.location.href = 'login.php?token=1';
+    }
+
+    function navigateToPage(page) {
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+
+      event.target.closest('.nav-item').classList.add('active');
+
+      switch (page) {
+        case 'home':
+          window.location.href = '/index.php';
+          break;
+        case 'map':
+          window.location.href = '/map.html';
+          break;
+        case 'checkin':
+          window.location.href = '/checkin/checkin.html';
+          break;
+        case 'leaderboard':
+          // Already on leaderboard page
+          break;
+        case 'profile':
+          window.location.href = '/profile.html';
+          break;
+      }
+    }
+
+    // Tab switching
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      event.target.classList.add('active');
+
+      // Here you would normally load different data based on the tab
+      console.log('Switched to tab:', tab);
+    }
+
+    // Load leaderboard từ DB
+    async function loadLeaderboard() {
+  try {
+    const response = await fetch('./getLeaderboard.php');
+    if (!response.ok) throw new Error('Không thể tải dữ liệu');
+    const data = await response.json();
+    const leaderboardList = document.getElementById('leaderboardList');
+    leaderboardList.innerHTML = "";
+
+    // Lọc bỏ Admin
+    const filtered = data.filter(u => u.Role !== 'Admin');
+
+    // Tách podium và danh sách còn lại
+    const podiumHtml = renderPodium(filtered.slice(0, 3));
+    const rankingHtml = renderRanking(filtered.slice(3));
+    leaderboardList.innerHTML = podiumHtml + rankingHtml;
+
+  } catch (err) {
+    document.getElementById('leaderboardList').innerHTML = `<p>Lỗi: ${err.message}</p>`;
+  }
+}
+
+// Render top 3 podium
+function renderPodium(top3) {
+  let html = '<div class="podium">';
+  const titles = ['first', 'second', 'third'];
+  for (let i = 0; i < 3; i++) {
+    const u = top3[i];
+    if (!u) continue;
+    html += `
+      <div class="podium-item ${titles[i]} ${u.Role === 'CustomerPre' ? 'flame' : ''}">
+        <div class="podium-avatar">
+          <img src="${u.avatar || '../avatar/default.png'}" alt="User ${i+1}">
+          ${i === 0 ? `<span class="crown-icon">👑</span>` : ""}
+          <div class="rank-number">${i+1}</div>
+        </div>
+        <div class="rank-name">${u.Username}</div>
+        <div class="rank-score">${u.Score}</div>
+        ${u.Role === 'CustomerPre' ? `
+            <video class="flame-video" src="output.webm" style="background:none" autoplay muted loop playsinline></video>
+        ` : ''}
+      </div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+// Render từ hạng 4 trở đi
+function renderRanking(others) {
+  let html = '<div class="ranking-list">';
+  for (let i = 0; i < others.length; i++) {
+    const u = others[i];
+    html += `
+      <div class="ranking-item ${u.Role === 'CustomerPre' ? 'flame' : ''}">
+        <span class="rank-list-id">${i+4}</span>
+        <div class="rank-avatar-w">
+          <img src="${u.avatar || '../avatar/default.png'}" class="rank-avatar" alt="User">
+        </div>
+        <span class="rank-list-name">${u.Username}</span>
+        <span class="rank-list-score">${u.Score}</span>
+        ${u.Role === 'CustomerPre' ? `
+            <video class="flame-video-top-4" src="output.webm" style="background:none" autoplay muted loop playsinline></video>
+        ` : ''}
+      </div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function () {
+  loadUserInfo();
+
+  loadLeaderboard();
+    });
+  </script>
+</body>
+
+</html>

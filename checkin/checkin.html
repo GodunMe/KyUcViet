@@ -1376,8 +1376,8 @@
                 'home': '../index.php',
                 'map': '../map.html',
                 'checkin': 'checkin.html',
-                'leaderboard': '../leaderboard.html',
-                'profile': '../profile/profile.html'
+                'leaderboard': '/leaderboard/leaderboard.html',
+                'profile': '../profile.html'
             };
             
             if (pages[page]) {
@@ -1913,7 +1913,7 @@
             
             // Update user points
             const pointsElement = document.getElementById('userPoints');
-            pointsElement.textContent = (userData.score || 0) + 'đ';
+            pointsElement.textContent = (userData.score || 0);
         }
 
         function showUserNotLoggedInState() {

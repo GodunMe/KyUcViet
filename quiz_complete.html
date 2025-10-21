@@ -30,6 +30,12 @@
     font-size: 18px;
     margin-bottom: 30px;
   }
+  .btn-group {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 10px;
+  }
   button {
     background: #3498db;
     color: white;
@@ -49,7 +55,10 @@
 <div class="container">
   <h1>🎉 Hoàn thành 5 quiz!</h1>
   <p>Cảm ơn bạn đã tham gia quiz về bảo tàng.</p>
-  <button id="backBtn">⬅️ Quay lại</button>
+  <div class="btn-group">
+    <button id="resetQuizBtn">🔄 Làm lại quiz</button>
+    <button id="backBtn">⬅️ Quay lại</button>
+  </div>
 </div>
 
 <script>
@@ -57,11 +66,20 @@ function getQueryParam(param) {
   const params = new URLSearchParams(window.location.search);
   return params.get(param);
 }
-
 document.getElementById('backBtn').addEventListener('click', () => {
   const museumId = getQueryParam('museumId');
   if (museumId) {
     window.location.href = `museum.html?id=${museumId}`;
+  } else {
+    window.location.href = 'museum.html';
+  }
+});
+document.getElementById('resetQuizBtn').addEventListener('click', () => {
+  const museumId = getQueryParam('museumId');
+  if (museumId) {
+    window.location.href = `doquiz.php?museumId=${museumId}&reset=1`;
+  } else {
+    alert("Không xác định được bảo tàng!");
   }
 });
 </script>
