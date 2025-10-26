@@ -321,6 +321,22 @@
 
   openBtn.addEventListener('click', (ev) => {
     ev.preventDefault();
+
+    const museumId = (typeof currentMuseumId !== 'undefined' && currentMuseumId) ? currentMuseumId : (new URLSearchParams(window.location.search)).get('id');
+    if (museumId !== '3') {
+      alert('VR360 chỉ khả dụng cho bảo tàng này.');
+      return;
+    }
+
+    if (!window.userIsCustomerPre()) {
+      if (!window.currentUserLoggedIn) {
+        goToLogin();
+      } else {
+        alert('Chỉ khách VIP (CustomerPre) mới có thể xem VR360.');
+      }
+      return;
+    }
+
     openModal();
   });
 
@@ -343,34 +359,52 @@
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get('id');
     }
-        // Chỉ hiển thị nút VR360 khi museumId=3
-        document.addEventListener('DOMContentLoaded', function() {
-          var museumId = getMuseumIdFromUrl();
-          var vrBtn = document.getElementById('openVrBtn');
-          if (vrBtn) {
-            if (museumId !== '3') {
-              vrBtn.style.display = 'none';
-            } else {
-              vrBtn.style.display = '';
-            }
-          }
-        });
+    // Global user state for role-based UI
+    window.currentUserRole = null; // string like 'CustomerPre'
+    window.currentUserLoggedIn = false;
+
+    window.userIsCustomerPre = function() {
+      return window.currentUserLoggedIn === true && String(window.currentUserRole) === 'CustomerPre';
+    };
+
+    // Update VR button visibility based on museumId and user role
+    function updateVrButtonVisibility() {
+      const vrBtn = document.getElementById('openVrBtn');
+      if (!vrBtn) return;
+
+      const museumId = currentMuseumId || getMuseumIdFromUrl();
+      if (museumId === '3' && window.userIsCustomerPre()) {
+        vrBtn.style.display = '';
+      } else {
+        vrBtn.style.display = 'none';
+      }
+    }
 
     // Load user info on page load
     async function loadUserInfo() {
       try {
         const response = await fetch('getUserInfo.php');
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data.loggedIn) {
-            showUserLoggedInState(data);
+          if (response.ok) {
+            const data = await response.json();
+
+            if (data.loggedIn) {
+              // set global user state
+              window.currentUserLoggedIn = true;
+              window.currentUserRole = data.role || data.Role || null;
+              showUserLoggedInState(data);
+            } else {
+              window.currentUserLoggedIn = false;
+              window.currentUserRole = null;
+              showUserNotLoggedInState();
+            }
+            // update VR button whenever user info updated
+            updateVrButtonVisibility();
           } else {
+            window.currentUserLoggedIn = false;
+            window.currentUserRole = null;
             showUserNotLoggedInState();
+            updateVrButtonVisibility();
           }
-        } else {
-          showUserNotLoggedInState();
-        }
       } catch (error) {
         console.error('Error loading user info:', error);
         showUserNotLoggedInState();

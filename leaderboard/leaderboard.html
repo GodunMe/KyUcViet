@@ -7,56 +7,7 @@
   <title>Bảng xếp hạng - Vietnamese Memories</title>
   <link rel="icon" type="image/png" href="logo.PNG" />
   <link rel="stylesheet" href="../style.css" />
-  <style>
-    .flame {
-      position: relative;
-      animation: flameGlow 1s infinite alternate;
-    }
-
-    .flame::after {
-      position: absolute;
-      top: -18px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 28px;
-      pointer-events: none;
-    }
-
-    @keyframes flameGlow {
-      0% {
-        box-shadow: 0 0 8px 2px #ff9800;
-      }
-
-      100% {
-        box-shadow: 0 0 24px 8px #ff5722;
-      }
-    }
-
-    .left-rank {
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      background: #fff;
-      color: #ff9800;
-      font-size: 20px;
-      font-weight: bold;
-      border: 2px solid #ff9800;
-      border-radius: 50%;
-      width: 38px;
-      height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2;
-      box-shadow: 0 0 8px 2px #ff980022;
-    }
-
-    .ranking-item {
-      position: relative;
-      padding-left: 50px;
-    }
-  </style>
+  <!-- head-level styles removed; styles are in style.css -->
 </head>
 
 <body>
@@ -140,23 +91,36 @@
   </div>
 
   <script>
-    // Load user info on page load
+    // Load user info on page load and store global user state
     async function loadUserInfo() {
       try {
-        const response = await fetch('../getUserInfo.php'); // Sửa đường dẫn cho đúng
+        const response = await fetch('../getUserInfo.php'); // same-origin PHP endpoint
         if (response.ok) {
           const data = await response.json();
 
+          // store global state for leaderboard rendering
+          window.currentUserLoggedIn = !!data.loggedIn;
+          window.currentUsername = data.username || null;
+          window.currentUserRole = data.role || null;
+
           if (data.loggedIn) {
             showUserLoggedInState(data);
+            // populate the user rank card after we confirmed logged-in
+            try { loadUserRankCard(); } catch (e) { /* ignore */ }
           } else {
             showUserNotLoggedInState();
           }
         } else {
+          window.currentUserLoggedIn = false;
+          window.currentUsername = null;
+          window.currentUserRole = null;
           showUserNotLoggedInState();
         }
       } catch (error) {
         console.error('Error loading user info:', error);
+        window.currentUserLoggedIn = false;
+        window.currentUsername = null;
+        window.currentUserRole = null;
         showUserNotLoggedInState();
       }
     }
@@ -201,11 +165,15 @@
       } catch (e) { }
     }
 
-    // Thêm vào DOMContentLoaded
-    document.addEventListener('DOMContentLoaded', function () {
-      loadUserInfo();
+    // Thêm vào DOMContentLoaded - ensure we load user info first so highlighting is accurate
+    document.addEventListener('DOMContentLoaded', async function () {
+      try {
+        await loadUserInfo();
+      } catch (e) {
+        // ignore - loadUserInfo handles its own errors but we still want leaderboard to load
+      }
+      // now load leaderboard after user state is known
       loadLeaderboard();
-      loadUserRankCard();
     });
 
 
@@ -265,7 +233,7 @@
           // Already on leaderboard page
           break;
         case 'profile':
-          window.location.href = '/profile.html';
+          window.location.href = '../profile/profile.html';
           break;
       }
     }
@@ -282,81 +250,70 @@
       console.log('Switched to tab:', tab);
     }
 
-    // Load leaderboard từ DB
+    // Load leaderboard từ DB and render top-10 as a single vertical list
     async function loadLeaderboard() {
-  try {
-    const response = await fetch('./getLeaderboard.php');
-    if (!response.ok) throw new Error('Không thể tải dữ liệu');
-    const data = await response.json();
-    const leaderboardList = document.getElementById('leaderboardList');
-    leaderboardList.innerHTML = "";
+      try {
+        const response = await fetch('./getLeaderboard.php');
+        if (!response.ok) throw new Error('Không thể tải dữ liệu');
+        const data = await response.json();
+        const leaderboardList = document.getElementById('leaderboardList');
+        leaderboardList.innerHTML = "";
 
-    // Lọc bỏ Admin
-    const filtered = data.filter(u => u.Role !== 'Admin');
+        // Remove Admin entries and take top 10
+        const filtered = data.filter(u => u.Role !== 'Admin').slice(0, 10);
 
-    // Tách podium và danh sách còn lại
-    const podiumHtml = renderPodium(filtered.slice(0, 3));
-    const rankingHtml = renderRanking(filtered.slice(3));
-    leaderboardList.innerHTML = podiumHtml + rankingHtml;
+        leaderboardList.innerHTML = renderTop10(filtered);
 
-  } catch (err) {
-    document.getElementById('leaderboardList').innerHTML = `<p>Lỗi: ${err.message}</p>`;
-  }
-}
+      } catch (err) {
+        document.getElementById('leaderboardList').innerHTML = `<p>Lỗi: ${err.message}</p>`;
+      }
+    }
 
-// Render top 3 podium
-function renderPodium(top3) {
-  let html = '<div class="podium">';
-  const titles = ['first', 'second', 'third'];
-  for (let i = 0; i < 3; i++) {
-    const u = top3[i];
-    if (!u) continue;
-    html += `
-      <div class="podium-item ${titles[i]} ${u.Role === 'CustomerPre' ? 'flame' : ''}">
-        <div class="podium-avatar">
-          <img src="${u.avatar || '../avatar/default.png'}" alt="User ${i+1}">
-          ${i === 0 ? `<span class="crown-icon">👑</span>` : ""}
-          <div class="rank-number">${i+1}</div>
+    // Render top-10 vertical list. Each row: rank circle, avatar, name + role, right-aligned score
+    function renderTop10(list) {
+      let html = '<div class="ranking-list">';
+      for (let i = 0; i < list.length; i++) {
+        const u = list[i];
+        const rank = i + 1;
+        const username = u.Username || u.username || 'Người dùng';
+        const role = u.Role || u.role || '';
+        const avatar = u.avatar || u.Avatar || '../avatar/default.png';
+
+  // determine if this is the current logged-in user
+  // normalize both sides to avoid mismatches due to case or surrounding spaces
+  const normalize = s => (s || '').toString().trim().toLowerCase();
+  const isCurrent = !!(window.currentUserLoggedIn && window.currentUsername && normalize(window.currentUsername) === normalize(username));
+
+        // build badge content: top 1-3 use framed images, 4+ show a numeric badge
+        let badgeInner = '';
+        if (rank <= 3) {
+          // image names expected: rank-1.png, rank-2.png, rank-3.png under /leaderboard
+          const imgPath = `../leaderboard/rank-${rank}.png`;
+          badgeInner = `<img src="${imgPath}" alt="rank ${rank}" class="rank-badge-img rank-badge-top rank-badge-top-${rank}">`;
+        } else {
+          badgeInner = `<div class="rank-number-only"><b>${rank}</b></div>`;
+        }
+
+        html += `
+      <div class="ranking-item ${isCurrent ? 'current-user' : ''}" data-username="${encodeURIComponent(username)}">
+        <div class="rank-left">
+          <div class="rank-badge">${badgeInner}</div>
+          <img src="${avatar}" alt="${username}" class="rank-avatar">
+          <div class="rank-info">
+            <h4 class="rank-list-name">${username}</h4>
+            <p class="role-text">${role}</p>
+          </div>
         </div>
-        <div class="rank-name">${u.Username}</div>
-        <div class="rank-score">${u.Score}</div>
-        ${u.Role === 'CustomerPre' ? `
-            <video class="flame-video" src="output.webm" style="background:none" autoplay muted loop playsinline></video>
-        ` : ''}
-      </div>`;
-  }
-  html += '</div>';
-  return html;
-}
-
-// Render từ hạng 4 trở đi
-function renderRanking(others) {
-  let html = '<div class="ranking-list">';
-  for (let i = 0; i < others.length; i++) {
-    const u = others[i];
-    html += `
-      <div class="ranking-item ${u.Role === 'CustomerPre' ? 'flame' : ''}">
-        <span class="rank-list-id">${i+4}</span>
-        <div class="rank-avatar-w">
-          <img src="${u.avatar || '../avatar/default.png'}" class="rank-avatar" alt="User">
+        <div class="rank-right">
+          <div class="rank-list-score">${u.Score}</div>
         </div>
-        <span class="rank-list-name">${u.Username}</span>
-        <span class="rank-list-score">${u.Score}</span>
-        ${u.Role === 'CustomerPre' ? `
-            <video class="flame-video-top-4" src="output.webm" style="background:none" autoplay muted loop playsinline></video>
-        ` : ''}
       </div>`;
-  }
-  html += '</div>';
-  return html;
-}
+      }
+      html += '</div>';
+      return html;
+    }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function () {
-  loadUserInfo();
-
-  loadLeaderboard();
-    });
+// (Initialization handled earlier in the script)
   </script>
 </body>
 

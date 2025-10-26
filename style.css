@@ -12,6 +12,8 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  /* Allow shadows from child cards to be visible; flame video removed so no clipping needed */
+  overflow: visible;
 }
 
 .header-img {
@@ -591,69 +593,94 @@ body {
 
 /* Leaderboard Page Styles */
 .user-rank-card {
-  margin: 20px;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  margin: 18px 14px;
+  /* leave space on the left for the square rank badge */
+  padding: 28px 22px 28px 110px;
+  /* purple gradient card like the mock */
+  background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  color: #fff;
   border-radius: 16px;
   text-align: center;
+  border: none;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  position: relative; /* allow absolute child (rank badge) */
 }
 
-.rank-badge {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 10px;
+.user-rank-card .rank-badge {
+  /* square white badge at top-left with centered rank number */
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  width: 64px;
+  height: 64px;
+  background: #fff;
+  color: #222;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
 }
 
 .user-info-rank {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 15px;
-  margin-bottom: 15px;
+  gap: 18px;
+  margin-bottom: 14px;
 }
 
 .rank-avatar {
-  width: 50px;
-  height: 50px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  border: 3px solid white;
+  border: 4px solid rgba(255,255,255,0.9);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
 .user-info-rank h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
 }
 
 .user-info-rank p {
-  margin: 5px 0 0 0;
-  opacity: 0.9;
+  margin: 6px 0 0 0;
+  opacity: 0.95;
   font-size: 14px;
+  color: rgba(255,255,255,0.9);
 }
 
 .rank-progress {
-  margin-top: 15px;
+  margin-top: 18px;
 }
 
+/* Show the progress area on the card (was hidden earlier) */
+.user-rank-card .rank-progress { display: block !important; }
+
 .progress-bar {
-  height: 6px;
-  background: rgba(255,255,255,0.3);
-  border-radius: 3px;
+  height: 8px;
+  background: rgba(255,255,255,0.22);
+  border-radius: 6px;
   overflow: hidden;
-  margin-bottom: 8px;
+  margin: 8px 18px 12px 18px;
 }
 
 .progress-fill {
   height: 100%;
-  background: white;
-  border-radius: 3px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 6px;
   transition: width 0.5s ease;
 }
 
 .rank-progress p {
   margin: 0;
-  font-size: 12px;
-  opacity: 0.9;
+  font-size: 13px;
+  opacity: 0.95;
+  color: rgba(255,255,255,0.95);
 }
 
 .filter-tabs {
@@ -823,35 +850,7 @@ body {
   position: relative;
   padding-left: 38px;
 }
-.flame-video {
-  position: absolute;
-  left: 50%;
-  bottom: 0px;      /* Sát dưới, có thể chỉnh lại */
-  height: 38px;       /* Chỉnh lại cao/thấp cho hợp khung */
-  width: auto;
-  min-width: 40px;
-  max-width: none;
-  pointer-events: none;
-  opacity: 0.50;      /* Làm mờ 50% */
-  z-index: 10;
-  object-fit: cover;  /* Video luôn bám ngang khung */
-  transform: translateX(-50%) scaleX(5) scaleY(3);
-}
-.flame-video-top-4 {
-  position: absolute;
-  left: 50%;
-  bottom: 0px;      /* Sát dưới, có thể chỉnh lại */
-  height: 38px;       /* Chỉnh lại cao/thấp cho hợp khung */
-  width: auto;
-  margin-bottom: 10px;
-  min-width: 40px;
-  max-width: none;
-  pointer-events: none;
-  opacity: 0.50;      /* Làm mờ 50% */
-  z-index: 10;
-  object-fit: cover;  /* Video luôn bám ngang khung */
-  transform: translateX(-50%) scaleX(16) scaleY(4);
-}
+/* flame-video rules removed - flame animation disabled to avoid layout issues */
 .flame-border {
   position: relative; /* Để video tuyệt đối so với khung */
   /* box-shadow lửa nếu muốn mix thêm */
@@ -888,7 +887,8 @@ body {
 .ranking-list {
   display: flex;
   flex-direction: column;
-  gap: 0px;
+  gap: 12px; /* space between each card */
+  padding: 12px 14px; /* breathing room inside list container */
 }
 
 .rank-list-id {
@@ -923,8 +923,31 @@ body {
 }
 
 .ranking-item.current-user {
-  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-  border: 2px solid #007bff;
+  /* Highlight the current user: warm yellow card with pronounced shadow */
+  background: linear-gradient(180deg, #fff59d 0%, #ffec99 100%);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  border: none;
+  position: relative;
+}
+
+.ranking-item.current-user::before {
+  /* subtle left accent for current user (no black stripe) */
+  content: '';
+  position: absolute;
+  left: 6px; /* keep it close to the card edge but away from the medal */
+  top: 12%;
+  bottom: 12%;
+  width: 6px; /* thin accent bar */
+  background: linear-gradient(180deg, rgba(247,169,0,0.95), rgba(247,169,0,0.65));
+  border-radius: 4px;
+  z-index: 0; /* put behind child content so transparent PNGs are not overlaid */
+  box-shadow: 0 4px 12px rgba(247,169,0,0.08);
+}
+
+.ranking-item.current-user .rank-list-id {
+  background: #000;
+  color: #fff;
+  border-color: #000;
 }
 
 .ranking-item {
@@ -982,6 +1005,138 @@ body {
   margin: 0;
   font-size: 12px;
   color: #666;
+}
+
+/* New layout for ranking rows: left group (number + avatar + name/role) and right score */
+.ranking-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #ffffff; /* white card background as requested */
+  border-radius: 14px;
+  /* Two-layer shadow to mimic lifted rounded cards in the mock */
+  box-shadow: 0 6px 0 rgba(0,0,0,0.08), 0 8px 20px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.06);
+  gap: 12px;
+  position: relative;
+}
+
+.ranking-item > * { z-index: 2; } /* ensure content sits above the pseudo shadow */
+.rank-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.rank-badge {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  border-radius: 10px;
+  background: #fff; /* white square background for your PNG */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+/* rank badge: keep a small inner padding so the medal image is not cropped
+   and use contain so the full medal shows regardless of aspect ratio */
+.rank-badge {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  border-radius: 10px;
+  background: #fff; /* white square background for your PNG */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  overflow: hidden;
+  padding: 4px; /* inner spacing so medal doesn't touch edges */
+  box-sizing: border-box;
+}
+
+.rank-badge-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* show whole medal without cropping */
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Slightly tweak top-three badge variant (if used) but keep it constrained) */
+.rank-badge-top {
+  padding: 2px;
+}
+
+/* Make badges a bit smaller on narrow screens */
+@media (max-width: 420px) {
+  .rank-badge {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    padding: 3px;
+  }
+  .rank-avatar {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+.rank-badge-number {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: 800;
+  color: #f7a900; /* gold by default, will invert for highlighted row */
+  font-size: 16px;
+  pointer-events: none;
+}
+.rank-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+}
+.rank-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.role-text {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: #888;
+}
+.rank-right {
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+.rank-list-score {
+  font-weight: 800;
+  color: #20be46;
+  font-size: 16px;
+}
+
+/* When current-user highlighted, invert the badge number colors */
+.ranking-item.current-user .rank-badge-number {
+  /* keep number visible but use accent color on light background */
+  color: #f7a900; /* gold */
+}
+.ranking-item.current-user .rank-badge {
+  /* do NOT change to dark background (breaks transparent PNGs) - keep white
+     but emphasize with a subtle golden border and stronger shadow */
+  background: #fff;
+  border: 2px solid rgba(247,169,0,0.18);
+  box-shadow: 0 6px 18px rgba(247,169,0,0.09), 0 2px 6px rgba(0,0,0,0.06);
 }
   
 /* ion: absolute;
