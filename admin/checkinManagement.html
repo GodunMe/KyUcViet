@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Check-in - Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-card.pending .stat-number { color: #f39c12; }
+        .stat-card.approved .stat-number { color: #27ae60; }
+        .stat-card.denied .stat-number { color: #e74c3c; }
+        .stat-card.points .stat-number { color: #3498db; }
+
+        .checkins-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .checkin-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .checkin-item:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+        }
+
+        .checkin-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .checkin-info {
+            flex: 1;
+        }
+
+        .checkin-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .user-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .museum-name {
+            color: #7f8c8d;
+            margin: 5px 0;
+        }
+
+        .checkin-time {
+            color: #95a5a6;
+            font-size: 0.9em;
+        }
+
+        .checkin-caption {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-style: italic;
+            border-left: 4px solid #3498db;
+        }
+
+        .points-info {
+            color: #f39c12;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-approve {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background: #229954;
+        }
+
+        .btn-deny {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-deny:hover {
+            background: #c0392b;
+        }
+
+        .btn-detail {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-detail:hover {
+            background: #2980b9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #7f8c8d;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 50px;
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 10px;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .nav-back {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: #34495e;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .nav-back:hover {
+            background: #2c3e50;
+        }
+
+        /* Detail Modal Styles */
+        .detail-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            overflow-y: auto;
+        }
+
+        .detail-modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .detail-modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px 12px 0 0;
+            position: relative;
+        }
+
+        .detail-modal-header h3 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .detail-modal-close {
+            color: white;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .detail-modal-close:hover {
+            opacity: 0.7;
+        }
+
+        .detail-modal-body {
+            padding: 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .detail-section-header {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-section-content {
+            padding: 16px;
+        }
+
+        .detail-row {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: flex-start;
+        }
+
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+            min-width: 120px;
+            margin-right: 16px;
+        }
+
+        .detail-value {
+            color: #333;
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-denied {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .role-badge {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .role-admin {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .role-user {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .photo-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .photo-item:hover {
+            transform: scale(1.05);
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            color: white;
+            padding: 8px;
+            font-size: 12px;
+        }
+
+        .photo-counter {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Photo Modal Styles */
+        .admin-photo-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .admin-photo-modal.active {
+            display: flex;
+        }
+
+        .admin-modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .admin-modal-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            max-height: 80vh;
+        }
+
+        .admin-modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 2001;
+        }
+
+        .admin-modal-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            font-size: 24px;
+            padding: 16px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            z-index: 2001;
+            transition: background 0.3s ease;
+        }
+
+        .admin-modal-prev {
+            left: -60px;
+        }
+
+        .admin-modal-next {
+            right: -60px;
+        }
+
+        .admin-modal-nav:hover {
+            background: rgba(0,0,0,0.8);
+        }
+
+        .admin-photo-info {
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .admin-modal-nav {
+                display: none;
+            }
+            
+            .photos-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .caption-display {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            border-radius: 4px;
+            font-style: italic;
+            color: #555;
+            margin-top: 8px;
+        }
+
+        .location-link {
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .location-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Tab Navigation Styles */
+        .tab-navigation {
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tab-buttons {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            position: relative;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .tab-button {
+                min-width: 150px;
+                padding: 12px 15px;
+                font-size: 12px;
+            }
+            
+            .tab-buttons {
+                justify-content: space-around;
+            }
+        }
+
+        .tab-button:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content {
+            padding: 20px;
+        }
+
+        /* Status specific styling for check-in items */
+        .checkin-item.status-approved {
+            border-left: 4px solid #27ae60;
+            background: rgba(39, 174, 96, 0.05);
+        }
+
+        .checkin-item.status-denied {
+            border-left: 4px solid #e74c3c;
+            background: rgba(231, 76, 60, 0.05);
+        }
+
+        .checkin-item.status-pending {
+            border-left: 4px solid #f39c12;
+            background: rgba(243, 156, 18, 0.05);
+        }
+
+        .processed-info {
+            color: #7f8c8d;
+            font-size: 0.85em;
+            margin-top: 8px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .deny-reason {
+            color: #e74c3c;
+            font-style: italic;
+            margin-top: 8px;
+            padding: 8px;
+            background: #fdf2f2;
+            border-radius: 4px;
+            border-left: 3px solid #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="dashboard.php" class="nav-back">← Quay lại Dashboard</a>
+        
+        <div class="header">
+            <h1>Quản lý Duyệt Check-in</h1>
+            <p>Phê duyệt hoặc từ chối các check-in của người dùng</p>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="stats-grid">
+            <div class="stat-card pending">
+                <div class="stat-number" id="pending-count">-</div>
+                <div class="stat-label">Chờ duyệt</div>
+            </div>
+            <div class="stat-card approved">
+                <div class="stat-number" id="approved-count">-</div>
+                <div class="stat-label">Đã duyệt</div>
+            </div>
+            <div class="stat-card denied">
+                <div class="stat-number" id="denied-count">-</div>
+                <div class="stat-label">Bị từ chối</div>
+            </div>
+            <div class="stat-card points">
+                <div class="stat-number" id="total-points">-</div>
+                <div class="stat-label">Tổng điểm đã trao</div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-status="none" onclick="switchTab('none')">
+                    ⏳ Chờ duyệt (<span id="tab-pending-count">-</span>)
+                </button>
+                <button class="tab-button" data-status="approved" onclick="switchTab('approved')">
+                    ✅ Đã duyệt (<span id="tab-approved-count">-</span>)
+                </button>
+                <button class="tab-button" data-status="denied" onclick="switchTab('denied')">
+                    ❌ Bị từ chối (<span id="tab-denied-count">-</span>)
+                </button>
+                <button class="tab-button" data-status="all" onclick="switchTab('all')">
+                    📋 Tất cả
+                </button>
+            </div>
+            <div class="tab-content">
+                <h2 class="section-title" id="section-title">Check-in Chờ Duyệt</h2>
+                <div id="checkins-container">
+                    <div class="loading">
+                        Đang tải dữ liệu...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Check-ins Section -->
+        <div class="checkins-section" style="display: none;">
+            <h2 class="section-title">Check-in Chờ Duyệt</h2>
+            <div id="checkins-container-old">
+                <div class="loading">
+                    Đang tải dữ liệu...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve Modal -->
+    <div id="approveModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('approveModal')">&times;</span>
+            <h3>Phê duyệt Check-in</h3>
+            <form id="approveForm">
+                <input type="hidden" id="approve-checkin-id" name="checkinId">
+                <div class="form-group">
+                    <label for="approved-points">Số điểm trao thưởng:</label>
+                    <input type="number" id="approved-points" name="approvedPoints" min="0" max="200" required>
+                </div>
+                <div class="form-group">
+                    <label for="admin-note">Ghi chú (không bắt buộc):</label>
+                    <textarea id="admin-note" name="adminNote" placeholder="Ghi chú của admin..."></textarea>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-approve">Phê duyệt</button>
+                    <button type="button" class="btn" onclick="closeModal('approveModal')">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Deny Modal -->
+    <div id="denyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('denyModal')">&times;</span>
+            <h3>Từ chối Check-in</h3>
+            <form id="denyForm">
+                <input type="hidden" id="deny-checkin-id" name="checkinId">
+                <div class="form-group">
+                    <label for="deny-reason">Lý do từ chối:</label>
+                    <textarea id="deny-reason" name="denyReason" placeholder="Nhập lý do từ chối..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-deny">Từ chối</button>
+                    <button type="button" class="btn" onclick="closeModal('denyModal')">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="detail-modal">
+        <div class="detail-modal-content">
+            <div class="detail-modal-header">
+                <h3>Chi tiết Check-in</h3>
+                <span class="detail-modal-close" onclick="closeDetailModal()">&times;</span>
+            </div>
+            <div class="detail-modal-body" id="detailModalBody">
+                <!-- Content will be loaded here -->
+                <div class="loading">
+                    Đang tải chi tiết...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Photo Modal -->
+    <div class="admin-photo-modal" id="adminPhotoModal">
+        <div class="admin-modal-content">
+            <button class="admin-modal-close" onclick="closeAdminPhotoModal()">×</button>
+            <button class="admin-modal-nav admin-modal-prev" onclick="prevAdminPhoto()">‹</button>
+            <img class="admin-modal-image" id="adminModalImage" src="" alt="Photo">
+            <button class="admin-modal-nav admin-modal-next" onclick="nextAdminPhoto()">›</button>
+            <div class="admin-photo-info" id="adminPhotoInfo">1 / 1</div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentStatus = 'none';
+        let currentOffset = 0;
+        const itemsPerPage = 20;
+        
+        // Photo modal state
+        let currentDetailData = null;
+        let currentPhotoIndex = 0;
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadCheckins('none');
+        });
+
+        // Switch tab
+        function switchTab(status) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-status="${status}"]`).classList.add('active');
+            
+            // Update section title
+            const titles = {
+                'none': 'Check-in Chờ Duyệt',
+                'approved': 'Check-in Đã Duyệt', 
+                'denied': 'Check-in Bị Từ chối',
+                'all': 'Tất cả Check-in'
+            };
+            document.getElementById('section-title').textContent = titles[status];
+            
+            // Load data for selected status
+            currentStatus = status;
+            currentOffset = 0;
+            loadCheckins(status);
+        }
+
+        // Load statistics 
+        function loadStats() {
+            fetch('checkinApproval.php?action=getStats')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Update main stats
+                        document.getElementById('pending-count').textContent = data.data.none || 0;
+                        document.getElementById('approved-count').textContent = data.data.approved || 0;
+                        document.getElementById('denied-count').textContent = data.data.denied || 0;
+                        document.getElementById('total-points').textContent = data.data.totalPointsAwarded || 0;
+                        
+                        // Update tab counts
+                        document.getElementById('tab-pending-count').textContent = data.data.none || 0;
+                        document.getElementById('tab-approved-count').textContent = data.data.approved || 0;
+                        document.getElementById('tab-denied-count').textContent = data.data.denied || 0;
+                    } else {
+                        alert('Error loading stats: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Network error loading stats: ' + error.message);
+                });
+        }
+
+        // Load check-ins by status
+        function loadCheckins(status = 'none', append = false) {
+            const url = `checkinApproval.php?action=getCheckins&status=${status}&limit=${itemsPerPage}&offset=${currentOffset}`;
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        displayCheckins(data.data, status, append);
+                        
+                        // Show/hide load more button based on pagination
+                        if (data.pagination.hasMore) {
+                            showLoadMoreButton(status);
+                        } else {
+                            hideLoadMoreButton();
+                        }
+                    } else {
+                        document.getElementById('checkins-container').innerHTML = 
+                            '<div class="no-data">Lỗi: ' + data.error + '</div>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('checkins-container').innerHTML = 
+                        '<div class="no-data">Lỗi tải dữ liệu: ' + error.message + '</div>';
+                });
+        }
+
+        // Load pending check-ins (kept for backward compatibility)
+        function loadPendingCheckins() {
+            loadCheckins('none');
+        }
+
+        // Display check-ins
+        function displayCheckins(checkins, status = 'none', append = false) {
+            const container = document.getElementById('checkins-container');
+            
+            if (checkins.length === 0 && !append) {
+                const statusMessages = {
+                    'none': 'Không có check-in nào đang chờ duyệt',
+                    'approved': 'Không có check-in nào đã được duyệt',
+                    'denied': 'Không có check-in nào bị từ chối',
+                    'all': 'Không có check-in nào'
+                };
+                container.innerHTML = `<div class="no-data">${statusMessages[status] || 'Không có dữ liệu'}</div>`;
+                return;
+            }
+
+            let html = append ? container.innerHTML : '';
+            
+            checkins.forEach(checkin => {
+                // Use client-side time calculation for accuracy
+                const timeAgo = calculateTimeAgo(checkin.checkinTime);
+                
+                // Determine status class and status display
+                const statusClass = `status-${checkin.approvalStatus || 'pending'}`;
+                let statusDisplay = '';
+                let actionsHtml = '';
+                let processedInfoHtml = '';
+                
+                // Build status-specific content
+                switch (checkin.approvalStatus) {
+                    case 'approved':
+                        statusDisplay = `<div style="color: #27ae60; font-weight: bold;">✅ Đã duyệt - ${checkin.actualPoints}đ</div>`;
+                        actionsHtml = `<button class="btn btn-detail" onclick="viewDetail(${checkin.id})">Chi tiết</button>`;
+                        if (checkin.processedAt) {
+                            processedInfoHtml = `<div class="processed-info">Duyệt lúc: ${new Date(checkin.processedAt).toLocaleString('vi-VN')}${checkin.processedByName ? ` bởi ${checkin.processedByName}` : ''}</div>`;
+                        }
+                        break;
+                        
+                    case 'denied':
+                        statusDisplay = `<div style="color: #e74c3c; font-weight: bold;">❌ Bị từ chối</div>`;
+                        actionsHtml = `
+                            <button class="btn btn-detail" onclick="viewDetail(${checkin.id})">Chi tiết</button>
+                            <button class="btn btn-approve" onclick="showApproveModal(${checkin.id}, ${checkin.pendingPoints})">Duyệt lại</button>
+                        `;
+                        if (checkin.processedAt) {
+                            processedInfoHtml = `<div class="processed-info">Từ chối lúc: ${new Date(checkin.processedAt).toLocaleString('vi-VN')}${checkin.processedByName ? ` bởi ${checkin.processedByName}` : ''}</div>`;
+                        }
+                        if (checkin.deniedReason) {
+                            processedInfoHtml += `<div class="deny-reason">Lý do: ${checkin.deniedReason}</div>`;
+                        }
+                        break;
+                        
+                    default: // 'none' or pending
+                        statusDisplay = `<div class="points-info">💎 ${checkin.pendingPoints} điểm (chờ duyệt)</div>`;
+                        actionsHtml = `
+                            <button class="btn btn-detail" onclick="viewDetail(${checkin.id})">Chi tiết</button>
+                            <button class="btn btn-approve" onclick="showApproveModal(${checkin.id}, ${checkin.pendingPoints})">Duyệt</button>
+                            <button class="btn btn-deny" onclick="showDenyModal(${checkin.id})">Từ chối</button>
+                        `;
+                }
+                
+                html += `
+                    <div class="checkin-item ${statusClass}">
+                        <div class="checkin-header">
+                            <div class="checkin-info">
+                                <div class="user-name">${checkin.user.name}</div>
+                                <div class="checkin-id">#${checkin.id}</div>
+                                <div class="museum-name">📍 ${checkin.museum.name}</div>
+                                <div class="checkin-time">⏰ ${timeAgo}</div>
+                                ${statusDisplay}
+                                ${checkin.photoCount > 0 ? `<div style="color: #3498db;">📷 ${checkin.photoCount} ảnh</div>` : ''}
+                                ${processedInfoHtml}
+                            </div>
+                            <div class="checkin-actions">
+                                ${actionsHtml}
+                            </div>
+                        </div>
+                        ${checkin.caption ? `<div class="checkin-caption">"${checkin.caption}"</div>` : ''}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Show/hide load more functionality
+        function showLoadMoreButton(status) {
+            // Remove existing load more button if any
+            hideLoadMoreButton();
+            
+            const loadMoreHtml = `
+                <div id="load-more-container" style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-detail" onclick="loadMoreCheckins('${status}')">Tải thêm</button>
+                </div>
+            `;
+            document.getElementById('checkins-container').insertAdjacentHTML('afterend', loadMoreHtml);
+        }
+
+        function hideLoadMoreButton() {
+            const loadMoreContainer = document.getElementById('load-more-container');
+            if (loadMoreContainer) {
+                loadMoreContainer.remove();
+            }
+        }
+
+        function loadMoreCheckins(status) {
+            currentOffset += itemsPerPage;
+            loadCheckins(status, true); // append = true
+        }
+
+        // Calculate time ago from timestamp (client-side for accuracy)
+        function calculateTimeAgo(timestamp) {
+            const now = new Date();
+            const checkinTime = new Date(timestamp);
+            const diffMs = now.getTime() - checkinTime.getTime();
+            
+            // Convert to minutes, hours, days
+            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 0) {
+                if (diffDays === 1) {
+                    return 'Hôm qua lúc ' + checkinTime.toLocaleTimeString('vi-VN', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                } else {
+                    return checkinTime.toLocaleDateString('vi-VN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+            } else if (diffHours > 0) {
+                return diffHours + ' giờ trước';
+            } else if (diffMinutes > 0) {
+                return diffMinutes + ' phút trước';
+            } else {
+                return 'Vừa xong';
+            }
+        }
+
+        // Show approve modal
+        function showApproveModal(checkinId, pendingPoints) {
+            document.getElementById('approve-checkin-id').value = checkinId;
+            document.getElementById('approved-points').value = pendingPoints;
+            document.getElementById('approveModal').style.display = 'block';
+        }
+
+        // Show deny modal
+        function showDenyModal(checkinId) {
+            document.getElementById('deny-checkin-id').value = checkinId;
+            document.getElementById('deny-reason').value = '';
+            document.getElementById('denyModal').style.display = 'block';
+        }
+
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // View detail 
+        function viewDetail(checkinId) {
+            // Show detail modal and load data
+            document.getElementById('detailModal').style.display = 'block';
+            loadCheckinDetail(checkinId);
+        }
+
+        // Load check-in detail for modal
+        async function loadCheckinDetail(checkinId) {
+            try {
+                const response = await fetch(`getCheckinDetailAdmin.php?id=${checkinId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.message || 'Không thể tải thông tin check-in');
+                }
+
+                displayCheckinDetail(result.data);
+
+            } catch (error) {
+                document.getElementById('detailModalBody').innerHTML = `
+                    <div class="no-data">
+                        ❌ Lỗi tải dữ liệu: ${error.message}
+                        <br><br>
+                        <button class="btn btn-detail" onclick="loadCheckinDetail(${checkinId})">Thử lại</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Display check-in detail in modal
+        function displayCheckinDetail(data) {
+            // Store data for photo modal
+            currentDetailData = data;
+            
+            // Debug log to check photos data
+            console.log('Display detail data:', data);
+            console.log('Photos data:', data.photos);
+            
+            const timeAgo = calculateTimeAgo(data.checkin.time);
+            const checkinDateTime = new Date(data.checkin.time).toLocaleString('vi-VN');
+            
+            // Determine approval status display
+            let statusBadgeClass = '';
+            let statusText = '';
+            
+            switch(data.checkin.approvalStatus) {
+                case 'approved':
+                    statusBadgeClass = 'status-approved';
+                    statusText = '✅ Đã duyệt';
+                    break;
+                case 'denied':
+                    statusBadgeClass = 'status-denied';
+                    statusText = '❌ Bị từ chối';
+                    break;
+                default:
+                    statusBadgeClass = 'status-pending';
+                    statusText = '⏳ Chờ duyệt';
+            }
+
+            // Determine user role badge
+            const userRole = (data.user.role || '').toLowerCase();
+            const roleBadgeClass = ['admin', 'administrator'].includes(userRole) ? 'role-admin' : 'role-user';
+            const roleDisplayText = data.user.role || 'User';
+            
+            // Build photos section
+            let photosHtml = '';
+            if (data.photos && data.photos.length > 0) {
+                let photoItems = '';
+                data.photos.forEach((photo, index) => {
+                    const photoPath = photo.path || '/uploads/checkins/default.png';
+                    photoItems += `
+                        <div class="photo-item" onclick="openAdminPhotoModal(${index})">
+                            <img src="${photoPath}" alt="Check-in photo ${index + 1}" onerror="this.src='/uploads/checkins/default.png'">
+                            <div class="photo-counter">${index + 1}/${data.photos.length}</div>
+                        </div>
+                    `;
+                });
+                
+                photosHtml = `
+                    <div class="photos-grid">
+                        ${photoItems}
+                    </div>
+                `;
+            } else {
+                photosHtml = '<div class="no-data">Không có ảnh đính kèm</div>';
+            }
+
+            // Build caption section
+            const captionHtml = data.checkin.caption ? 
+                `<div class="caption-display">"${data.checkin.caption}"</div>` : 
+                '<div class="detail-value">Không có chia sẻ</div>';
+
+            const html = `
+                <!-- User Information Section -->
+                <div class="detail-section">
+                    <div class="detail-section-header">
+                        👤 Thông tin người dùng
+                    </div>
+                    <div class="detail-section-content">
+                        <div class="detail-row">
+                            <div class="detail-label">Tên:</div>
+                            <div class="detail-value">${data.user.name}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Token:</div>
+                            <div class="detail-value"><code>${data.user.token}</code></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Vai trò:</div>
+                            <div class="detail-value">
+                                <span class="role-badge ${roleBadgeClass}">${roleDisplayText}</span>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Điểm hiện tại:</div>
+                            <div class="detail-value">${data.user.score || 0}đ</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Check-in Information Section -->
+                <div class="detail-section">
+                    <div class="detail-section-header">
+                        📍 Thông tin Check-in
+                    </div>
+                    <div class="detail-section-content">
+                        <div class="detail-row">
+                            <div class="detail-label">ID:</div>
+                            <div class="detail-value"><code>${data.id}</code></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Thời gian:</div>
+                            <div class="detail-value">${checkinDateTime} (${timeAgo})</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Trạng thái:</div>
+                            <div class="detail-value">
+                                <span class="status-badge ${statusBadgeClass}">${statusText}</span>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Vị trí người dùng Check-in:</div>
+                            <div class="detail-value">
+                                <a href="https://maps.google.com/?q=${data.location.latitude},${data.location.longitude}" 
+                                   target="_blank" class="location-link">
+                                    ${data.location.latitude.toFixed(6)}, ${data.location.longitude.toFixed(6)} 📍
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Museum Information Section -->
+                <div class="detail-section">
+                    <div class="detail-section-header">
+                        🏛️ Thông tin Bảo tàng
+                    </div>
+                    <div class="detail-section-content">
+                        <div class="detail-row">
+                            <div class="detail-label">ID:</div>
+                            <div class="detail-value"><code>${data.museum.id}</code></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Tên:</div>
+                            <div class="detail-value">${data.museum.name}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Địa chỉ:</div>
+                            <div class="detail-value">${data.museum.address}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Points Information Section -->
+                <div class="detail-section">
+                    <div class="detail-section-header">
+                        💎 Thông tin Điểm
+                    </div>
+                    <div class="detail-section-content">
+                        <div class="detail-row">
+                            <div class="detail-label">Điểm chờ duyệt:</div>
+                            <div class="detail-value">${data.checkin.pendingPoints}đ</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Điểm thực tế:</div>
+                            <div class="detail-value">${data.checkin.actualPoints}đ</div>
+                        </div>
+                        ${data.checkin.processedAt ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Xử lý lúc:</div>
+                            <div class="detail-value">${new Date(data.checkin.processedAt).toLocaleString('vi-VN')}</div>
+                        </div>
+                        ` : ''}
+                        ${data.checkin.processedByName ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Xử lý bởi:</div>
+                            <div class="detail-value">${data.checkin.processedByName}</div>
+                        </div>
+                        ` : ''}
+                        ${data.checkin.deniedReason ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Lý do từ chối:</div>
+                            <div class="detail-value" style="color: #e74c3c;">${data.checkin.deniedReason}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- Caption Section -->
+                <div class="detail-section">
+                    <div class="detail-section-header">
+                        💭 Chia sẻ của người dùng
+                    </div>
+                    <div class="detail-section-content">
+                        ${captionHtml}
+                    </div>
+                </div>
+
+                <!-- Photos Section -->
+                <div class="detail-section">
+                    <div class="detail-section-header">
+                        📷 Ảnh Check-in (${data.photos ? data.photos.length : 0} ảnh)
+                    </div>
+                    <div class="detail-section-content">
+                        ${photosHtml}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('detailModalBody').innerHTML = html;
+        }
+
+        // Close detail modal
+        function closeDetailModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        // Open photo viewer (simple implementation)
+        function openPhotoViewer(photoPath) {
+            window.open(photoPath, '_blank');
+        }
+
+        // Admin Photo Modal Functions
+        function openAdminPhotoModal(index) {
+            console.log('Opening photo modal for index:', index);
+            console.log('Current detail data:', currentDetailData);
+            
+            if (!currentDetailData || !currentDetailData.photos) {
+                console.error('No photo data available');
+                return;
+            }
+
+            currentPhotoIndex = index;
+            updateAdminModalImage();
+            document.getElementById('adminPhotoModal').classList.add('active');
+        }
+
+        function closeAdminPhotoModal() {
+            document.getElementById('adminPhotoModal').classList.remove('active');
+        }
+
+        function prevAdminPhoto() {
+            if (!currentDetailData || !currentDetailData.photos) return;
+            currentPhotoIndex = (currentPhotoIndex - 1 + currentDetailData.photos.length) % currentDetailData.photos.length;
+            updateAdminModalImage();
+        }
+
+        function nextAdminPhoto() {
+            if (!currentDetailData || !currentDetailData.photos) return;
+            currentPhotoIndex = (currentPhotoIndex + 1) % currentDetailData.photos.length;
+            updateAdminModalImage();
+        }
+
+        function updateAdminModalImage() {
+            if (!currentDetailData || !currentDetailData.photos[currentPhotoIndex]) {
+                console.error('No photo data for index:', currentPhotoIndex);
+                return;
+            }
+            
+            const photo = currentDetailData.photos[currentPhotoIndex];
+            console.log('Loading photo:', photo.path);
+            
+            document.getElementById('adminModalImage').src = photo.path;
+            document.getElementById('adminPhotoInfo').textContent = 
+                `${currentPhotoIndex + 1} / ${currentDetailData.photos.length}`;
+        }
+
+        // Handle approve form submission
+        document.getElementById('approveForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            formData.append('action', 'approve');
+            
+            fetch('checkinApproval.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Đã phê duyệt check-in thành công!');
+                    closeModal('approveModal');
+                    loadStats();
+                    currentOffset = 0; // Reset pagination
+                    loadCheckins(currentStatus);
+                } else {
+                    alert('Lỗi: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Lỗi xử lý yêu cầu');
+            });
+        });
+
+        // Handle deny form submission
+        document.getElementById('denyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            formData.append('action', 'deny');
+            
+            fetch('checkinApproval.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Đã từ chối check-in thành công!');
+                    closeModal('denyModal');
+                    loadStats();
+                    currentOffset = 0; // Reset pagination
+                    loadCheckins(currentStatus);
+                } else {
+                    alert('Lỗi: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Lỗi xử lý yêu cầu');
+            });
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const approveModal = document.getElementById('approveModal');
+            const denyModal = document.getElementById('denyModal');
+            const detailModal = document.getElementById('detailModal');
+            const adminPhotoModal = document.getElementById('adminPhotoModal');
+            
+            if (event.target === approveModal) {
+                approveModal.style.display = 'none';
+            }
+            if (event.target === denyModal) {
+                denyModal.style.display = 'none';
+            }
+            if (event.target === detailModal) {
+                detailModal.style.display = 'none';
+            }
+            if (event.target === adminPhotoModal) {
+                closeAdminPhotoModal();
+            }
+        }
+
+        // Keyboard navigation for photo modal
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('adminPhotoModal').classList.contains('active')) {
+                if (e.key === 'Escape') {
+                    closeAdminPhotoModal();
+                } else if (e.key === 'ArrowLeft') {
+                    prevAdminPhoto();
+                } else if (e.key === 'ArrowRight') {
+                    nextAdminPhoto();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user['STATUS'] === 'Active') {
 
     // Nếu là user thường và là lần đầu đăng nhập → bắt đổi mật khẩu
     if ($user['isFirstLogin'] == 1) {
-        header("Location: change_password.php");
+        header("Location: profile/change_password.php");
         exit();
     }
 

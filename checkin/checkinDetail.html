@@ -415,10 +415,10 @@
             </div>
         </div>
 
-        <!-- Status section -->
+        <!-- Caption section (đổi từ Status) -->
         <div class="content-section" id="statusSection" style="display: none;">
             <div class="section-header">
-                💭 Cảm xúc
+                💭 Chia sẻ của bạn
             </div>
             <div class="section-content">
                 <div class="status-content" id="statusContent">
@@ -496,6 +496,15 @@
                 }
 
                 const result = await response.json();
+                
+                // Debug log to see what we receive
+                console.log('API Response:', result);
+                if (result.data && result.data.checkin) {
+                    console.log('Checkin time data:', {
+                        time: result.data.checkin.time,
+                        timeFormatted: result.data.checkin.timeFormatted
+                    });
+                }
 
                 if (!result.success) {
                     throw new Error(result.message || 'Không thể tải thông tin check-in');
@@ -511,34 +520,39 @@
             }
         }
 
-        // Update points display based on earning status
+        // Update points display for approval workflow
         function updatePointsDisplay(checkinData) {
             const pointsBadge = document.getElementById('checkinPoints');
             const pointsNote = document.getElementById('pointsNote');
             
-            console.log('Updating points display:', {
-                isFirstCheckinToday: checkinData.isFirstCheckinToday,
-                pointsEarned: checkinData.pointsEarned,
-                totalPoints: checkinData.points
+            console.log('Updating points display for approval workflow:', {
+                approvalStatus: checkinData.approvalStatus,
+                pendingPoints: checkinData.pendingPoints,
+                actualPoints: checkinData.actualPoints,
+                deniedReason: checkinData.deniedReason
             });
             
-            if (checkinData.isFirstCheckinToday && checkinData.pointsEarned > 0) {
-                // First check-in of the day - points earned
-                pointsBadge.textContent = '+' + checkinData.pointsEarned + 'đ';
+            if (checkinData.approvalStatus === 'approved') {
+                // Approved - show actual points earned
+                pointsBadge.textContent = '+' + checkinData.actualPoints + 'đ';
                 pointsBadge.className = 'points-badge';
-                pointsNote.textContent = 'Lần đầu check-in hôm nay!';
+                pointsNote.textContent = '✅ Đã được duyệt và nhận điểm';
                 pointsNote.style.display = 'block';
-            } else if (!checkinData.isFirstCheckinToday) {
-                // Not first check-in of the day - no points
+                pointsNote.style.color = '#27ae60';
+            } else if (checkinData.approvalStatus === 'denied') {
+                // Denied - show 0 points
                 pointsBadge.textContent = '0đ';
                 pointsBadge.className = 'points-badge no-points';
-                pointsNote.textContent = 'Đã check-in tại đây hôm nay';
+                pointsNote.textContent = '❌ Bị từ chối: ' + (checkinData.deniedReason || 'Không đạt yêu cầu');
                 pointsNote.style.display = 'block';
+                pointsNote.style.color = '#e74c3c';
             } else {
-                // Fallback case - show base points
-                pointsBadge.textContent = checkinData.points + 'đ';
+                // Pending approval - show pending points
+                pointsBadge.textContent = checkinData.pendingPoints + 'đ (chờ)';
                 pointsBadge.className = 'points-badge';
-                pointsNote.style.display = 'none';
+                pointsNote.textContent = '⏳ Đang chờ admin duyệt';
+                pointsNote.style.display = 'block';
+                pointsNote.style.color = '#f39c12';
             }
         }
 
@@ -550,7 +564,10 @@
             // Update header
             document.getElementById('museumName').textContent = data.museum.name;
             document.getElementById('museumAddress').textContent = '📍 ' + data.museum.address;
-            document.getElementById('checkinTime').textContent = '⏰ ' + data.checkin.timeFormatted;
+            
+            // Calculate time ago on client side for accuracy
+            const timeAgo = calculateTimeAgo(data.checkin.time);
+            document.getElementById('checkinTime').textContent = '⏰ ' + timeAgo;
 
             // Set museum image
             if (data.museum.image) {
@@ -565,9 +582,9 @@
             // Update points display based on whether points were actually earned
             updatePointsDisplay(data.checkin);
 
-            // Update status section
-            if (data.checkin.status && data.checkin.status.trim()) {
-                document.getElementById('statusContent').textContent = data.checkin.status;
+            // Update caption section (đổi từ status)
+            if (data.checkin.caption && data.checkin.caption.trim()) {
+                document.getElementById('statusContent').textContent = data.checkin.caption;
                 document.getElementById('statusSection').style.display = 'block';
             }
 
@@ -701,6 +718,50 @@
                 hour: '2-digit',
                 minute: '2-digit'
             });
+        }
+
+        // Calculate time ago from timestamp (client-side for accuracy)
+        function calculateTimeAgo(timestamp) {
+            const now = new Date();
+            const checkinTime = new Date(timestamp);
+            const diffMs = now.getTime() - checkinTime.getTime();
+            
+            // Convert to minutes, hours, days
+            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            console.log('Time calculation:', {
+                now: now.toISOString(),
+                checkinTime: checkinTime.toISOString(),
+                diffMs: diffMs,
+                diffMinutes: diffMinutes,
+                diffHours: diffHours,
+                diffDays: diffDays
+            });
+            
+            if (diffDays > 0) {
+                if (diffDays === 1) {
+                    return 'Hôm qua lúc ' + checkinTime.toLocaleTimeString('vi-VN', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                } else {
+                    return checkinTime.toLocaleDateString('vi-VN', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+            } else if (diffHours > 0) {
+                return diffHours + ' giờ trước';
+            } else if (diffMinutes > 0) {
+                return diffMinutes + ' phút trước';
+            } else {
+                return 'Vừa xong';
+            }
         }
 
         // Close modal on outside click

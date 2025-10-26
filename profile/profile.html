@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile - Vietnamese Memories</title>
+  <link rel="icon" type="image/png" href="../logo.PNG" />
+  <link rel="stylesheet" href="../style.css" />
+  <!-- Thêm thư viện Cropper.js (trong thực tế bạn nên tải thư viện này) -->
+  <script>
+    // Đây chỉ là phần giả lập vì chúng ta không thể tải thư viện trong demo này
+    // Trong dự án thực tế, bạn nên tải Cropper.js từ CDN hoặc cài đặt qua npm
+    console.log("Cropper.js would be loaded here in a real implementation");
+  </script>
+  <style>
+    /* Container position relative để làm điểm tham chiếu cho overlay */
+    .container {
+      position: relative;
+    }
+    
+    /* Cải tiến giao diện profile header */
+    .profile-header {
+      background: linear-gradient(135deg, #5bc0de, #0088cc);
+      padding: 30px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+      min-height: 240px;
+      text-align: center;
+    }
+    
+
+    .profile-header-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .profile-avatar {
+      position: relative;
+      margin-bottom: 15px;
+    }
+
+    .profile-avatar img {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+      transition: transform 0.3s ease;
+    }
+    
+    .profile-avatar img:hover {
+      transform: scale(1.05);
+    }
+
+    .profile-info {
+      z-index: 2;
+      position: relative;
+      width: 100%;
+      text-align: center;
+    }
+
+    .profile-info-top {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .username-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .profile-info h2 {
+      margin: 5px 0;
+      color: white;
+      font-size: 32px;
+      display: inline-block;
+      padding: 3px 0;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+      font-weight: bold;
+    }
+
+    .profile-points {
+      color: #fcff32;
+      font-size: 22px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    /* Ẩn bio */
+    .profile-info p {
+      display: none;
+    }
+
+    .edit-profile-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      min-width: 35px; /* Đảm bảo không bị co lại */
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.2s;
+      margin-left: 10px;
+    }
+
+    .edit-profile-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+    
+    /* Style cho nút lưu khi đang chỉnh sửa */
+    .edit-mode .edit-profile-btn {
+      background: rgba(46, 204, 113, 0.7);
+      border-color: rgba(46, 204, 113, 0.8);
+    }
+    
+    .edit-mode .edit-profile-btn:hover {
+      background: rgba(46, 204, 113, 0.9);
+    }
+
+    /* Ẩn header ở trên */
+    .user-header {
+      display: none !important;
+    }
+    
+    /* Style cho chế độ chỉnh sửa */
+    .profile-input {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    #bioInput {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    .username-history-container {
+      margin: 10px 0;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      color: white;
+      font-size: 14px;
+    }
+
+
+    
+    /* Overlay cho người dùng chưa đăng nhập */
+    .not-logged-in-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 60px; /* Để tránh che thanh navigator */
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      text-align: center;
+      padding: 20px;
+      border-radius: 12px;
+    }
+    
+    /* Modal popup chỉnh sửa thông tin cá nhân */
+    .edit-profile-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 350px;
+      background-color: rgba(255, 255, 255, 1);
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      padding: 20px 0; /* Thay đổi padding để giữ lề trên/dưới và bỏ lề trái/phải */
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    
+    .modal-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 0 20px; /* Thêm padding cho header để đảm bảo có không gian ở hai bên */
+      box-sizing: border-box;
+    }
+    
+    .modal-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    .modal-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #eee;
+      margin-bottom: 15px;
+    }
+    
+    .modal-username {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 25px;
+    }
+    
+    .modal-options {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 0 15px; /* Thêm padding cho container để tạo khoảng cách 2 bên */
+      box-sizing: border-box;
+    }
+    
+    .modal-option {
+      width: 100%;
+      background-color: white;
+      border: 1px solid #eee;
+      border-radius: 10px;
+      padding: 12px 15px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 2px;
+      box-sizing: border-box;
+    }
+    
+    .modal-option:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .modal-option-icon {
+      margin-right: 15px;
+      font-size: 20px;
+      color: #555;
+    }
+    
+    .modal-option-text {
+      font-size: 16px;
+      color: #333;
+    }
+    
+    /* Username input modal */
+    .username-edit-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%; /* Tăng độ rộng một chút để khung nhìn dễ chịu hơn */
+      max-width: 350px;
+      background-color: #1a1e25;
+      color: white;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+      z-index: 1001;
+      padding: 0;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    
+    .username-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .username-modal-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+    }
+    
+    .username-modal-close, .username-modal-back {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .username-modal-content {
+      padding: 20px 5px; /* Giảm padding ngang để cho phép margin của input hoạt động đúng */
+    }
+    
+    .username-input-label {
+      display: block;
+      margin: 0 15px 10px 15px; /* Đồng bộ với margin của input */
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 14px;
+    }
+    
+    .username-input {
+      width: calc(100% - 30px); /* Giảm chiều rộng để tạo lề 2 bên */
+      background-color: #2a3140;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 15px;
+      font-size: 16px;
+      margin: 0 15px 20px 15px; /* Tạo khoảng cách 15px ở hai bên */
+      box-sizing: border-box;
+    }
+    
+    .username-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(75, 171, 247, 0.5);
+    }
+    
+    .username-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 10px 15px 20px; /* Đồng bộ padding với margin của input */
+    }
+    
+    .username-modal-button {
+      background-color: #5bc0de;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 8px 20px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    .username-modal-button.cancel {
+      background-color: transparent;
+      color: #5bc0de;
+    }
+    
+    /* Error message styling */
+    .username-error-message {
+      color: #ff3333;
+      font-size: 14px;
+      margin: 8px 15px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    /* Avatar crop modal */
+    .avatar-crop-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #222;
+      color: white;
+      z-index: 1002;
+      display: none;
+      flex-direction: column;
+    }
+    
+    .crop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: #1a1e25;
+    }
+    
+    .crop-title {
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      flex-grow: 1;
+    }
+    
+    .crop-back {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+      width: 40px;
+      padding: 0;
+      text-align: left;
+    }
+    
+    .crop-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      overflow: hidden;
+    }
+    
+    .crop-preview {
+      max-width: 100%;
+      max-height: 60vh;
+      margin-bottom: 20px;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+    
+    .crop-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .crop-actions {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+      background-color: #1a1e25;
+    }
+    
+    .crop-button {
+      background-color: #6c5ce7;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .crop-button:hover {
+      background-color: #5b4cc7;
+    }
+    
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      display: none;
+    }
+    
+    .not-logged-in-message {
+      color: white;
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 25px;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    }
+    
+    .login-button {
+      background-color: #44bd32;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .login-button:hover {
+      background-color: #4cd137;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .login-button-icon {
+      margin-right: 10px;
+      font-size: 20px;
+    }
+
+    /* Username container styling */
+    .username-container {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+    
+    /* Role badge styling */
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+      margin: 8px 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      position: relative;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Premium user badge */
+    .role-badge.premium {
+      background: linear-gradient(135deg, #4cd137, #44bd32);
+      color: #fff;
+      padding-left: 35px;
+    }
+    
+    .role-badge.premium::before {
+      content: "👑";
+      position: absolute;
+      left: 12px;
+      font-size: 16px;
+    }
+    
+    /* Admin badge */
+    .role-badge.admin {
+      background: linear-gradient(135deg, #f44336, #b71c1c);
+      color: #fff;
+    }
+    
+    /* Role-specific avatar styling */
+    .profile-avatar.premium img {
+      border-color: #44bd32;
+      box-shadow: 0 6px 12px rgba(68, 189, 50, 0.3);
+    }
+    
+    .profile-avatar.admin img {
+      border-color: #f44336;
+      box-shadow: 0 6px 12px rgba(244, 67, 54, 0.3);
+    }
+    
+    /* Premium user crown - đã xóa biểu tượng ngôi sao */
+    .profile-avatar.premium::before {
+      content: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- User Header -->
+    <div class="user-header" id="userHeader">
+      <!-- User logged in state -->
+      <div id="userLoggedIn" class="user-logged-in" style="display: none;">
+        <div class="user-info">
+          <img id="userAvatar" src="../avatar/default.png" alt="User" class="user-icon">
+          <span id="userName" class="user-name">Loading...</span>
+        </div>
+        <div class="user-points">
+          <span id="userPoints">0đ</span>
+        </div>
+      </div>
+      
+      <!-- User not logged in state -->
+      <div id="usernotLoggedIn" class="user-not-logged-in" style="display: none;">
+        <div class="login-prompt">
+          <span class="login-text">Đăng nhập để xem thông tin cá nhân</span>
+        </div>
+        <button class="login-btn" onclick="goToLogin()">
+          🔑 Đăng nhập
+        </button>
+      </div>
+    </div>
+
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-header-content">
+        <div class="profile-avatar">
+          <img src="../avatar/default.png" alt="User Avatar" id="profileAvatar">
+        </div>
+        <div class="profile-info">
+          <div class="profile-info-top">
+            <div class="username-container">
+              <h2 id="profileName">Nguyen Van A</h2>
+              <!-- Role badge sẽ được thêm vào bởi JavaScript -->
+            </div>
+          </div>
+          <div class="profile-points"><span id="profilePoints">0 điểm</span></div>
+          <div class="maintenance-notice" style="color: #ff8801; font-size: 15px; margin-top: 5px;">
+            *Chức năng chỉnh sửa tạm thời bị vô hiệu hóa để bảo trì
+          </div>
+          <!-- Bio đã được ẩn theo yêu cầu -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-section">
+      <div class="stat-card">
+        <div class="stat-number">N/a</div>
+        <div class="stat-label">Điểm</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">N/a</div>
+        <div class="stat-label">Check-ins</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">N/a</div>
+        <div class="stat-label">Bảo tàng</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">#N/a</div>
+        <div class="stat-label">Xếp hạng</div>
+      </div>
+    </div>
+
+    <!-- Achievement Section -->
+    <div class="achievement-section">
+      <h3>🏅 Thành tích</h3>
+      <div class="achievement-grid">
+        <div class="achievement-card earned">
+          <div class="achievement-icon">🏛️</div>
+          <div class="achievement-name">Khám phá đầu tiên</div>
+          <div class="achievement-desc">Check-in lần đầu</div>
+        </div>
+        <div class="achievement-card earned">
+          <div class="achievement-icon">📍</div>
+          <div class="achievement-name">Thám hiểm</div>
+          <div class="achievement-desc">5 check-ins</div>
+        </div>
+        <div class="achievement-card">
+          <div class="achievement-icon">🎯</div>
+          <div class="achievement-name">Chuyên gia</div>
+          <div class="achievement-desc">10 check-ins</div>
+        </div>
+        <div class="achievement-card">
+          <div class="achievement-icon">👑</div>
+          <div class="achievement-name">Bậc thầy</div>
+          <div class="achievement-desc">Top 3 tuần</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="activity-section">
+      <h3>📋 Hoạt động gần đây</h3>
+      <div class="activity-list">
+        <div class="activity-item">
+          <div class="activity-icon">📍</div>
+          <div class="activity-info">
+            <p><strong>Check-in tại Bảo tàng Hồ Chí Minh</strong></p>
+            <p class="activity-time">Hôm nay, 14:30</p>
+          </div>
+          <div class="activity-points">+25</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon">🏆</div>
+          <div class="activity-info">
+            <p><strong>Lên hạng 7</strong></p>
+            <p class="activity-time">Hôm nay, 14:31</p>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon">📍</div>
+          <div class="activity-info">
+            <p><strong>Check-in tại Bảo tàng Lịch sử Quân sự</strong></p>
+            <p class="activity-time">Hôm qua, 10:15</p>
+          </div>
+          <div class="activity-points">+30</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon">🏅</div>
+          <div class="activity-info">
+            <p><strong>Nhận thành tích "Thám hiểm"</strong></p>
+            <p class="activity-time">Hôm qua, 10:16</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Section -->
+    <div class="settings-section">
+      <h3>⚙️ Cài đặt</h3>
+      <div class="settings-list">
+        <div class="setting-item" onclick="showEditProfileModal()">
+          <div class="setting-info">
+            <div class="setting-name">Chỉnh sửa thông tin cá nhân</div>
+            <div class="setting-desc">Thay đổi avatar và tên hiển thị</div>
+          </div>
+          <div class="setting-arrow">▶</div>
+        </div>
+        <div class="setting-item" onclick="toggleLocation()">
+          <div class="setting-info">
+            <div class="setting-name">Vị trí</div>
+            <div class="setting-desc">Cho phép truy cập vị trí</div>
+          </div>
+          <div class="setting-toggle">
+            <input type="checkbox" id="location" checked>
+            <label for="location" class="toggle-switch"></label>
+          </div>
+          <div class="setting-arrow">▶</div>
+        </div>
+        <div class="setting-item" onclick="showAboutUs()">
+          <div class="setting-info">
+            <div class="setting-name">Giới thiệu</div>
+            <div class="setting-desc">Thông tin về ứng dụng</div>
+          </div>
+          <div class="setting-arrow">▶</div>
+        </div>
+        
+        <div class="setting-item logout-item" onclick="logout()">
+          <div class="setting-info">
+            <div class="setting-name">Đăng xuất</div>
+            <div class="setting-desc">Thoát khỏi tài khoản</div>
+          </div>
+          <div class="setting-arrow">▶</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal Chỉnh sửa thông tin cá nhân -->
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="edit-profile-modal" id="editProfileModal">
+    <div class="modal-header">
+      <div class="modal-title">Chỉnh sửa thông tin</div>
+      <button class="modal-close" onclick="closeEditProfileModal()">×</button>
+    </div>
+    <img src="../avatar/default.png" alt="Avatar" class="modal-avatar" id="modalAvatar">
+    <div class="modal-username" id="modalUsername">Người dùng</div>
+    <div class="modal-options">
+      <div class="modal-option" onclick="editAvatar()">
+        <span class="modal-option-icon">🖼️</span>
+        <span class="modal-option-text">Thay đổi ảnh đại diện</span>
+      </div>
+      <div class="modal-option" onclick="editUsername()">
+        <span class="modal-option-icon">✏️</span>
+        <span class="modal-option-text">Thay đổi tên hiển thị</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal chỉnh sửa tên người dùng -->
+  <div class="username-edit-modal" id="usernameEditModal">
+    <div class="username-modal-header">
+      <button class="username-modal-back" onclick="backToMainEditModal()">←</button>
+      <div class="username-modal-title">Chỉnh sửa tên người dùng</div>
+      <button class="username-modal-close" onclick="closeAllModals()">×</button>
+    </div>
+    <div class="username-modal-content">
+      <label for="newUsername" class="username-input-label">Tên người dùng</label>
+      <input type="text" id="newUsername" class="username-input" placeholder="Nhập tên người dùng mới">
+      <div class="username-error-message" id="usernameError"></div>
+    </div>
+    <div class="username-modal-actions">
+      <button class="username-modal-button cancel" onclick="backToMainEditModal()">Hủy</button>
+      <button class="username-modal-button" onclick="saveUsername()">OK</button>
+    </div>
+  </div>
+  
+  <!-- Modal crop ảnh đại diện -->
+  <div class="avatar-crop-modal" id="avatarCropModal">
+    <div class="crop-header">
+      <button class="crop-back" onclick="backFromCropModal()">←</button>
+      <div class="crop-title">Crop & điều chỉnh</div>
+      <div style="width: 40px;"></div>
+    </div>
+    <div class="crop-container">
+      <div class="crop-preview">
+        <img id="cropPreviewImg" src="" alt="Preview">
+      </div>
+    </div>
+    <div class="crop-actions">
+      <button class="crop-button" onclick="saveCroppedAvatar()">Next</button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="navigateToPage('home')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('map')">
+      <div class="nav-icon">🗺️</div>
+      <div class="nav-label">Map</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('checkin')">
+      <div class="nav-icon">📍</div>
+      <div class="nav-label">Check-in</div>
+    </div>
+    <div class="nav-item" onclick="navigateToPage('leaderboard')">
+      <div class="nav-icon">🏆</div>
+      <div class="nav-label">Bảng xếp hạng</div>
+    </div>
+    <div class="nav-item active" onclick="navigateToPage('profile')">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">Profile</div>
+    </div>
+  </div>
+
+  <script>
+    // Load user info on page load
+    async function loadUserInfo() {
+      try {
+        const response = await fetch('getUserInfo.php');
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.loggedIn) {
+            showUserLoggedInState(data);
+          } else {
+            showUserNotLoggedInState();
+          }
+        } else {
+          showUserNotLoggedInState();
+        }
+      } catch (error) {
+        console.error('Error loading user info:', error);
+        showUserNotLoggedInState();
+      }
+    }
+
+
+    
+    function showUserLoggedInState(userData) {
+      const loggedInDiv = document.getElementById('userLoggedIn');
+      const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+      
+      // Show logged in state, hide not logged in state
+      loggedInDiv.style.display = 'flex';
+      notLoggedInDiv.style.display = 'none';
+      
+      // Xóa overlay nếu có
+      const overlay = document.querySelector('.container .not-logged-in-overlay');
+      if (overlay) {
+        overlay.remove();
+      }
+      
+      // Update user avatar
+      const avatarElement = document.getElementById('userAvatar');
+      avatarElement.src = userData.avatarRelative || '../avatar/default.png';
+      
+      // Update user name
+      const nameElement = document.getElementById('userName');
+      nameElement.textContent = userData.username || 'Guest User';
+      
+      // Update user points
+      const pointsElement = document.getElementById('userPoints');
+      pointsElement.textContent = (userData.score || 0) + 'đ';
+      
+      // Update profile points - make them larger and more prominent
+      const profilePointsElement = document.getElementById('profilePoints');
+      if (profilePointsElement) {
+        profilePointsElement.textContent = (userData.score || 0) + ' điểm';
+        profilePointsElement.style.textShadow = '0 0 5px rgba(75, 171, 247, 0.5)';
+      }
+      
+      // Thêm verified badge dựa trên role
+      const userRole = userData.role ? userData.role.toLowerCase() : 'customer';
+      console.log('User role:', userRole);
+      
+      // Update profile information
+      const profileName = document.getElementById('profileName');
+      if (profileName) {
+        profileName.textContent = userData.username || 'Guest User';
+        // Remove any existing role classes from profile name
+        profileName.classList.remove('admin', 'customerpre', 'customer');
+        
+        // Thêm badge theo role
+        const usernameContainer = document.querySelector('.username-container');
+        if (usernameContainer) {
+          // Remove any existing badge
+          const existingBadge = usernameContainer.querySelector('.role-badge');
+          if (existingBadge) existingBadge.remove();
+          
+          // Add role-specific badge - now it will appear below the username
+          if (userRole === 'admin') {
+            const badge = document.createElement('span');
+            badge.className = 'role-badge admin';
+            badge.textContent = 'ADMIN';
+            usernameContainer.appendChild(badge);
+            
+            // Add admin class to avatar container
+            const avatarContainer = document.querySelector('.profile-avatar');
+            if (avatarContainer) {
+              avatarContainer.classList.add('admin');
+              avatarContainer.classList.remove('premium');
+            }
+          } 
+          else if (userRole === 'customerpre') {
+            const badge = document.createElement('span');
+            badge.className = 'role-badge premium';
+            badge.textContent = 'PREMIUM USER';
+            usernameContainer.appendChild(badge);
+            
+            // Add premium class to avatar container
+            const avatarContainer = document.querySelector('.profile-avatar');
+            if (avatarContainer) {
+              avatarContainer.classList.add('premium');
+              avatarContainer.classList.remove('admin');
+            }
+          }
+          else {
+            // Regular user - no badge
+            const avatarContainer = document.querySelector('.profile-avatar');
+            if (avatarContainer) {
+              avatarContainer.classList.remove('admin', 'premium');
+            }
+          }
+        }
+      }
+      
+      const profileAvatar = document.getElementById('profileAvatar');
+      if (profileAvatar) profileAvatar.src = userData.avatarRelative || '../avatar/default.png';
+      
+      // Apply role-based styling
+      // First, remove any existing role classes
+      nameElement.classList.remove('admin', 'customerpre', 'customer');
+      avatarElement.classList.remove('admin', 'customerpre', 'customer');
+      
+      if (profileAvatar) {
+        const profileAvatarContainer = document.querySelector('.profile-avatar');
+        if (profileAvatarContainer) {
+          profileAvatarContainer.classList.remove('admin', 'customerpre', 'customer');
+        }
+      }
+      
+      // Then apply the appropriate class based on user's role
+      // Add appropriate class based on role
+      nameElement.classList.add(userRole);
+      avatarElement.classList.add(userRole);
+      
+      // Thêm class role vào profileName để có cùng style với userName
+      if (profileName) profileName.classList.add(userRole);
+      
+      if (profileAvatar) {
+        const profileAvatarContainer = document.querySelector('.profile-avatar');
+        if (profileAvatarContainer) {
+          profileAvatarContainer.classList.add(userRole);
+        }
+      }
+      
+      console.log('Applied styling for role:', userRole);
+    }
+
+    function showUserNotLoggedInState() {
+      const loggedInDiv = document.getElementById('userLoggedIn');
+      const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+      
+      // Show not logged in state, hide logged in state
+      loggedInDiv.style.display = 'none';
+      notLoggedInDiv.style.display = 'flex';
+
+      // Hiển thị tên người dùng mặc định
+      const profileName = document.getElementById('profileName');
+      if (profileName) {
+        profileName.textContent = 'Khách';
+      }
+      
+      // Hiển thị điểm mặc định
+      const profilePoints = document.getElementById('profilePoints');
+      if (profilePoints) {
+        profilePoints.textContent = '0 điểm';
+      }
+      
+      // Tạo overlay khi chưa đăng nhập
+      const overlay = document.createElement('div');
+      overlay.className = 'not-logged-in-overlay';
+      
+      // Tạo thông báo
+      const message = document.createElement('div');
+      message.className = 'not-logged-in-message';
+      message.textContent = 'Hãy đăng nhập để xem chi tiết thông tin người dùng';
+      
+      // Tạo nút đăng nhập
+      const loginButton = document.createElement('button');
+      loginButton.className = 'login-button';
+      loginButton.onclick = goToLogin;
+      
+      // Thêm biểu tượng cho nút
+      const icon = document.createElement('span');
+      icon.className = 'login-button-icon';
+      icon.textContent = '🔑';
+      
+      // Thêm text cho nút
+      const buttonText = document.createTextNode('Đăng nhập');
+      
+      // Ghép lại nút đăng nhập
+      loginButton.appendChild(icon);
+      loginButton.appendChild(buttonText);
+      
+      // Thêm các phần tử vào overlay
+      overlay.appendChild(message);
+      overlay.appendChild(loginButton);
+      
+      // Thêm overlay vào đầu container để che tất cả nội dung nhưng không che navigation bar
+      const container = document.querySelector('.container');
+      if (container) {
+        // Thêm overlay vào đầu container để nó che tất cả nội dung
+        container.insertBefore(overlay, container.firstChild);
+      }
+    }
+
+    function goToLogin() {
+  // Kiểm tra xem có token không (có thể từ localStorage, sessionStorage, hoặc URL parameter)
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenFromUrl = urlParams.get('token');
+  const tokenFromStorage = localStorage.getItem('nfc_token') || sessionStorage.getItem('nfc_token');
+  
+  if (tokenFromUrl || tokenFromStorage) {
+    // Có token, chuyển đến trang login
+    const token = tokenFromUrl || tokenFromStorage;
+    window.location.href = `../login.php?token=${token}`;
+  } else {
+    // Không có token, chuyển đến trang thông báo NFC
+    window.location.href = '../nfc_required.html';
+  }
+}
+
+    // Navigation functions
+    function navigateToPage(page) {
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      event.target.closest('.nav-item').classList.add('active');
+      
+      switch(page) {
+        case 'home':
+          window.location.href = '../index.php';
+          break;
+        case 'map':
+          window.location.href = '../map.html';
+          break;
+        case 'checkin':
+          window.location.href = '../checkin/checkin.html';
+          break;
+        case 'leaderboard':
+          window.location.href = '../leaderboard.html';
+          break;
+        case 'profile':
+          // Already on profile page
+          break;
+      }
+    }
+
+    // Profile functions
+    function toggleEditMode() {
+      // Tạm thời vô hiệu hóa chức năng chỉnh sửa
+      console.log("Chức năng chỉnh sửa tạm thời bị vô hiệu hóa để bảo trì");
+      // Hiển thị thông báo cho người dùng nếu cần
+      alert("Chức năng chỉnh sửa hồ sơ đang được bảo trì. Vui lòng thử lại sau.");
+      
+      /* Đã vô hiệu hóa
+      const isEditing = document.querySelector('.edit-mode');
+      if (isEditing) {
+        exitEditMode();
+      } else {
+        enterEditMode();
+      }
+      */
+    }
+
+    async function enterEditMode() {
+      document.body.classList.add('edit-mode');
+      const name = document.getElementById('profileName');
+      const bio = document.getElementById('profileBio');
+      const editBtn = document.querySelector('.edit-profile-btn');
+      
+      // Lấy và lưu trữ role để dùng sau khi thoát chế độ chỉnh sửa
+      const userRole = name.classList.contains('admin') ? 'admin' : 
+                      name.classList.contains('customerpre') ? 'customerpre' : 'customer';
+      
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = name.innerText;
+      nameInput.id = 'nameInput';
+      nameInput.className = 'profile-input';
+      
+      const bioInput = document.createElement('textarea');
+      bioInput.value = bio.innerText;
+      bioInput.id = 'bioInput';
+      bioInput.className = 'profile-input';
+      
+      // Tạo container cho lịch sử username
+      const usernameHistoryContainer = document.createElement('div');
+      usernameHistoryContainer.id = 'usernameHistoryContainer';
+      usernameHistoryContainer.className = 'username-history-container';
+      usernameHistoryContainer.innerHTML = '<p>Đang tải lịch sử username...</p>';
+      
+      // Thay thế các phần tử
+      name.replaceWith(nameInput);
+      bio.replaceWith(bioInput);
+      
+      // Chèn container lịch sử username sau nameInput
+      nameInput.parentNode.insertBefore(usernameHistoryContainer, nameInput.nextSibling);
+      
+      // Cập nhật nút lưu
+      editBtn.innerHTML = '💾';
+      
+      // Lấy lịch sử username từ server
+      try {
+        const response = await fetch('getUsernameHistory.php');
+        const data = await response.json();
+        
+        if (data.success) {
+          let historyContent = '';
+          
+          // Kiểm tra có thể đổi username hay không
+          if (!data.canChangeUsername) {
+            historyContent = `<div class="username-change-restriction">
+              <p>⏰ Bạn có thể đổi username sau ${data.daysRemaining} ngày nữa</p>
+            </div>`;
+            
+            // Disable nameInput nếu chưa đủ 90 ngày
+            nameInput.disabled = true;
+            nameInput.title = `Bạn chỉ có thể đổi username sau ${data.daysRemaining} ngày nữa`;
+          }
+          
+          // Thêm lịch sử username nếu có
+          if (data.history.length > 0) {
+            historyContent += '<div class="username-history-list"><h4>Lịch sử username cũ:</h4><ul>';
+            
+            data.history.forEach(item => {
+              // Định dạng ngày tháng
+              const date = new Date(item.changeDate);
+              const formattedDate = date.toLocaleDateString('vi-VN') + ' ' + 
+                                   date.toLocaleTimeString('vi-VN');
+              
+              historyContent += `<li>${formattedDate} - ${item.username}</li>`;
+            });
+            
+            historyContent += '</ul></div>';
+          }
+          
+          // Cập nhật nội dung container
+          if (historyContent) {
+            usernameHistoryContainer.innerHTML = historyContent;
+          } else {
+            usernameHistoryContainer.style.display = 'none';
+          }
+        } else {
+          usernameHistoryContainer.innerHTML = '<p>Không thể tải lịch sử username</p>';
+        }
+      } catch (error) {
+        console.error('Lỗi khi tải lịch sử username:', error);
+        usernameHistoryContainer.innerHTML = '<p>Đã xảy ra lỗi khi tải lịch sử</p>';
+      }
+    }
+
+    async function exitEditMode() {
+      const nameInput = document.getElementById('nameInput');
+      const bioInput = document.getElementById('bioInput');
+      const editBtn = document.querySelector('.edit-profile-btn');
+      
+      // Xóa container lịch sử username
+      const usernameHistoryContainer = document.getElementById('usernameHistoryContainer');
+      if (usernameHistoryContainer) {
+        usernameHistoryContainer.remove();
+      }
+      
+      // Lưu giá trị hiện tại để khôi phục nếu cần
+      const currentNameValue = nameInput.value.trim();
+      const currentBioValue = bioInput.value.trim();
+      
+      // Lấy tên hiện tại từ phần tử userName
+      const currentUsername = document.getElementById('userName').textContent;
+      
+      // Lấy role hiện tại để tạo lại badge
+      const userRole = document.getElementById('userName').classList.contains('admin') ? 'admin' : 
+                      document.getElementById('userName').classList.contains('customerpre') ? 'customerpre' : 'customer';
+      
+      // Kiểm tra nếu username thay đổi
+      if (currentNameValue !== currentUsername) {
+        try {
+          // Gửi yêu cầu cập nhật username
+          const response = await fetch('updateUsername.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username: currentNameValue })
+          });
+          
+          const data = await response.json();
+          
+          if (!data.success) {
+            // Hiển thị thông báo lỗi
+            alert(data.message);
+            
+            // Khôi phục tên cũ
+            nameInput.value = currentUsername;
+            return; // Không thoát khỏi chế độ chỉnh sửa
+          } else {
+            // Cập nhật thành công, hiển thị thông báo
+            alert('Tên người dùng đã được cập nhật thành công!');
+            
+            // Cập nhật tên trong toàn bộ giao diện
+            document.getElementById('userName').textContent = currentNameValue;
+          }
+        } catch (error) {
+          console.error('Lỗi khi cập nhật tên người dùng:', error);
+          alert('Đã xảy ra lỗi khi cập nhật tên người dùng');
+          return; // Không thoát khỏi chế độ chỉnh sửa
+        }
+      }
+      
+      // Thoát khỏi chế độ chỉnh sửa
+      document.body.classList.remove('edit-mode');
+      
+      const name = document.createElement('h2');
+      name.id = 'profileName';
+      name.innerText = currentNameValue;
+      name.classList.add(userRole); // Thêm lại class role
+      
+      const bio = document.createElement('p');
+      bio.id = 'profileBio';
+      bio.innerText = currentBioValue;
+      
+      nameInput.replaceWith(name);
+      bioInput.replaceWith(bio);
+      editBtn.innerHTML = '✏️';
+      
+      // Khôi phục badge sau khi chỉnh sửa
+      setTimeout(() => {
+        const usernameContainer = document.querySelector('.username-container');
+        if (usernameContainer) {
+          // Thêm lại badge theo role
+          if (userRole === 'admin') {
+            const badge = document.createElement('span');
+            badge.className = 'role-badge admin';
+            badge.textContent = 'ADMIN';
+            usernameContainer.appendChild(badge);
+          } 
+          else if (userRole === 'customerpre') {
+            const badge = document.createElement('span');
+            badge.className = 'role-badge premium';
+            badge.textContent = 'PREMIUM USER';
+            usernameContainer.appendChild(badge);
+          }
+        }
+      }, 100);
+      
+
+      
+      // TODO: Lưu bio vào server (chức năng này sẽ được phát triển sau)
+      console.log('Profile saved:', { name: currentNameValue, bio: currentBioValue });
+    }
+
+    async function uploadAvatar(file) {
+      if (!file) return;
+      
+      try {
+        // Hiển thị trạng thái đang tải lên
+        const cropButton = document.querySelector('.crop-button');
+        const originalButtonText = cropButton.textContent;
+        cropButton.textContent = 'Đang tải lên...';
+        cropButton.disabled = true;
+        
+        // Tạo FormData để gửi lên server
+        const formData = new FormData();
+        formData.append('avatar', file);
+        
+        // Gửi dữ liệu lên server
+        const response = await fetch('uploadAvatar.php', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        // Khôi phục nút
+        cropButton.textContent = originalButtonText;
+        cropButton.disabled = false;
+        
+        if (data.success) {
+          // Cập nhật avatar mới
+          document.getElementById('profileAvatar').src = data.avatarUrl;
+          document.getElementById('userAvatar').src = data.avatarUrl;
+          
+          // Cập nhật avatar trong modal chính
+          const modalAvatar = document.getElementById('modalAvatar');
+          if (modalAvatar) {
+            modalAvatar.src = data.avatarUrl;
+          }
+          
+          // Đóng tất cả modal
+          closeAllModals();
+          
+          // Thông báo thành công
+          alert('Ảnh đại diện đã được cập nhật thành công');
+        } else {
+          // Hiển thị lỗi
+          alert('Lỗi khi cập nhật ảnh đại diện: ' + data.message);
+        }
+      } catch (error) {
+        console.error('Lỗi khi tải lên avatar:', error);
+        alert('Đã xảy ra lỗi khi tải lên ảnh đại diện');
+        document.querySelector('.crop-button').textContent = 'Next';
+        document.querySelector('.crop-button').disabled = false;
+      }
+    }
+    
+    // Giữ lại hàm changeAvatar cũ cho trường hợp cần dùng đến (nhưng không được sử dụng trong UI mới)
+    function changeAvatar() {
+      editAvatar();
+    }
+
+
+    function toggleLocation() {
+      const checkbox = document.getElementById('location');
+      checkbox.checked = !checkbox.checked;
+      console.log('Location:', checkbox.checked);
+    }
+
+    function showAboutUs() {
+      alert('Thông tin về ứng dụng sẽ được phát triển trong phiên bản tiếp theo');
+    }
+    
+    function showEditProfileModal() {
+      // Cập nhật thông tin trong modal
+      const profileAvatar = document.getElementById('profileAvatar').src;
+      const profileName = document.getElementById('profileName').textContent;
+      
+      document.getElementById('modalAvatar').src = profileAvatar;
+      document.getElementById('modalUsername').textContent = profileName;
+      
+      // Hiển thị modal và backdrop
+      document.getElementById('modalBackdrop').style.display = 'block';
+      document.getElementById('editProfileModal').style.display = 'flex';
+    }
+    
+    function closeEditProfileModal() {
+      document.getElementById('modalBackdrop').style.display = 'none';
+      document.getElementById('editProfileModal').style.display = 'none';
+    }
+    
+    function editUsername() {
+      // Ẩn modal chỉnh sửa chính
+      document.getElementById('editProfileModal').style.display = 'none';
+      
+      // Hiện modal chỉnh sửa tên
+      const usernameModal = document.getElementById('usernameEditModal');
+      const currentName = document.getElementById('modalUsername').textContent;
+      document.getElementById('newUsername').value = currentName;
+      
+      // Reset thông báo lỗi
+      const errorElement = document.getElementById('usernameError');
+      if (errorElement) {
+        errorElement.textContent = '';
+        errorElement.style.display = 'none';
+      }
+      
+      usernameModal.style.display = 'flex';
+    }
+    
+    function backToMainEditModal() {
+      // Ẩn modal chỉnh sửa tên
+      document.getElementById('usernameEditModal').style.display = 'none';
+      
+      // Reset thông báo lỗi
+      const errorElement = document.getElementById('usernameError');
+      if (errorElement) {
+        errorElement.textContent = '';
+        errorElement.style.display = 'none';
+      }
+      
+      // Hiện lại modal chỉnh sửa chính
+      document.getElementById('editProfileModal').style.display = 'flex';
+    }
+    
+    function closeAllModals() {
+      document.getElementById('usernameEditModal').style.display = 'none';
+      document.getElementById('editProfileModal').style.display = 'none';
+      document.getElementById('avatarCropModal').style.display = 'none';
+      document.getElementById('modalBackdrop').style.display = 'none';
+      
+      // Reset thông báo lỗi nếu có
+      const errorElement = document.getElementById('usernameError');
+      if (errorElement) {
+        errorElement.textContent = '';
+        errorElement.style.display = 'none';
+      }
+      
+      // Xóa ảnh đã chọn nếu có
+      if (croppedImageUrl) {
+        URL.revokeObjectURL(croppedImageUrl);
+        croppedImageUrl = null;
+      }
+      selectedImageFile = null;
+    }
+    
+    function saveUsername() {
+      const newName = document.getElementById('newUsername').value.trim();
+      const errorElement = document.getElementById('usernameError');
+      
+      if (newName !== '') {
+        // Ẩn thông báo lỗi nếu có
+        errorElement.style.display = 'none';
+        // Gửi request cập nhật tên
+        updateUsername(newName);
+      } else {
+        // Hiển thị lỗi trong modal
+        errorElement.textContent = 'Tên người dùng không được để trống';
+        errorElement.style.display = 'block';
+      }
+    }
+    
+    async function updateUsername(newName) {
+      try {
+        const errorElement = document.getElementById('usernameError');
+        
+        // Gửi yêu cầu cập nhật username
+        const response = await fetch('updateUsername.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username: newName })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+          // Hiển thị thông báo lỗi trong modal
+          errorElement.textContent = data.message;
+          errorElement.style.display = 'block';
+        } else {
+          // Cập nhật thành công
+          // Cập nhật tên trong toàn bộ giao diện
+          document.getElementById('userName').textContent = newName;
+          document.getElementById('profileName').textContent = newName;
+          document.getElementById('modalUsername').textContent = newName;
+          
+          // Đóng tất cả các modal
+          closeAllModals();
+          
+          // Thông báo thành công
+          alert('Tên người dùng đã được cập nhật thành công!');
+        }
+      } catch (error) {
+        console.error('Lỗi khi cập nhật tên người dùng:', error);
+        document.getElementById('usernameError').textContent = 'Đã xảy ra lỗi khi cập nhật tên người dùng';
+        document.getElementById('usernameError').style.display = 'block';
+      }
+    }
+    
+    // Biến lưu trữ dữ liệu ảnh
+    let selectedImageFile = null;
+    let croppedImageUrl = null;
+    
+    function editAvatar() {
+      // Mở input để chọn file
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/jpeg,image/png,image/gif';
+      input.onchange = handleAvatarFileSelect;
+      input.click();
+    }
+    
+    function handleAvatarFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      // Kiểm tra kích thước file (giới hạn 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Kích thước file quá lớn. Giới hạn 2MB');
+        return;
+      }
+      
+      selectedImageFile = file;
+      
+      // Tạo URL cho ảnh đã chọn
+      const imageUrl = URL.createObjectURL(file);
+      
+      // Hiển thị ảnh trong modal crop
+      document.getElementById('cropPreviewImg').src = imageUrl;
+      
+      // Ẩn modal chỉnh sửa thông tin và hiện modal crop
+      document.getElementById('editProfileModal').style.display = 'none';
+      document.getElementById('avatarCropModal').style.display = 'flex';
+    }
+    
+    function backFromCropModal() {
+      // Ẩn modal crop và hiện lại modal chỉnh sửa
+      document.getElementById('avatarCropModal').style.display = 'none';
+      document.getElementById('editProfileModal').style.display = 'flex';
+      
+      // Xóa ảnh đã chọn
+      if (croppedImageUrl) {
+        URL.revokeObjectURL(croppedImageUrl);
+        croppedImageUrl = null;
+      }
+    }
+    
+    function saveCroppedAvatar() {
+      if (!selectedImageFile) return;
+      
+      // Lưu ý: Trong thực tế, bạn nên sử dụng thư viện như Cropper.js để cắt ảnh
+      // Ở đây chúng ta chỉ giả lập việc crop bằng cách sử dụng ảnh đã chọn mà không cắt
+      uploadAvatar(selectedImageFile);
+    }
+
+    function logout() {
+      if (confirm('Bạn có chắc muốn đăng xuất?')) {
+        // Clear all client-side storage
+        sessionStorage.clear();
+        localStorage.clear();
+        
+        // Clear any cookies (optional, for completeness)
+        document.cookie.split(";").forEach(function(c) { 
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        // Redirect to logout.php to clear server-side session
+        window.location.href = '../logout.php';
+      }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      loadUserInfo();
+      console.log('Profile page loaded');
+    });
+  </script>
+</body>
+</html>

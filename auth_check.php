@@ -30,7 +30,7 @@ if (strpos($_SERVER['SCRIPT_NAME'], '/admin/') !== false) {
 
 // Nếu isFirstLogin = 1 và không phải trang đổi mật khẩu → redirect sang change_password.php
 if ($isFirstLogin == 1 && strpos($_SERVER['PHP_SELF'], 'change_password.php') === false) {
-    header("Location: ../change_password.php");
+    header("Location: ../profile/change_password.php");
     exit();
 }
 ?>

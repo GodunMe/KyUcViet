@@ -24,10 +24,101 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `option`
+-- Drop tables in correct order (child tables first, then parent tables)
 --
 
 DROP TABLE IF EXISTS `option`;
+DROP TABLE IF EXISTS `question`;
+DROP TABLE IF EXISTS `quiz`;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `quiz`
+--
+
+CREATE TABLE `quiz` (
+  `QuizID` int(11) NOT NULL,
+  `MuseumID` int(11) DEFAULT NULL,
+  `Explaination` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `quiz`
+--
+
+INSERT INTO `quiz` (`QuizID`, `MuseumID`, `Explaination`) VALUES
+(1, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
+(2, 3, 'Quiz kiểm tra kiến thức lịch sử bảo tàng'),
+(3, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
+(4, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
+(5, 3, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(6, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
+(7, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
+(8, 3, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(9, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
+(10, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(11, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(12, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(13, 4, 'Quiz kiểm tra kiến thức lịch sử'),
+(14, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(15, 4, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng'),
+(16, 4, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng'),
+(17, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(18, 5, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(19, 5, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(20, 5, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng'),
+(21, 5, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(22, 5, 'Quiz kiểm tra kiến thức về bảo tàng'),
+(23, 5, 'Quiz kiểm tra kiến thức về bảo tàng');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `question`
+--
+
+CREATE TABLE `question` (
+  `QuestionID` int(11) NOT NULL,
+  `QuizID` int(11) DEFAULT NULL,
+  `QuestionText` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `question`
+--
+
+INSERT INTO `question` (`QuestionID`, `QuizID`, `QuestionText`) VALUES
+(1, 1, 'Bảo tàng Lịch sử Quân sự Việt Nam có tên gọi thân quen là gì?'),
+(2, 2, 'Bảo tàng Lịch sử Quân sự Việt Nam thành lập năm nào?'),
+(3, 3, 'Tòa tháp nổi tiếng nằm trong khuôn viên bảo tàng là gì?'),
+(4, 4, 'Trong bảo tàng có trưng bày chiếc máy bay nào gắn liền với chiến thắng Điện Biên Phủ trên không?'),
+(5, 5, 'Bảo tàng Lịch sử Quân sự Việt Nam nằm trên đường nào của Hà Nội?'),
+(6, 6, 'Chiếc xe tăng nào được trưng bày, từng húc đổ cổng Dinh Độc Lập ngày 30/4/1975?'),
+(7, 7, 'Trong bảo tàng có trưng bày chiếc pháo cao xạ gắn liền với chiến dịch nào?'),
+(8, 8, 'Bảo tàng Lịch Sử Quân sự Việt Nam hiện là 1 trong bao nhiêu bảo tàng hạng 1 quốc gia?'),
+(9, 9, 'Ngoài trưng bày vũ khí, bảo tàng còn có chuyên đề gì đặc biệt?'),
+(10, 10, 'Bảo tàng Hồ Chí Minh khánh thành vào ngày nào?'),
+(11, 11, 'Bảo tàng Hồ Chí Minh nằm ở đâu?'),
+(12, 12, 'Hình dáng kiến trúc của bảo tàng tượng trưng cho loài hoa nào?'),
+(13, 13, 'Ai là Tổng Bí thư đọc diễn văn khánh thành bảo tàng năm 1990?'),
+(14, 14, 'Bảo tàng được xây dựng nhân kỷ niệm bao nhiêu năm ngày sinh của Bác Hồ?'),
+(15, 15, 'Phần trưng bày cố định của bảo tàng tập trung vào nội dung gì?'),
+(16, 16, 'Ngoài hiện vật, bảo tàng còn sử dụng phương tiện gì để minh họa?'),
+(17, 17, 'Công trình bảo tàng được coi là biểu tượng của tình hữu nghị Việt Nam với nước nào?'),
+(18, 18, 'Bảo tàng Dân tộc học Việt Nam chính thức mở cửa vào năm nào?'),
+(19, 19, 'Bảo tàng Dân tộc học Việt Nam trưng bày về bao nhiêu dân tộc?'),
+(20, 20, 'Khu trưng bày ngoài trời của bảo tàng nổi bật với gì?'),
+(21, 21, 'Ai là người hỗ trợ thiết kế chính của bảo tàng?'),
+(22, 22, 'Ngoài trưng bày thường xuyên, bảo tàng còn tổ chức gì?'),
+(23, 23, 'Bảo tàng được coi là "ngôi nhà chung" của?');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `option`
+--
+
 CREATE TABLE `option` (
   `OptionID` int(11) NOT NULL,
   `QuestionID` int(11) DEFAULT NULL,
@@ -132,90 +223,6 @@ INSERT INTO `option` (`OptionID`, `QuestionID`, `TEXT`, `isCorrect`) VALUES
 (90, 23, 'Sinh viên', 0),
 (91, 23, 'Các dân tộc Việt Nam', 1),
 (92, 23, 'Các nhà khoa học', 0);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `question`
---
-
-DROP TABLE IF EXISTS `question`;
-CREATE TABLE `question` (
-  `QuestionID` int(11) NOT NULL,
-  `QuizID` int(11) DEFAULT NULL,
-  `QuestionText` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `question`
---
-
-INSERT INTO `question` (`QuestionID`, `QuizID`, `QuestionText`) VALUES
-(1, 1, 'Bảo tàng Lịch sử Quân sự Việt Nam có tên gọi thân quen là gì?'),
-(2, 2, 'Bảo tàng Lịch sử Quân sự Việt Nam thành lập năm nào?'),
-(3, 3, 'Tòa tháp nổi tiếng nằm trong khuôn viên bảo tàng là gì?'),
-(4, 4, 'Trong bảo tàng có trưng bày chiếc máy bay nào gắn liền với chiến thắng Điện Biên Phủ trên không?'),
-(5, 5, 'Bảo tàng Lịch sử Quân sự Việt Nam nằm trên đường nào của Hà Nội?'),
-(6, 6, 'Chiếc xe tăng nào được trưng bày, từng húc đổ cổng Dinh Độc Lập ngày 30/4/1975?'),
-(7, 7, 'Trong bảo tàng có trưng bày chiếc pháo cao xạ gắn liền với chiến dịch nào?'),
-(8, 8, 'Bảo tàng Lịch Sử Quân sự Việt Nam hiện là 1 trong bao nhiêu bảo tàng hạng 1 quốc gia?'),
-(9, 9, 'Ngoài trưng bày vũ khí, bảo tàng còn có chuyên đề gì đặc biệt?'),
-(10, 10, 'Bảo tàng Hồ Chí Minh khánh thành vào ngày nào?'),
-(11, 11, 'Bảo tàng Hồ Chí Minh nằm ở đâu?'),
-(12, 12, 'Hình dáng kiến trúc của bảo tàng tượng trưng cho loài hoa nào?'),
-(13, 13, 'Ai là Tổng Bí thư đọc diễn văn khánh thành bảo tàng năm 1990?'),
-(14, 14, 'Bảo tàng được xây dựng nhân kỷ niệm bao nhiêu năm ngày sinh của Bác Hồ?'),
-(15, 15, 'Phần trưng bày cố định của bảo tàng tập trung vào nội dung gì?'),
-(16, 16, 'Ngoài hiện vật, bảo tàng còn sử dụng phương tiện gì để minh họa?'),
-(17, 17, 'Công trình bảo tàng được coi là biểu tượng của tình hữu nghị Việt Nam với nước nào?'),
-(18, 18, 'Bảo tàng Dân tộc học Việt Nam chính thức mở cửa vào năm nào?'),
-(19, 19, 'Bảo tàng Dân tộc học Việt Nam trưng bày về bao nhiêu dân tộc?'),
-(20, 20, 'Khu trưng bày ngoài trời của bảo tàng nổi bật với gì?'),
-(21, 21, 'Ai là người hỗ trợ thiết kế chính của bảo tàng?'),
-(22, 22, 'Ngoài trưng bày thường xuyên, bảo tàng còn tổ chức gì?'),
-(23, 23, 'Bảo tàng được coi là “ngôi nhà chung” của?');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `quiz`
---
-
-DROP TABLE IF EXISTS `quiz`;
-CREATE TABLE `quiz` (
-  `QuizID` int(11) NOT NULL,
-  `MuseumID` int(11) DEFAULT NULL,
-  `Explaination` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `quiz`
---
-
-INSERT INTO `quiz` (`QuizID`, `MuseumID`, `Explaination`) VALUES
-(1, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
-(2, 3, 'Quiz kiểm tra kiến thức lịch sử bảo tàng'),
-(3, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
-(4, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
-(5, 3, 'Quiz kiểm tra kiến thức về bảo tàng'),
-(6, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
-(7, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
-(8, 3, 'Quiz kiểm tra kiến thức về bảo tàng'),
-(9, 3, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng Lịch Sử Quân sự Việt Nam'),
-(10, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
-(11, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
-(12, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
-(13, 4, 'Quiz kiểm tra kiến thức lịch sử'),
-(14, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
-(15, 4, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng'),
-(16, 4, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng'),
-(17, 4, 'Quiz kiểm tra kiến thức về bảo tàng'),
-(18, 5, 'Quiz kiểm tra kiến thức về bảo tàng'),
-(19, 5, 'Quiz kiểm tra kiến thức về bảo tàng'),
-(20, 5, 'Quiz kiểm tra kiến thức về hiện vật trong bảo tàng'),
-(21, 5, 'Quiz kiểm tra kiến thức về bảo tàng'),
-(22, 5, 'Quiz kiểm tra kiến thức về bảo tàng'),
-(23, 5, 'Quiz kiểm tra kiến thức về bảo tàng');
 
 --
 -- Indexes for dumped tables

@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.css" />
   <style>
     #mapContainer {
-      height: calc(100vh - 160px);
+      height: calc(100vh - 60px);
       width: 100%;
       position: relative;
     }
@@ -106,35 +106,6 @@
 </head>
 <body>
   <div class="container">
-    <!-- User Header -->
-    <div class="user-header" id="userHeader">
-      <!-- User logged in state -->
-      <div id="userLoggedIn" class="user-logged-in" style="display: none;">
-        <div class="user-info">
-          <img id="userAvatar" src="avatar/default.png" alt="User" class="user-icon">
-          <span id="userName" class="user-name">Loading...</span>
-        </div>
-        <div class="user-points">
-          <span id="userPoints">0đ</span>
-        </div>
-      </div>
-      
-      <!-- User not logged in state -->
-      <div id="usernotLoggedIn" class="user-not-logged-in" style="display: none;">
-        <div class="login-prompt">
-          <span class="login-text">Đăng nhập để xem bản đồ chi tiết</span>
-        </div>
-        <button class="login-btn" onclick="goToLogin()">
-          🔑 Đăng nhập
-        </button>
-      </div>
-    </div>
-
-    <!-- Page Header -->
-    <div class="page-header">
-      <h1>🗺️ Bản đồ</h1>
-      <p>Khám phá các bảo tàng và địa điểm văn hóa xung quanh bạn</p>
-    </div>
 
     <!-- Map Container -->
     <div id="mapContainer">
@@ -200,7 +171,7 @@
     // Load user info on page load
     async function loadUserInfo() {
       try {
-        const response = await fetch('getUserInfo.php');
+        const response = await fetch('profile/getUserInfo.php');
         if (response.ok) {
           const data = await response.json();
           
@@ -233,6 +204,16 @@
       // Update user name
       const nameElement = document.getElementById('userName');
       nameElement.textContent = userData.username || 'Guest User';
+      
+      // Apply role-based styling
+      // First, remove any existing role classes
+      nameElement.classList.remove('admin', 'customerpre', 'customer');
+      avatarElement.classList.remove('admin', 'customerpre', 'customer');
+      
+      // Add appropriate class based on role
+      const role = userData.role ? userData.role.toLowerCase() : 'customer';
+      nameElement.classList.add(role);
+      avatarElement.classList.add(role);
       
       // Update user points
       const pointsElement = document.getElementById('userPoints');
@@ -274,7 +255,7 @@
           window.location.href = '/leaderboard/leaderboard.html';
           break;
         case 'profile':
-          window.location.href = '/profile.html';
+          window.location.href = '/profile/profile.html';
           break;
       }
     }

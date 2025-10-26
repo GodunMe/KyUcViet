@@ -118,7 +118,8 @@ $conn->close();
         <a href="users.php" class="btn btn-primary me-2">Manage Users</a>
         <a href="museums.php" class="btn btn-success me-2">Manage Museums</a>
         <a href="artifacts.php" class="btn btn-warning me-2">Manage Artifacts</a>
-        <a href="quiz.php" class="btn btn-info">Manage Quizzes</a>
+        <a href="quiz.php" class="btn btn-info me-2">Manage Quizzes</a>
+        <a href="checkinManagement.html" class="btn btn-secondary">Manage Check-ins</a>
     </div>
 
     <!-- USERS -->
