@@ -108,10 +108,45 @@ $conn->close();
         .section-header { display:flex; align-items:center; justify-content:space-between; }
         .museum-link { font-weight:600; }
         .small-preview { max-width:80px; max-height:60px; object-fit:cover; }
+        .admin-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .admin-welcome {
+            margin: 0;
+            color: #333;
+        }
+        .admin-role {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="container my-4">
-    <h2>Admin Dashboard</h2>
+    <div class="admin-header">
+        <div class="admin-info">
+            <h2 class="admin-welcome">Admin Dashboard</h2>
+            <span class="admin-role">Administrator</span>
+        </div>
+        <a href="../logout.php" class="btn btn-danger">
+            🚪 Logout
+        </a>
+    </div>
 
     <!-- TOP manage buttons -->
     <div class="mb-3">
@@ -119,7 +154,8 @@ $conn->close();
         <a href="museums.php" class="btn btn-success me-2">Manage Museums</a>
         <a href="artifacts.php" class="btn btn-warning me-2">Manage Artifacts</a>
         <a href="quiz.php" class="btn btn-info me-2">Manage Quizzes</a>
-        <a href="checkinManagement.html" class="btn btn-secondary">Manage Check-ins</a>
+        <a href="checkinManagement.html" class="btn btn-secondary me-2">Manage Check-ins</a>
+        <a href="coin_pickups.html" class="btn btn-dark">🪙 Duyệt Xu May Mắn</a>
     </div>
 
     <!-- USERS -->

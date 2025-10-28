@@ -130,9 +130,7 @@
       <div id="vrFallback" class="vr-fallback" style="display:none;">
         <p>⚠️ Trang VR360 này không cho phép nhúng trực tiếp.</p>
         <p>
-          <a id="openNewTab" href="#" target="_blank" rel="noopener" class="vr-fallback-link">
-            Mở trong tab mới
-          </a>
+          <button id="vrReloadBtn" class="vr-fallback-link" type="button">Tải lại trang để trải nghiệm VR360</button>
         </p>
       </div>
     </div>
@@ -280,7 +278,7 @@
   const closeBtn = document.getElementById('vrClose');
   const iframe = document.getElementById('vrIframe');
   const fallback = document.getElementById('vrFallback');
-  const openNewTab = document.getElementById('openNewTab');
+  const vrReloadBtn = document.getElementById('vrReloadBtn');
 
   const targetUrl = 'https://vr360.yoolife.vn/bao-tang-lich-su-quan-su-viet-nam-zmuseumc118u26724';
   const IFRAME_TIMEOUT = 2500;
@@ -291,7 +289,10 @@
     fallback.style.display = 'none';
     iframe.style.display = 'block';
     modal.setAttribute('aria-hidden', 'false');
-    openNewTab.href = targetUrl;
+    // wire reload button to refresh the page so user can retry loading the VR360
+    if (vrReloadBtn) {
+      vrReloadBtn.onclick = () => location.reload();
+    }
 
     setTimeout(() => {
       iframe.src = targetUrl;
@@ -321,6 +322,22 @@
 
   openBtn.addEventListener('click', (ev) => {
     ev.preventDefault();
+
+    const museumId = (typeof currentMuseumId !== 'undefined' && currentMuseumId) ? currentMuseumId : (new URLSearchParams(window.location.search)).get('id');
+    if (museumId !== '3') {
+      alert('VR360 chỉ khả dụng cho bảo tàng này.');
+      return;
+    }
+
+    if (!window.userIsCustomerPre()) {
+      if (!window.currentUserLoggedIn) {
+        goToLogin();
+      } else {
+        alert('Chỉ người dùng không phải "Standard" mới có thể xem VR360.');
+      }
+      return;
+    }
+
     openModal();
   });
 
@@ -343,34 +360,54 @@
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get('id');
     }
-        // Chỉ hiển thị nút VR360 khi museumId=3
-        document.addEventListener('DOMContentLoaded', function() {
-          var museumId = getMuseumIdFromUrl();
-          var vrBtn = document.getElementById('openVrBtn');
-          if (vrBtn) {
-            if (museumId !== '3') {
-              vrBtn.style.display = 'none';
-            } else {
-              vrBtn.style.display = '';
-            }
-          }
-        });
+    // Global user state for role-based UI
+    window.currentUserRole = null; // string like 'CustomerPre'
+    window.currentUserLoggedIn = false;
+
+        // Previously this checked for CustomerPre; new rule: any logged-in user whose role is not 'Standard' may view VR360
+        window.userIsCustomerPre = function() {
+          return window.currentUserLoggedIn === true && String(window.currentUserRole) !== 'Standard';
+        };
+
+    // Update VR button visibility based on museumId and user role
+    function updateVrButtonVisibility() {
+      const vrBtn = document.getElementById('openVrBtn');
+      if (!vrBtn) return;
+
+      const museumId = currentMuseumId || getMuseumIdFromUrl();
+      if (museumId === '3' && window.userIsCustomerPre()) {
+        vrBtn.style.display = '';
+      } else {
+        vrBtn.style.display = 'none';
+      }
+    }
 
     // Load user info on page load
     async function loadUserInfo() {
       try {
-        const response = await fetch('profile/getUserInfo.php');
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data.loggedIn) {
-            showUserLoggedInState(data);
+        const response = await fetch('getUserInfo.php');
+          if (response.ok) {
+            const data = await response.json();
+
+            if (data.loggedIn) {
+              // set global user state
+              window.currentUserLoggedIn = true;
+              window.currentUserRole = data.role || data.Role || null;
+              showUserLoggedInState(data);
+            } else {
+              window.currentUserLoggedIn = false;
+              window.currentUserRole = null;
+              showUserNotLoggedInState();
+            }
+            // update VR button whenever user info updated
+            updateVrButtonVisibility();
+
           } else {
+            window.currentUserLoggedIn = false;
+            window.currentUserRole = null;
             showUserNotLoggedInState();
+            updateVrButtonVisibility();
           }
-        } else {
-          showUserNotLoggedInState();
-        }
       } catch (error) {
         console.error('Error loading user info:', error);
         showUserNotLoggedInState();
@@ -658,6 +695,24 @@
           displayArtifactsPage();
           setupPagination();
           window.scrollTo(0, 0);
+          return;
+        }
+
+        // If navigated from the Map, reset pagination/description and scroll to top
+        const fromMap = urlParams.get('fromMap');
+        if (fromMap === 'true') {
+          sessionStorage.removeItem('museumPageState');
+          sessionStorage.removeItem('artifactDetailState');
+          currentPage = 1;
+          displayArtifactsPage();
+          setupPagination();
+          // reset expandable description to first chunk
+          if (typeof currentChunkIndex !== 'undefined') {
+            currentChunkIndex = 0;
+            if (typeof displayDescriptionChunks === 'function') displayDescriptionChunks();
+          }
+          // Scroll to top of page
+          window.scrollTo({ top: 0, behavior: 'auto' });
           return;
         }
         
@@ -1085,7 +1140,7 @@
         });
       }
       
-      console.log('Chunks created:', descriptionChunks.length, 'chunks');
+      
       
       // Show first chunk initially
       currentChunkIndex = 0;
@@ -1434,5 +1489,8 @@
         opacity: 1;
       }
   </style>
+
+  <!-- Lucky Coin Notification -->
+  <script src="/lucky_coin/lucky_coin_notification.js"></script>
 </body>
 </html>
