@@ -430,5 +430,8 @@ async function init() {
     // Initialize when page loads
     document.addEventListener('DOMContentLoaded', init);
   </script>
+
+    <!-- Lucky Coin Notification -->
+    <script src="/lucky_coin/lucky_coin_notification.js"></script>
 </body>
 </html>
