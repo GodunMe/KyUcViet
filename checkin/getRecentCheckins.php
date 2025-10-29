@@ -101,9 +101,6 @@ while ($row = $result->fetch_assoc()) {
     $now = new DateTime();
     $interval = $now->diff($checkInTime);
     
-    // Debug log
-    error_log("Time calculation: CheckinTime={$row['CheckinTime']}, Now=" . $now->format('Y-m-d H:i:s') . ", Diff(days={$interval->days}, hours={$interval->h}, minutes={$interval->i})");
-    
     if ($interval->days == 0) {
         if ($interval->h == 0) {
             if ($interval->i == 0) {

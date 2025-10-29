@@ -102,9 +102,6 @@ try {
     $isFirstCheckinToday = ($orderData['checkins_before_this'] == 0);
     $pointsEarned = $isFirstCheckinToday ? intval($checkin['Points']) : 0;
     
-    // Enhanced debug log
-    error_log("Debug Checkin Detail: CheckinID={$checkinId}, UserToken={$userToken}, MuseumID={$museumId}, Date={$checkinDate}, TotalTodayAtThisMuseum={$countData['total_checkins_today']}, CheckinsBeforeThisAtThisMuseum={$orderData['checkins_before_this']}, IsFirstAtThisMuseumToday={$isFirstCheckinToday}, PointsInDB={$checkin['Points']}, PointsEarned={$pointsEarned}");
-    
     // Get photos for this check-in
     $stmt = $conn->prepare("
         SELECT 
@@ -245,9 +242,6 @@ function formatTime($timestamp) {
     $diff = $now->diff($checkinTime);
     
     // Debug log
-    error_log("Debug formatTime: Now=" . $now->format('Y-m-d H:i:s') . 
-              ", CheckinTime=" . $checkinTime->format('Y-m-d H:i:s') . 
-              ", Diff(days=" . $diff->days . ", hours=" . $diff->h . ", minutes=" . $diff->i . ")");
     
     if ($diff->days > 0) {
         if ($diff->days == 1) {

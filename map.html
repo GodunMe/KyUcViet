@@ -13,10 +13,24 @@
   <!-- Leaflet Geocoder CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.css" />
   <style>
+    /* Prevent body scroll on map page */
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .container {
+      height: 100%;
+      overflow: hidden;
+    }
+
     #mapContainer {
       height: calc(100vh - 60px);
       width: 100%;
       position: relative;
+      overflow: hidden;
     }
     
     .map-controls {
@@ -60,6 +74,154 @@
       color: #666;
     }
 
+    /* Popup action buttons */
+    .popup-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .popup-actions button {
+      flex: 1 1 auto;
+      padding: 6px 8px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+
+    .popup-actions .details-btn {
+      background: #007bff;
+      color: white;
+    }
+
+    .popup-actions .route-btn {
+      background: #28a745;
+      color: white;
+    }
+
+    .popup-actions .lucky-btn {
+      background: #ffc107;
+      color: #333;
+      font-weight: 500;
+    }
+    
+    /* Lucky button style (outside .popup-actions too) */
+    .lucky-btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+      background: #ffc107;
+      color: #333;
+      font-weight: 500;
+      width: 100%;
+      margin: 8px 0;
+    }
+    
+    .popup-actions .lucky-btn:disabled,
+    .lucky-btn:disabled {
+      background: #ccc;
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    /* Coin icon animation - applied to inner element only, NOT the marker container */
+    .coin-icon-inner {
+      animation: coinPulse 2s infinite;
+    }
+
+    @keyframes coinPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    /* Photo upload modal */
+    .photo-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 99999;
+      justify-content: center;
+      align-items: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .photo-modal.active {
+      display: flex;
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .photo-modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 400px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .photo-modal h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+    }
+
+    .photo-preview {
+      width: 100%;
+      max-height: 300px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin: 10px 0;
+      display: none;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .modal-actions button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .modal-actions .submit-btn {
+      background: #28a745;
+      color: white;
+    }
+
+    .modal-actions .cancel-btn {
+      background: #dc3545;
+      color: white;
+    }
+
+    /* Ensure popup buttons receive pointer events (in case global CSS disables them) */
+    .leaflet-popup-content button, .marker-popup button {
+      pointer-events: auto;
+    }
+
+    /* Make sure popups sit above other UI elements */
+    .leaflet-popup {
+      z-index: 10000 !important;
+    }
+
     /* Hide default Leaflet routing collapse button */
     .leaflet-routing-container-hide,
     .leaflet-routing-collapse-btn {
@@ -101,6 +263,114 @@
     .leaflet-routing-container {
       position: relative !important;
     }
+
+    /* Coin History Modal */
+    .coin-history-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 99999;
+      justify-content: center;
+      align-items: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .coin-history-modal.active {
+      display: flex;
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .coin-history-content {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .coin-history-content h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .history-item {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      background: #f9f9f9;
+    }
+
+    .history-item.pending {
+      border-left: 4px solid #ffc107;
+    }
+
+    .history-item.approved {
+      border-left: 4px solid #28a745;
+    }
+
+    .history-item.rejected {
+      border-left: 4px solid #dc3545;
+    }
+
+    .history-item h4 {
+      margin: 0 0 8px 0;
+      color: #333;
+      font-size: 15px;
+    }
+
+    .history-item p {
+      margin: 4px 0;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .history-status {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 8px;
+    }
+
+    .history-status.pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .history-status.approved {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .history-status.rejected {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .close-history-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 15px;
+      width: 100%;
+    }
     
   </style>
 </head>
@@ -117,6 +387,9 @@
         <button id="routingToggleBtn" class="control-btn" onclick="toggleRoutingPanel()" title="Ẩn/hiện hướng dẫn">
           📋 Hướng dẫn
         </button>
+        <button class="control-btn" onclick="openCoinHistory()" title="Lịch sử nhặt xu">
+          🪙 Lịch sử nhặt xu
+        </button>
         <button id="cancelRouteBtn" class="control-btn" onclick="cancelRoute()" title="Hủy chỉ đường" style="display: none; background-color: #ff4444; color: white;">
           ❌ Hủy chỉ đường
         </button>
@@ -132,7 +405,10 @@
       <div class="nav-label">Home</div>
     </div>
     <div class="nav-item active" onclick="navigateToPage('map')">
-      <div class="nav-icon">🗺️</div>
+      <div class="nav-icon" style="position: relative;">
+        🗺️
+        <span id="coin-notification-dot" style="display: none; position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: red; border-radius: 50%; border: 1px solid white;"></span>
+      </div>
       <div class="nav-label">Map</div>
     </div>
     <div class="nav-item" onclick="navigateToPage('checkin')">
@@ -146,6 +422,46 @@
     <div class="nav-item" onclick="navigateToPage('profile')">
       <div class="nav-icon">👤</div>
       <div class="nav-label">Profile</div>
+    </div>
+  </div>
+
+  <!-- Photo Upload Modal -->
+  <div id="photoModal" class="photo-modal">
+    <div class="photo-modal-content">
+      <h3>📸 Chụp ảnh bằng chứng</h3>
+      <p style="font-size: 13px; color: #666; margin: 10px 0;">
+        Chụp ảnh tại bảo tàng để xác nhận bạn đang ở đây
+      </p>
+      
+      <input type="file" id="photoInput" accept="image/*" capture="environment" 
+             style="display: block; margin: 10px 0; width: 100%;">
+      
+      <img id="photoPreview" class="photo-preview" alt="Preview">
+      
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closePhotoModal()">Hủy</button>
+        <button class="submit-btn" id="submitPhotoBtn" onclick="submitCoinPickup()">Gửi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coin History Modal -->
+  <div id="coinHistoryModal" class="coin-history-modal">
+    <div class="coin-history-content">
+      <h3>🪙 Lịch sử nhặt xu may mắn</h3>
+      <div id="historyList">
+        <p style="text-align: center; color: #666;">Đang tải...</p>
+      </div>
+      <button class="close-history-btn" onclick="closeCoinHistory()">Đóng</button>
+    </div>
+  </div>
+      
+      <img id="photoPreview" class="photo-preview" alt="Preview">
+      
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closePhotoModal()">Hủy</button>
+        <button class="submit-btn" id="submitPhotoBtn" onclick="submitCoinPickup()">Gửi</button>
+      </div>
     </div>
   </div>
 
@@ -169,13 +485,30 @@
     let museumMarkers = [];
 
     // Load user info on page load
+    // Helper to safely parse JSON responses (avoids Uncaught SyntaxError on empty responses)
+    async function safeFetchJson(response) {
+      try {
+        const text = await response.text();
+        if (!text) return null;
+        const trimmed = text.trim();
+        // If response looks like HTML (starts with <), don't try to parse as JSON
+        if (trimmed.startsWith('<')) {
+          return null;
+        }
+        return JSON.parse(text);
+      } catch (err) {
+        console.warn('safeFetchJson: failed to parse JSON', err);
+        return null;
+      }
+    }
+
     async function loadUserInfo() {
       try {
         const response = await fetch('profile/getUserInfo.php');
         if (response.ok) {
-          const data = await response.json();
+          const data = await safeFetchJson(response);
           
-          if (data.loggedIn) {
+          if (data && data.loggedIn) {
             showUserLoggedInState(data);
           } else {
             showUserNotLoggedInState();
@@ -190,43 +523,56 @@
     }
 
     function showUserLoggedInState(userData) {
-      const loggedInDiv = document.getElementById('userLoggedIn');
-      const notLoggedInDiv = document.getElementById('usernotLoggedIn');
-      
-      // Show logged in state, hide not logged in state
-      loggedInDiv.style.display = 'flex';
-      notLoggedInDiv.style.display = 'none';
-      
-      // Update user avatar
-      const avatarElement = document.getElementById('userAvatar');
-      avatarElement.src = userData.avatarRelative || 'avatar/default.png';
-      
-      // Update user name
-      const nameElement = document.getElementById('userName');
-      nameElement.textContent = userData.username || 'Guest User';
-      
-      // Apply role-based styling
-      // First, remove any existing role classes
-      nameElement.classList.remove('admin', 'customerpre', 'customer');
-      avatarElement.classList.remove('admin', 'customerpre', 'customer');
-      
-      // Add appropriate class based on role
-      const role = userData.role ? userData.role.toLowerCase() : 'customer';
-      nameElement.classList.add(role);
-      avatarElement.classList.add(role);
-      
-      // Update user points
-      const pointsElement = document.getElementById('userPoints');
-      pointsElement.textContent = (userData.score || 0);
+      // Defensive: only modify DOM if the expected elements exist on this page
+      try {
+        const loggedInDiv = document.getElementById('userLoggedIn');
+        const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+        if (loggedInDiv && notLoggedInDiv) {
+          // Show logged in state, hide not logged in state
+          loggedInDiv.style.display = 'flex';
+          notLoggedInDiv.style.display = 'none';
+
+          // Update user avatar
+          const avatarElement = document.getElementById('userAvatar');
+          if (avatarElement) avatarElement.src = userData.avatarRelative || 'avatar/default.png';
+
+          // Update user name
+          const nameElement = document.getElementById('userName');
+          if (nameElement) nameElement.textContent = userData.username || 'Guest User';
+
+          // Apply role-based styling
+          if (nameElement) nameElement.classList.remove('admin', 'customerpre', 'customer');
+          if (avatarElement) avatarElement.classList.remove('admin', 'customerpre', 'customer');
+          const role = userData.role ? userData.role.toLowerCase() : 'customer';
+          if (nameElement) nameElement.classList.add(role);
+          if (avatarElement) avatarElement.classList.add(role);
+
+          // Update user points
+          const pointsElement = document.getElementById('userPoints');
+          if (pointsElement) pointsElement.textContent = (userData.score || 0);
+        } else {
+          // Page does not have user header area — skip DOM updates
+          
+        }
+      } catch (err) {
+        console.error('showUserLoggedInState error:', err);
+      }
     }
 
     function showUserNotLoggedInState() {
-      const loggedInDiv = document.getElementById('userLoggedIn');
-      const notLoggedInDiv = document.getElementById('usernotLoggedIn');
-      
-      // Show not logged in state, hide logged in state
-      loggedInDiv.style.display = 'none';
-      notLoggedInDiv.style.display = 'flex';
+      try {
+        const loggedInDiv = document.getElementById('userLoggedIn');
+        const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+        if (loggedInDiv && notLoggedInDiv) {
+          // Show not logged in state, hide logged in state
+          loggedInDiv.style.display = 'none';
+          notLoggedInDiv.style.display = 'flex';
+        } else {
+          
+        }
+      } catch (err) {
+        console.error('showUserNotLoggedInState error:', err);
+      }
     }
 
     function goToLogin() {
@@ -311,8 +657,43 @@
         );
       }
 
-      // Load existing markers
-      loadMarkers();
+      // Load lucky coins first, then load markers (so icons are correct from the start)
+      loadLuckyCoins().then(() => {
+        loadMarkers();
+      });
+
+      // Attach popupopen handler here after map is initialized
+      if (map && map.on) {
+        map.on('popupopen', function(e) {
+          try {
+            const popupEl = e.popup.getElement();
+            if (!popupEl) return;
+            const container = popupEl.querySelector('.marker-popup');
+            if (!container) return;
+
+            const museumId = container.getAttribute('data-museum-id');
+            const museumName = container.getAttribute('data-museum-name');
+            const lat = container.getAttribute('data-lat');
+            const lng = container.getAttribute('data-lng');
+
+            const detailsBtn = container.querySelector('.details-btn');
+            const routeBtn = container.querySelector('.route-btn');
+            const luckyBtn = container.querySelector('.lucky-btn');
+
+            if (detailsBtn) {
+              detailsBtn.onclick = function(evt) { viewMuseumDetails(evt, museumId); };
+            }
+            if (routeBtn) {
+              routeBtn.onclick = function(evt) { getDirections(evt, museumId, museumName, lat, lng); };
+            }
+            if (luckyBtn) {
+              luckyBtn.onclick = function(evt) { pickLuckyCoin(museumId); };
+            }
+          } catch (err) {
+            console.error('popupopen handler error', err);
+          }
+        });
+      }
     }
 
     async function loadMarkers() {
@@ -327,7 +708,7 @@
           throw new Error('Failed to fetch museums');
         }
         
-        const museums = await response.json();
+        const museums = await safeFetchJson(response) || [];
         
         // Convert getMuseums.php format to map format
         museumMarkers = museums.map(museum => ({
@@ -345,7 +726,6 @@
           addMarkerToMap(markerData);
         });
         
-        console.log(`Loaded ${museumMarkers.length} museums from database`);
       } catch (error) {
         console.error('Error loading markers:', error);
         alert('Không thể tải dữ liệu bảo tàng. Vui lòng thử lại sau.');
@@ -353,24 +733,62 @@
     }
 
     function addMarkerToMap(markerData) {
-      const iconHtml = getMarkerIcon(markerData.type);
+      // Check if this museum has an active coin
+      const coinData = activeCoins.find(c => String(c.museum_id) === String(markerData.id));
+      const hasCoin = coinData !== undefined;
+      const alreadyPicked = hasCoin && coinData.already_picked === true;
+      
+      // Show coin icon ONLY if coin exists AND user hasn't picked it yet
+      const showCoinIcon = hasCoin && !alreadyPicked;
+      
+      // Use coin icon if museum has unpicked coin, otherwise use regular museum icon
+      const iconHtml = showCoinIcon ? getCoinMarkerIcon() : getMarkerIcon(markerData.type);
       
       const marker = L.marker([markerData.lat, markerData.lng], {
         icon: L.divIcon({
-          className: 'custom-marker',
+          className: showCoinIcon ? 'custom-marker coin-marker' : 'custom-marker',
           html: iconHtml,
-          iconSize: [30, 30],
-          iconAnchor: [15, 30],
-          popupAnchor: [0, -30]
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],  // Center point - same for both icons
+          popupAnchor: [0, -16]  // Same popup position for both
         })
       }).addTo(map);
 
+      // Truncate description for popup to keep it concise
+      function truncateText(text, maxChars = 120) {
+        if (!text) return '';
+        const cleaned = String(text).trim();
+        if (cleaned.length <= maxChars) return cleaned;
+        // Try to cut at a word boundary
+        const truncated = cleaned.slice(0, maxChars);
+        return truncated.replace(/\s+\S*$/, '') + '...';
+      }
+
+      const shortDesc = markerData.description ? truncateText(markerData.description, 140) : 'Không có mô tả';
+
+      // Build popup content with conditional coin button
+      let coinButton = '';
+      if (hasCoin) {
+        if (alreadyPicked) {
+          // Already picked - show info message
+          coinButton = '<p style="color: #28a745; font-weight: 500; margin: 8px 0;">✅ Đã nhặt xu này</p>';
+        } else {
+          // Not picked yet - show pickup button
+          coinButton = '<button class="lucky-btn">🪙 Nhặt xu may mắn</button>';
+        }
+      }
+
       const popupContent = `
-        <div class="marker-popup">
-          <h4>${markerData.name}</h4>
+        <div class="marker-popup" data-museum-id="${markerData.id}" data-museum-name="${escapeHtml(markerData.name)}" data-lat="${markerData.lat}" data-lng="${markerData.lng}">
+          <h4>${showCoinIcon ? '🪙 ' : ''}${escapeHtml(markerData.name)}</h4>
           <p><strong>Loại:</strong> ${getTypeLabel(markerData.type)}</p>
-          <p><strong>Mô tả:</strong> ${markerData.description || 'Không có mô tả'}</p>
-          <p><strong>Địa chỉ:</strong> ${markerData.address || 'Đang cập nhật...'}</p>
+          <p><strong>Mô tả:</strong> ${escapeHtml(shortDesc)}</p>
+          <p><strong>Địa chỉ:</strong> ${escapeHtml(markerData.address || 'Đang cập nhật...')}</p>
+          ${coinButton}
+          <div class="popup-actions">
+            <button class="details-btn">Xem chi tiết</button>
+            <button class="route-btn">Chỉ đường</button>
+          </div>
         </div>
       `;
 
@@ -394,7 +812,11 @@
       };
       
       const icon = icons[type] || '📌';
-      return `<div style="background: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid #333; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${icon}</div>`;
+      return `<div style="background: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 2px solid #333; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${icon}</div>`;
+    }
+
+    function getCoinMarkerIcon() {
+      return `<div class="coin-icon-inner" style="background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 3px solid #ff8c00; box-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 2px 6px rgba(0,0,0,0.4);">🪙</div>`;
     }
 
     function getTypeLabel(type) {
@@ -406,6 +828,422 @@
         other: 'Khác'
       };
       return labels[type] || 'Khác';
+    }
+
+    // Escape text before inserting into inline HTML to avoid breaking attributes
+    function escapeHtml(str) {
+      if (str === undefined || str === null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Helper: open museum detail page (with login check, same behavior as index.php)
+    function viewMuseumDetails(e, museumId) {
+      try {
+        
+        // Accept either (museumId) or (event, museumId)
+        if (museumId === undefined && e !== undefined && typeof e === 'number') {
+          museumId = e; e = null;
+        }
+        if (e && e.stopPropagation) e.stopPropagation();
+        if (!museumId) {
+          alert('Lỗi: không tìm thấy ID bảo tàng.');
+          return;
+        }
+
+        // Check login status first (same flow as index.php -> viewMuseumDetails)
+        fetch('profile/getUserInfo.php')
+          .then(async response => await safeFetchJson(response))
+          .then(data => {
+            if (data && data.loggedIn) {
+              // User is logged in - allow access to museum details
+              window.location.href = `/museum.html?id=${museumId}&fromMap=true`;
+            } else {
+              // Not logged in - notify and send to NFC/login required page
+              alert('Bạn cần đăng nhập để xem chi tiết bảo tàng!');
+              window.location.href = '/nfc_required.html';
+            }
+          })
+          .catch(error => {
+            console.error('Error checking login status:', error);
+            alert('Bạn cần đăng nhập để xem chi tiết bảo tàng!');
+            window.location.href = '/nfc_required.html';
+          });
+      } catch (err) {
+        console.error('viewMuseumDetails error', err);
+        alert('Lỗi nội bộ khi mở chi tiết. Kiểm tra console.');
+      }
+    }
+
+    // Helper: trigger route to a destination (uses existing handler if available)
+    function openRouteTo(lat, lng, name) {
+      if (!lat || !lng) return alert('Không có tọa độ hợp lệ để chỉ đường.');
+
+      const doRoute = () => {
+        if (typeof handleDirectionsRequest === 'function') {
+          handleDirectionsRequest({ route: true, lat: String(lat), lng: String(lng), name: name || '' });
+          return;
+        }
+
+        // Fallback: center map and show a destination marker
+        const destination = [parseFloat(lat), parseFloat(lng)];
+        if (destinationMarker) {
+          map.removeLayer(destinationMarker);
+          destinationMarker = null;
+        }
+        destinationMarker = L.marker(destination).addTo(map).bindPopup(`<b>${name || 'Đích đến'}</b>`).openPopup();
+        map.setView(destination, 15);
+      };
+
+      // If we already have user location, proceed. Otherwise try to obtain it first.
+      if (currentUserLocation && Array.isArray(currentUserLocation) && currentUserLocation.length === 2) {
+        doRoute();
+      } else if (navigator.geolocation) {
+        // Ask for geolocation then route
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            currentUserLocation = [pos.coords.latitude, pos.coords.longitude];
+            // Update or create user marker
+            if (userMarker) {
+              userMarker.setLatLng(currentUserLocation);
+            } else {
+              userMarker = L.marker(currentUserLocation, {
+                icon: L.divIcon({
+                  className: 'user-marker',
+                  html: '<div style="background: #007bff; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">📍</div>',
+                  iconSize: [20,20],
+                  iconAnchor: [10,10]
+                })
+              }).addTo(map);
+            }
+            doRoute();
+          },
+          err => {
+            console.warn('Geolocation unavailable:', err);
+            alert('Không thể lấy vị trí hiện tại — không thể tạo chỉ đường.');
+          },
+          { enableHighAccuracy: true, timeout: 8000 }
+        );
+      } else {
+        alert('Trình duyệt của bạn không hỗ trợ Geolocation.');
+      }
+    }
+
+    // Placeholder for the "lucky coin" action
+    let currentCoinId = null; // Store current coin being picked up
+    let activeCoins = []; // Store active coins data
+
+    async function pickLuckyCoin(museumId) {
+      try {
+        // Check if user is logged in first
+        const userResponse = await fetch('/getUserInfo.php');
+        const userData = await userResponse.json();
+        
+        if (!userData.loggedIn) {
+          alert('Bạn cần đăng nhập để nhặt xu may mắn!');
+          window.location.href = '/login.php';
+          return;
+        }
+        
+        // Fetch latest coin data to ensure accuracy
+        const response = await fetch('/lucky_coin/getLuckyCoins.php');
+        const data = await response.json();
+        
+        if (!data.success) {
+          alert('Không thể tải thông tin xu may mắn!');
+          return;
+        }
+        
+        // Update activeCoins cache
+        activeCoins = data.coins;
+        
+        // Find coin for this museum (convert both to string for comparison)
+        const coin = activeCoins.find(c => String(c.museum_id) === String(museumId));
+        
+        if (!coin) {
+          alert('Xu may mắn đã hết hạn hoặc không tồn tại!');
+          return;
+        }
+        
+        // Check if already picked
+        if (coin.already_picked) {
+          alert('Bạn đã nhặt xu này rồi!');
+          return;
+        }
+        
+        // Store coin ID for submission
+        currentCoinId = coin.coin_id;
+        
+        // Open photo modal
+        const modal = document.getElementById('photoModal');
+        modal.classList.add('active');
+      } catch (error) {
+        console.error('Error loading coin:', error);
+        alert('Lỗi khi tải thông tin xu may mắn!');
+      }
+    }
+
+    function closePhotoModal() {
+      const modal = document.getElementById('photoModal');
+      modal.classList.remove('active');
+      document.getElementById('photoInput').value = '';
+      document.getElementById('photoPreview').style.display = 'none';
+      currentCoinId = null;
+    }
+
+    async function submitCoinPickup() {
+      const photoInput = document.getElementById('photoInput');
+      
+      if (!photoInput.files || !photoInput.files[0]) {
+        alert('Vui lòng chọn ảnh!');
+        return;
+      }
+      
+      if (!currentCoinId) {
+        alert('Lỗi: Không tìm thấy coin ID');
+        closePhotoModal();
+        return;
+      }
+      
+      // Disable submit button
+      const submitBtn = document.getElementById('submitPhotoBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang lấy vị trí...';
+      
+      // Get user's current GPS location
+      if (!navigator.geolocation) {
+        alert('Trình duyệt của bạn không hỗ trợ GPS!');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Gửi';
+        return;
+      }
+      
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const userLat = position.coords.latitude;
+          const userLng = position.coords.longitude;
+          
+          submitBtn.textContent = 'Đang gửi...';
+          
+          try {
+            const formData = new FormData();
+            formData.append('coin_id', currentCoinId);
+            formData.append('photo', photoInput.files[0]);
+            formData.append('user_lat', userLat);
+            formData.append('user_lng', userLng);
+            
+            const response = await fetch('/lucky_coin/pickupCoin.php', {
+              method: 'POST',
+              body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+              alert(`✅ ${data.message}\n\nBảo tàng: ${data.museum_name}\nĐiểm chờ duyệt: +${data.points_pending}${data.distance ? `\nKhoảng cách: ${data.distance}m` : ''}`);
+              closePhotoModal();
+              
+              // Reload coins to update UI
+              loadLuckyCoins();
+            } else {
+              alert(`❌ Lỗi: ${data.message}`);
+            }
+          } catch (error) {
+            console.error('Pickup error:', error);
+            alert('Lỗi kết nối! Vui lòng thử lại.');
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Gửi';
+          }
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          let errorMsg = 'Không thể lấy vị trí GPS!';
+          
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMsg = 'Bạn đã từ chối quyền truy cập vị trí. Vui lòng bật GPS và cho phép truy cập!';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMsg = 'Không thể xác định vị trí. Vui lòng kiểm tra GPS!';
+              break;
+            case error.TIMEOUT:
+              errorMsg = 'Quá thời gian lấy vị trí. Vui lòng thử lại!';
+              break;
+          }
+          
+          alert(errorMsg);
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Gửi';
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    }
+
+    // Photo preview
+    document.addEventListener('DOMContentLoaded', function() {
+      const photoInput = document.getElementById('photoInput');
+      const photoPreview = document.getElementById('photoPreview');
+      
+      if (photoInput) {
+        photoInput.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              photoPreview.src = e.target.result;
+              photoPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+    });
+
+    // =====================================================
+    // Coin History Modal Functions
+    // =====================================================
+    
+    async function openCoinHistory() {
+      try {
+        // Check if user is logged in
+        const userResponse = await fetch('/getUserInfo.php');
+        const userData = await userResponse.json();
+        
+        if (!userData.loggedIn) {
+          alert('Bạn cần đăng nhập để xem lịch sử nhặt xu!');
+          window.location.href = '/login.php';
+          return;
+        }
+        
+        // Show modal
+        const modal = document.getElementById('coinHistoryModal');
+        modal.classList.add('active');
+        
+        // Load history
+        const response = await fetch('/lucky_coin/getCoinHistory.php');
+        const data = await response.json();
+        
+        const historyList = document.getElementById('historyList');
+        
+        if (!data.success) {
+          historyList.innerHTML = `<p style="text-align: center; color: #dc3545;">❌ ${data.message || 'Không thể tải lịch sử'}</p>`;
+          return;
+        }
+        
+        if (data.count === 0) {
+          historyList.innerHTML = `
+            <p style="text-align: center; color: #666; padding: 20px;">
+              Bạn chưa nhặt xu may mắn nào.<br>
+              Hãy tìm đồng xu 🪙 trên bản đồ và nhặt ngay!
+            </p>
+          `;
+          return;
+        }
+        
+        // Render history items
+        let html = '';
+        data.history.forEach(item => {
+          html += `
+            <div class="history-item ${item.status}">
+              <h4>🏛️ ${escapeHtml(item.museum_name)}</h4>
+              <p><strong>📍 Địa chỉ:</strong> ${escapeHtml(item.museum_address || 'Đang cập nhật')}</p>
+              <p><strong>⏰ Thời gian nhặt:</strong> ${item.pickup_time}</p>
+              <p><strong>� Điểm:</strong> ${item.status === 'approved' ? `+${item.points_awarded}` : `Chờ duyệt (+${item.points_awarded})`}</p>
+              <span class="history-status ${item.status}">${item.status_label}</span>
+              ${item.reject_reason ? `<p style="margin-top: 8px; padding: 8px; background: #fff; border-radius: 4px;"><strong>📝 Lý do từ chối:</strong> ${escapeHtml(item.reject_reason)}</p>` : ''}
+            </div>
+          `;
+        });
+        
+        historyList.innerHTML = html;
+        
+      } catch (error) {
+        console.error('Error loading coin history:', error);
+        alert('Lỗi khi tải lịch sử nhặt xu!');
+      }
+    }
+    
+    function closeCoinHistory() {
+      const modal = document.getElementById('coinHistoryModal');
+      modal.classList.remove('active');
+    }
+
+    // =====================================================
+    // Lucky Coins Functions
+    // =====================================================
+
+    // Load lucky coins from API
+    async function loadLuckyCoins() {
+      try {
+        const response = await fetch('/lucky_coin/getLuckyCoins.php');
+        const data = await response.json();
+        
+        if (data.success) {
+          const previousCount = activeCoins.length;
+          activeCoins = data.coins;
+          
+          // Note: Red dot is handled by global lucky_coin_notification.js
+          // This function just updates activeCoins for popup display
+          
+          // Only reload markers if coin count changed AND this is not the initial load
+          // (Initial load: previousCount === 0, markers will be loaded by initMap's .then())
+          if (previousCount > 0 && activeCoins.length !== previousCount) {
+            loadMarkers(); // Refresh all markers to update popups
+          }
+          
+          return activeCoins; // RETURN the coins array
+        } else {
+          return []; // Return empty array if failed
+        }
+      } catch (error) {
+        console.error('Failed to load lucky coins:', error);
+        return []; // Return empty array on error
+      }
+    }
+
+    // Poll for lucky coins every 60 seconds (for map-specific coin data)
+    let coinPollInterval;
+    function startCoinPolling() {
+      loadLuckyCoins(); // Initial load
+      coinPollInterval = setInterval(loadLuckyCoins, 60000); // Every 60 seconds
+    }
+
+    function stopCoinPolling() {
+      if (coinPollInterval) {
+        clearInterval(coinPollInterval);
+      }
+    }
+
+    // Start polling when page visibility changes
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        stopCoinPolling();
+      } else {
+        startCoinPolling();
+      }
+    });
+
+
+    // getDirections: signature similar to index.php for consistency
+    function getDirections(e, museumId, museumName, lat, lng) {
+      try {
+        
+        if (e && e.stopPropagation) e.stopPropagation();
+        // Use the existing openRouteTo helper which will obtain geolocation and call handleDirectionsRequest
+        openRouteTo(lat, lng, museumName);
+      } catch (err) {
+        console.error('getDirections error', err);
+        alert('Lỗi khi bắt đầu chỉ đường. Kiểm tra console.');
+      }
     }
 
 
@@ -471,9 +1309,10 @@
 
     async function reverseGeocode(lat, lng) {
       try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=vi`);
-        const data = await response.json();
-        return data.display_name || '';
+        // Use local proxy to avoid CORS issues (proxy.php forwards request to Nominatim)
+        const response = await fetch(`proxy.php?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}`);
+        const data = await safeFetchJson(response);
+        return (data && data.display_name) ? data.display_name : '';
       } catch (error) {
         console.error('Reverse geocoding error:', error);
         return '';
@@ -594,6 +1433,9 @@
       loadUserInfo();
       initMap();
       
+      // Start lucky coin polling
+      startCoinPolling();
+      
       // Handle URL parameters after map is initialized
       setTimeout(() => {
         const params = getUrlParams();
@@ -602,6 +1444,10 @@
         }
       }, 2000); // Wait for geolocation to complete
     });
+    
   </script>
+
+  <!-- Lucky Coin Notification (shared script for all pages) -->
+  <script src="/lucky_coin/lucky_coin_notification.js"></script>
 </body>
 </html>

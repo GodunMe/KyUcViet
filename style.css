@@ -1070,6 +1070,12 @@ body {
   max-height: 100%;
 }
 
+/* Ensure avatar sits above any pseudo-element highlights */
+.rank-avatar {
+  position: relative;
+  z-index: 3; /* higher than the accent (::before) so it is never covered */
+}
+
 /* Slightly tweak top-three badge variant (if used) but keep it constrained) */
 .rank-badge-top {
   padding: 2px;

@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duyệt Xu May Mắn - Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .header .back-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .filters {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filters select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .filters button {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .pickups-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .pickup-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .pickup-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .pickup-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            background: #f0f0f0;
+            cursor: pointer;
+        }
+
+        .pickup-info {
+            padding: 20px;
+        }
+
+        .pickup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .user-info h3 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .user-info p {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .museum-info {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .museum-info strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .museum-info p {
+            color: #666;
+            font-size: 13px;
+            margin: 3px 0;
+        }
+
+        .pickup-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .meta-item {
+            color: #666;
+        }
+
+        .meta-item strong {
+            color: #333;
+            display: block;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-approve {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background: #218838;
+        }
+
+        .btn-reject {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background: #c82333;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            background: white;
+            padding: 60px 20px;
+            border-radius: 15px;
+            text-align: center;
+            color: #666;
+        }
+
+        .empty-state h2 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .modal textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            min-height: 100px;
+            font-family: inherit;
+            margin-bottom: 15px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 18px;
+        }
+
+        /* Image modal */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .image-modal.active {
+            display: flex;
+        }
+
+        .image-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🪙 Duyệt Xu May Mắn</h1>
+            <a href="dashboard.php" class="back-btn">← Quay lại Dashboard</a>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="number" id="statPending">-</div>
+                <div class="label">Chờ duyệt</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="statApproved">-</div>
+                <div class="label">Đã duyệt</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="statRejected">-</div>
+                <div class="label">Đã từ chối</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="statActiveCoins">-</div>
+                <div class="label">Xu đang active</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="statTodayPickups">-</div>
+                <div class="label">Nhặt hôm nay</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="statTotalPoints">-</div>
+                <div class="label">Tổng điểm đã cộng</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <label>Lọc theo trạng thái:</label>
+            <select id="statusFilter">
+                <option value="pending">Chờ duyệt</option>
+                <option value="approved">Đã duyệt</option>
+                <option value="rejected">Đã từ chối</option>
+            </select>
+            <button onclick="loadPickups()">🔄 Làm mới</button>
+        </div>
+
+        <div id="loadingState" class="loading">
+            Đang tải dữ liệu...
+        </div>
+
+        <div id="pickupsGrid" class="pickups-grid" style="display: none;">
+            <!-- Pickup cards will be inserted here -->
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <h2>📭 Không có dữ liệu</h2>
+            <p>Chưa có pickup nào trong trạng thái này</p>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="modal">
+        <div class="modal-content">
+            <h3>❌ Từ chối pickup</h3>
+            <textarea id="rejectReason" placeholder="Nhập lý do từ chối (tùy chọn)..."></textarea>
+            <div class="modal-actions">
+                <button onclick="closeRejectModal()" style="background: #6c757d; color: white;">Hủy</button>
+                <button onclick="confirmReject()" style="background: #dc3545; color: white;">Xác nhận từ chối</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+        <img id="modalImage" src="" alt="Ảnh xu may mắn">
+    </div>
+
+    <script>
+        let currentPickupId = null;
+
+        // Load stats on page load
+        async function loadStats() {
+            try {
+                const response = await fetch('coin_pickups_approval.php?action=getStats');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.stats;
+                    document.getElementById('statPending').textContent = stats.pending || 0;
+                    document.getElementById('statApproved').textContent = stats.approved || 0;
+                    document.getElementById('statRejected').textContent = stats.rejected || 0;
+                    document.getElementById('statActiveCoins').textContent = stats.active_coins || 0;
+                    document.getElementById('statTodayPickups').textContent = stats.today_pickups || 0;
+                    document.getElementById('statTotalPoints').textContent = stats.total_points_awarded || 0;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load pickups
+        async function loadPickups() {
+            const status = document.getElementById('statusFilter').value;
+            const loadingState = document.getElementById('loadingState');
+            const pickupsGrid = document.getElementById('pickupsGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            loadingState.style.display = 'block';
+            pickupsGrid.style.display = 'none';
+            emptyState.style.display = 'none';
+            
+            try {
+                const response = await fetch(`coin_pickups_approval.php?action=getPickups&status=${status}&limit=100`);
+                const data = await response.json();
+                
+                loadingState.style.display = 'none';
+                
+                if (data.success && data.pickups.length > 0) {
+                    pickupsGrid.style.display = 'grid';
+                    pickupsGrid.innerHTML = data.pickups.map(pickup => createPickupCard(pickup)).join('');
+                } else {
+                    emptyState.style.display = 'block';
+                }
+                
+                // Reload stats
+                loadStats();
+            } catch (error) {
+                console.error('Error loading pickups:', error);
+                loadingState.textContent = 'Lỗi khi tải dữ liệu!';
+            }
+        }
+
+        // Create pickup card HTML
+        function createPickupCard(pickup) {
+            const statusClass = `status-${pickup.status}`;
+            const statusText = {
+                'pending': 'Chờ duyệt',
+                'approved': 'Đã duyệt',
+                'rejected': 'Đã từ chối'
+            }[pickup.status];
+            
+            const createdDate = new Date(pickup.created_at).toLocaleString('vi-VN');
+            const reviewedDate = pickup.reviewed_at ? new Date(pickup.reviewed_at).toLocaleString('vi-VN') : '-';
+            
+            const actionButtons = pickup.status === 'pending' ? `
+                <div class="actions">
+                    <button class="btn btn-approve" onclick="approvePickup(${pickup.pickup_id})">
+                        ✅ Duyệt (+${pickup.points_awarded}đ)
+                    </button>
+                    <button class="btn btn-reject" onclick="openRejectModal(${pickup.pickup_id})">
+                        ❌ Từ chối
+                    </button>
+                </div>
+            ` : pickup.status === 'rejected' && pickup.reject_reason ? `
+                <div class="museum-info" style="background: #f8d7da;">
+                    <strong style="color: #721c24;">Lý do từ chối:</strong>
+                    <p style="color: #721c24;">${escapeHtml(pickup.reject_reason)}</p>
+                </div>
+            ` : '';
+            
+            return `
+                <div class="pickup-card">
+                    <img src="${pickup.photo_url}" 
+                         alt="Ảnh xu may mắn" 
+                         class="pickup-image"
+                         onclick="openImageModal('${pickup.photo_url}')"
+                         onerror="this.src='/uploads/lucky_coins/placeholder.jpg'">
+                    <div class="pickup-info">
+                        <div class="pickup-header">
+                            <div class="user-info">
+                                <h3>${escapeHtml(pickup.username)}</h3>
+                                <p>📧 ${escapeHtml(pickup.email)}</p>
+                            </div>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                        
+                        <div class="museum-info">
+                            <strong>🏛️ ${escapeHtml(pickup.museum_name)}</strong>
+                            <p>${escapeHtml(pickup.museum_address || 'Đang cập nhật')}</p>
+                        </div>
+                        
+                        <div class="pickup-meta">
+                            <div class="meta-item">
+                                <strong>Pickup ID</strong>
+                                #${pickup.pickup_id}
+                            </div>
+                            <div class="meta-item">
+                                <strong>Coin ID</strong>
+                                #${pickup.coin_id}
+                            </div>
+                            <div class="meta-item">
+                                <strong>Thời gian nhặt</strong>
+                                ${createdDate}
+                            </div>
+                            <div class="meta-item">
+                                <strong>Thời gian duyệt</strong>
+                                ${reviewedDate}
+                            </div>
+                            <div class="meta-item">
+                                <strong>Delay</strong>
+                                ${pickup.pickup_delay_minutes} phút
+                            </div>
+                            <div class="meta-item">
+                                <strong>Điểm</strong>
+                                +${pickup.points_awarded}
+                            </div>
+                        </div>
+                        
+                        ${actionButtons}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Approve pickup
+        async function approvePickup(pickupId) {
+            if (!confirm('Xác nhận duyệt pickup này và cộng điểm cho user?')) {
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('action', 'approve');
+                formData.append('pickup_id', pickupId);
+                
+                const response = await fetch('coin_pickups_approval.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ Đã duyệt!\n\nUser: ${data.username}\nĐiểm cộng: +${data.points_awarded}\nTổng điểm mới: ${data.new_total_points}`);
+                    loadPickups();
+                } else {
+                    alert(`❌ Lỗi: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error approving pickup:', error);
+                alert('Lỗi kết nối!');
+            }
+        }
+
+        // Open reject modal
+        function openRejectModal(pickupId) {
+            currentPickupId = pickupId;
+            document.getElementById('rejectReason').value = '';
+            document.getElementById('rejectModal').classList.add('active');
+        }
+
+        // Close reject modal
+        function closeRejectModal() {
+            currentPickupId = null;
+            document.getElementById('rejectModal').classList.remove('active');
+        }
+
+        // Confirm reject
+        async function confirmReject() {
+            const reason = document.getElementById('rejectReason').value.trim();
+            
+            try {
+                const formData = new FormData();
+                formData.append('action', 'reject');
+                formData.append('pickup_id', currentPickupId);
+                formData.append('reason', reason);
+                
+                const response = await fetch('coin_pickups_approval.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`❌ Đã từ chối pickup của ${data.username}`);
+                    closeRejectModal();
+                    loadPickups();
+                } else {
+                    alert(`❌ Lỗi: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error rejecting pickup:', error);
+                alert('Lỗi kết nối!');
+            }
+        }
+
+        // Open image modal
+        function openImageModal(imageUrl) {
+            document.getElementById('modalImage').src = imageUrl;
+            document.getElementById('imageModal').classList.add('active');
+        }
+
+        // Close image modal
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Event listeners
+        document.getElementById('statusFilter').addEventListener('change', loadPickups);
+
+        // Initial load
+        loadStats();
+        loadPickups();
+        
+        // Auto refresh every 30 seconds
+        setInterval(() => {
+            loadStats();
+            if (document.getElementById('statusFilter').value === 'pending') {
+                loadPickups();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

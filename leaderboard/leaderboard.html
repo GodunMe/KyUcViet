@@ -107,8 +107,10 @@
             showUserLoggedInState(data);
             // populate the user rank card after we confirmed logged-in
             try { loadUserRankCard(); } catch (e) { /* ignore */ }
+            return data;
           } else {
             showUserNotLoggedInState();
+            return null;
           }
         } else {
           window.currentUserLoggedIn = false;
@@ -122,6 +124,7 @@
         window.currentUsername = null;
         window.currentUserRole = null;
         showUserNotLoggedInState();
+        return null;
       }
     }
     async function loadUserRankCard() {
@@ -146,8 +149,17 @@
           const data = await res.json();
           if (data.error) return;
 
-          // Hiển thị vào card
-          document.querySelector('.user-rank-card .rank-badge').textContent = `#${data.rank}`;
+          // Hiển thị rank badge với icon cho top 3
+          const rankBadgeEl = document.querySelector('.user-rank-card .rank-badge');
+          if (data.rank <= 3) {
+            // Top 1, 2, 3 - hiển thị icon
+            const imgPath = `../leaderboard/rank-${data.rank}.png`;
+            rankBadgeEl.innerHTML = `<img src="${imgPath}" alt="rank ${data.rank}" class="rank-badge-img rank-badge-top rank-badge-top-${data.rank}">`;
+          } else {
+            // Hạng khác - hiển thị số
+            rankBadgeEl.textContent = `#${data.rank}`;
+          }
+          
           document.querySelector('.user-rank-card h3').textContent = data.username;
           document.querySelector('.user-rank-card p').textContent = `${data.score} điểm`;
           // Tiến trình lên hạng
@@ -188,6 +200,17 @@
       // Update user avatar
       const avatarElement = document.getElementById('userAvatar');
       avatarElement.src = userData.avatarRelative || 'avatar/default.png';
+
+      // Also update the large avatar in the user rank card so it shows the user's avatar
+      try {
+        const rankAvatar = document.querySelector('.user-rank-card .rank-avatar');
+        if (rankAvatar) {
+          // Normalize the returned relative path: if it doesn't begin with ../ or /, prepend ../
+          const rel = userData.avatarRelative || 'avatar/default.png';
+          const resolved = (rel.startsWith('../') || rel.startsWith('/')) ? rel : ('../' + rel);
+          rankAvatar.src = resolved;
+        }
+      } catch (e) { /* ignore if element not present */ }
 
       // Update user name
       const nameElement = document.getElementById('userName');
@@ -277,7 +300,16 @@
         const rank = i + 1;
         const username = u.Username || u.username || 'Người dùng';
         const role = u.Role || u.role || '';
-        const avatar = u.avatar || u.Avatar || '../avatar/default.png';
+        const avatar = u.avatar || u.Avatar || 'avatar/default.png';
+        // resolve relative avatar paths so they load correctly from /leaderboard/ page.
+        // If the API returns paths like 'uploads/avatar/..' (relative to project root),
+        // prepend '../' so the src points to the correct location from this file.
+        const resolveAvatarPath = (p) => {
+          const s = (p || 'avatar/default.png').toString();
+          if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('/') || s.startsWith('../')) return s;
+          return '../' + s;
+        };
+        const resolvedAvatar = resolveAvatarPath(avatar);
 
   // determine if this is the current logged-in user
   // normalize both sides to avoid mismatches due to case or surrounding spaces
@@ -298,7 +330,7 @@
       <div class="ranking-item ${isCurrent ? 'current-user' : ''}" data-username="${encodeURIComponent(username)}">
         <div class="rank-left">
           <div class="rank-badge">${badgeInner}</div>
-          <img src="${avatar}" alt="${username}" class="rank-avatar">
+          <img src="${resolvedAvatar}" alt="${username}" class="rank-avatar">
           <div class="rank-info">
             <h4 class="rank-list-name">${username}</h4>
             <p class="role-text">${role}</p>
@@ -315,6 +347,9 @@
 
 // (Initialization handled earlier in the script)
   </script>
+
+    <!-- Lucky Coin Notification -->
+    <script src="/lucky_coin/lucky_coin_notification.js"></script>
 </body>
 
 </html>

@@ -1,7 +1,6 @@
 <?php
 session_start();
 require_once 'db.php';
-error_log("quiz_completed: " . (isset($_SESSION['quiz_completed']) ? ($_SESSION['quiz_completed'] ? 'true' : 'false') : 'not set'));
 
 // Lấy biến bảo tàng và token người dùng
 $museumId = isset($_GET['museumId']) ? intval($_GET['museumId']) : 0;
