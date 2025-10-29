@@ -584,6 +584,96 @@
     .profile-avatar.premium::before {
       content: none;
     }
+
+    /* Achievement and Activity Section Styles */
+    .achievement-grid {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: 8px;
+      padding: 8px 0 8px 0;  /* Bỏ padding trái phải */
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px 0 8px 0;  /* Bỏ padding trái phải */
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      gap: 12px;
+      transition: all 0.2s ease;
+      width: 100%;
+      box-sizing: border-box;
+
+    .activity-item:hover {
+      background-color: #f8f9fa;
+      border-color: #e0e0e0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      transform: translateY(-1px);
+    }
+
+    .activity-icon {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f8f9fa;
+      border-radius: 10px;
+      font-size: 20px;
+    }
+
+    .activity-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .activity-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .activity-info p {
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .activity-info p strong {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .activity-info p:not(:first-child) {
+      font-size: 13px;
+      color: #666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   </style>
 </head>
 <body>
@@ -657,27 +747,8 @@
     <!-- Achievement Section -->
     <div class="achievement-section">
       <h3>🏅 Thành tích</h3>
-      <div class="achievement-grid">
-        <div class="achievement-card earned">
-          <div class="achievement-icon">🏛️</div>
-          <div class="achievement-name">Khám phá đầu tiên</div>
-          <div class="achievement-desc">Check-in lần đầu</div>
-        </div>
-        <div class="achievement-card earned">
-          <div class="achievement-icon">📍</div>
-          <div class="achievement-name">Thám hiểm</div>
-          <div class="achievement-desc">5 check-ins</div>
-        </div>
-        <div class="achievement-card">
-          <div class="achievement-icon">🎯</div>
-          <div class="achievement-name">Chuyên gia</div>
-          <div class="achievement-desc">10 check-ins</div>
-        </div>
-        <div class="achievement-card">
-          <div class="achievement-icon">👑</div>
-          <div class="achievement-name">Bậc thầy</div>
-          <div class="achievement-desc">Top 3 tuần</div>
-        </div>
+      <div id="achievementsContainer" class="achievement-grid">
+        <p>Đang tải thành tích...</p>
       </div>
     </div>
 
@@ -981,7 +1052,9 @@
         }
       }
       
-      console.log('Applied styling for role:', userRole);
+        console.log('Applied styling for role:', userRole);
+        // Sau khi cập nhật giao diện, tải thành tích của người dùng
+        if (typeof fetchAchievements === 'function') fetchAchievements();
     }
 
     function showUserNotLoggedInState() {
@@ -1563,6 +1636,27 @@
       loadUserInfo();
       console.log('Profile page loaded');
     });
+
+    // Fetch achievements and render into the achievementsContainer (includes credentials to send PHP session cookie)
+    async function fetchAchievements() {
+      const container = document.getElementById('achievementsContainer');
+      if (!container) return;
+      container.innerHTML = '<p>Đang tải thành tích...</p>';
+      try {
+        const resp = await fetch('../get_achievements.php', { credentials: 'same-origin', cache: 'no-cache' });
+        const text = await resp.text();
+        if (!resp.ok) {
+          console.error('get_achievements.php error', resp.status, text);
+          container.innerHTML = '<p>Không thể tải thành tích.</p>';
+          return;
+        }
+        // Render returned HTML
+        container.innerHTML = text;
+      } catch (err) {
+        console.error('Error loading achievements:', err);
+        container.innerHTML = '<p>Đã xảy ra lỗi khi tải thành tích.</p>';
+      }
+    }
   </script>
 </body>
 </html>
