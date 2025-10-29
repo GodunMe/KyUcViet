@@ -69,90 +69,81 @@ function deleteUserAchievementsByIds($conn, $userToken, $ids) {
     $stmt2->execute();
 }
 
-// 1) CHECK-IN BASED ACHIEVEMENTS
-// thresholds -> achievement names (must match entries in achievements table)
-$checkinMilestones = [
-    1 => 'Khám phá đầu tiên',
-    3 => 'Tập sự - 3 lần check-in',
-    5 => 'Chuyên gia - 5 lần check-in',
-    10 => 'Bậc thầy - 10 lần check-in'
-];
+// Simplified achievement checks — only the three achievements defined in create_achievements.sql
+// Names must match entries in create_achievements.sql exactly.
+$firstQuizName = 'Dấu Ấn Đầu Tiên';           // uploads/icon/first_quiz.png
+$firstCheckinName = 'Nhà Khám Phá Văn Hóa';   // uploads/icon/first_checkin.png
+$firstAvatarName = 'Lịch sử đẹp đẽ';          // uploads/icon/first_avatar.png
 
-// Count user's check-ins (across all museums)
-$checkinSql = "SELECT COUNT(*) AS cnt FROM checkins WHERE UserToken = ?";
-$checkinStmt = $conn->prepare($checkinSql);
-$checkinStmt->bind_param('s', $userToken);
-$checkinStmt->execute();
-$checkinRes = $checkinStmt->get_result()->fetch_assoc();
-$checkinCount = intval($checkinRes['cnt']);
+// Resolve IDs for the three achievements
+$firstQuizId = getAchievementIdByName($conn, $firstQuizName);
+$firstCheckinId = getAchievementIdByName($conn, $firstCheckinName);
+$firstAvatarId = getAchievementIdByName($conn, $firstAvatarName);
 
-// Determine highest milestone achieved
-$achievedCheckinMilestone = 0;
-foreach ($checkinMilestones as $threshold => $name) {
-    if ($checkinCount >= $threshold) $achievedCheckinMilestone = $threshold;
+// 1) Check if user has any checkin
+$hasCheckin = false;
+$chkStmt = $conn->prepare("SELECT 1 FROM checkins WHERE UserToken = ? LIMIT 1");
+if ($chkStmt) {
+    $chkStmt->bind_param('s', $userToken);
+    $chkStmt->execute();
+    $chkRes = $chkStmt->get_result();
+    $hasCheckin = (bool) $chkRes->fetch_assoc();
 }
 
-if ($achievedCheckinMilestone > 0) {
-    $achName = $checkinMilestones[$achievedCheckinMilestone];
-    $achId = getAchievementIdByName($conn, $achName);
-    if ($achId) {
-        // Award highest milestone
-        awardAchievement($conn, $userToken, $achId);
-        // Remove lower-tier check-in achievements (thresholds < achievedCheckinMilestone)
-        $toRemoveNames = [];
-        foreach ($checkinMilestones as $threshold => $name) {
-            if ($threshold < $achievedCheckinMilestone) $toRemoveNames[] = $name;
-        }
-        if (!empty($toRemoveNames)) {
-            $idsToRemove = [];
-            foreach ($toRemoveNames as $n) {
-                $id = getAchievementIdByName($conn, $n);
-                if ($id) $idsToRemove[] = $id;
-            }
-            if (!empty($idsToRemove)) deleteUserAchievementsByIds($conn, $userToken, $idsToRemove);
+// 2) Check if user changed avatar (avatar != 'avatar/default.png')
+$hasChangedAvatar = false;
+$uStmt = $conn->prepare("SELECT avatar FROM users WHERE UserToken = ? LIMIT 1");
+if ($uStmt) {
+    $uStmt->bind_param('s', $userToken);
+    $uStmt->execute();
+    $uRow = $uStmt->get_result()->fetch_assoc();
+    if ($uRow) {
+        $avatar = isset($uRow['avatar']) ? ltrim($uRow['avatar'], '/') : '';
+        if ($avatar !== '' && $avatar !== 'avatar/default.png') {
+            $hasChangedAvatar = true;
         }
     }
 }
 
-// 2) LEADERBOARD ACHIEVEMENTS (Top 1-3)
-// Compute user's rank based on Score (lower rank number is better)
-$scoreSql = "SELECT Score FROM users WHERE UserToken = ? LIMIT 1";
-$sStmt = $conn->prepare($scoreSql);
-$sStmt->bind_param('s', $userToken);
-$sStmt->execute();
-$sRow = $sStmt->get_result()->fetch_assoc();
-if ($sRow) {
-    $userScore = intval($sRow['Score']);
-    // rank = 1 + number of users with Score > userScore
-    $rankSql = "SELECT COUNT(*) + 1 AS rank FROM users WHERE Score > ?";
-    $rStmt = $conn->prepare($rankSql);
-    $rStmt->bind_param('i', $userScore);
-    $rStmt->execute();
-    $rRow = $rStmt->get_result()->fetch_assoc();
-    $userRank = intval($rRow['rank']);
-
-    if ($userRank <= 3) {
-        $topName = 'Top ' . $userRank . ' Bảng xếp hạng';
-        $topId = getAchievementIdByName($conn, $topName);
-        if ($topId) {
-            awardAchievement($conn, $userToken, $topId);
-            // Remove lower leaderboard tiers (e.g., if rank=2 remove Top 3)
-            $lowerRanks = [];
-            for ($r = $userRank + 1; $r <= 3; $r++) $lowerRanks[] = 'Top ' . $r . ' Bảng xếp hạng';
-            $idsToRemove = [];
-            foreach ($lowerRanks as $n) {
-                $id = getAchievementIdByName($conn, $n);
-                if ($id) $idsToRemove[] = $id;
-            }
-            if (!empty($idsToRemove)) deleteUserAchievementsByIds($conn, $userToken, $idsToRemove);
-        }
-    } else {
-        // If user previously had Top1/2/3 but now no longer at that rank, do NOT remove automatically.
-        // (Optional) If you want to revoke leaderboard achievements when rank drops, implement deletion here.
-    }
+// 3) Check if user completed any quiz (table: user_do_quiz)
+$hasCompletedQuiz = false;
+$qStmt = $conn->prepare("SELECT 1 FROM user_do_quiz WHERE UserToken = ? LIMIT 1");
+if ($qStmt) {
+    $qStmt->bind_param('s', $userToken);
+    $qStmt->execute();
+    $qRes = $qStmt->get_result();
+    $hasCompletedQuiz = (bool) $qRes->fetch_assoc();
 }
 
-// 3) Optionally: other achievements (e.g., quiz completion) are awarded elsewhere (doquiz.php). You can add checks here if desired.
+// Award the three achievements when conditions met
+if ($hasCompletedQuiz && $firstQuizId) {
+    awardAchievement($conn, $userToken, $firstQuizId);
+}
+if ($hasCheckin && $firstCheckinId) {
+    awardAchievement($conn, $userToken, $firstCheckinId);
+}
+if ($hasChangedAvatar && $firstAvatarId) {
+    awardAchievement($conn, $userToken, $firstAvatarId);
+}
+
+// Remove any user achievements that are NOT one of the three tracked achievements
+$keepIds = array_filter([$firstQuizId, $firstCheckinId, $firstAvatarId], function($v){ return is_int($v) || (is_numeric($v) && intval($v)>0); });
+if (!empty($keepIds)) {
+    $keepInts = array_map('intval', $keepIds);
+    $sqlDel = "DELETE FROM user_achievements WHERE UserToken = ? AND AchievementID NOT IN (" . implode(',', $keepInts) . ")";
+    $delStmt = $conn->prepare($sqlDel);
+    if ($delStmt) {
+        $delStmt->bind_param('s', $userToken);
+        $delStmt->execute();
+    }
+} else {
+    // If none of the three achievements exist in DB, remove all user achievements to keep only controlled set
+    $delAll = $conn->prepare("DELETE FROM user_achievements WHERE UserToken = ?");
+    if ($delAll) {
+        $delAll->bind_param('s', $userToken);
+        $delAll->execute();
+    }
+}
 
 // 4) Fetch and render user's achievements (only those present in user_achievements)
 $sql = "SELECT a.ID, a.Name, a.Description, a.Icon, ua.CreatedAt
