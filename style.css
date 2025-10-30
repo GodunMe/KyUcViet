@@ -383,7 +383,7 @@ body {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 8px 0;
+  padding: 10px 0;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   border-radius: 20px 20px 0 0;
   z-index: 1000;
@@ -394,7 +394,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8px 12px;
+  padding: 12px 16px;
   cursor: pointer;
   transition: all 0.3s ease;
   border-radius: 12px;
@@ -416,16 +416,13 @@ body {
 }
 
 .nav-icon {
-  font-size: 20px;
-  margin-bottom: 4px;
+  font-size: 24px;
+  margin-bottom: 0;
   transition: transform 0.3s ease;
 }
 
 .nav-label {
-  font-size: 10px;
-  font-weight: 500;
-  text-align: center;
-  line-height: 1;
+  display: none; /* Ẩn text label */
 }
 
 /* Add bottom padding to container to accommodate fixed nav */
@@ -444,17 +441,18 @@ body {
   
   .nav-item {
     min-width: 50px;
-    padding: 6px 8px;
+    padding: 10px 12px;
   }
   
   .nav-icon {
-    font-size: 18px;
+    font-size: 22px;
   }
   
   .nav-label {
-    font-size: 9px;
+    display: none; /* Vẫn ẩn trên mobile */
   }
-}
+  }
+
 
 /* Page Header Styles */
 .page-header {
@@ -1196,35 +1194,61 @@ body {
 }
 
 .stats-section {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  padding: 20px;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-around;
+  align-items: stretch;
+  gap: 0;
+  padding: 20px 15px;
   background: white;
-  margin: -20px 20px 20px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin: -30px 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   position: relative;
   z-index: 1;
 }
 
 .stat-card {
+  flex: 1;
   text-align: center;
-  padding: 15px 10px;
-  border-radius: 12px;
-  background: #f8f9fa;
+  padding: 10px 8px;
+  border-radius: 0;
+  background: transparent;
+  transition: transform 0.2s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stat-card:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 35px;
+  background: #e0e0e0;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
 }
 
 .stat-number {
-  font-size: 20px;
-  font-weight: bold;
-  color: #007bff;
-  margin-bottom: 5px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 6px;
+  line-height: 1;
 }
 
 .stat-label {
-  font-size: 12px;
-  color: #666;
+  font-size: 11px;
+  color: #999;
+  line-height: 1;
+  font-weight: 500;
 }
 
 .achievement-section,
