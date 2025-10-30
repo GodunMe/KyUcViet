@@ -6,6 +6,10 @@
   <title>Profile - Vietnamese Memories</title>
   <link rel="icon" type="image/png" href="../logo.PNG" />
   <link rel="stylesheet" href="../style.css" />
+  <!-- Google Fonts cho Role & Rank Badges -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&family=Momo+Signature&display=swap" rel="stylesheet">
   <!-- Thêm thư viện Cropper.js (trong thực tế bạn nên tải thư viện này) -->
   <script>
     // Đây chỉ là phần giả lập vì chúng ta không thể tải thư viện trong demo này
@@ -18,9 +22,78 @@
       position: relative;
     }
     
-    /* Cải tiến giao diện profile header */
+    /* Login required page styling - thay thế overlay cũ */
+    .login-required-page {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .login-required-content {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 40px 30px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+      max-width: 350px;
+      width: 100%;
+    }
+    
+    .login-required-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      opacity: 0.8;
+    }
+    
+    .login-required-title {
+      font-size: 28px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    
+    .login-required-message {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+    
+    .login-required-button {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 15px 40px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 15px rgba(79, 172, 254, 0.3);
+    }
+    
+    .login-required-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 25px rgba(79, 172, 254, 0.4);
+    }
+    
+    .login-required-button:active {
+      transform: translateY(-1px);
+    }
+    
+    /* Profile header - ẩn khi chưa đăng nhập */
     .profile-header {
-      background: linear-gradient(135deg, #5bc0de, #0088cc);
+      background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.5)), 
+                  url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop') center/cover;
       padding: 30px 20px;
       border-radius: 12px;
       margin-bottom: 20px;
@@ -29,6 +102,9 @@
       overflow: hidden;
       min-height: 240px;
       text-align: center;
+      display: none; /* Ẩn mặc định, hiện khi đăng nhập */
+      background-size: cover;
+      background-position: center;
     }
     
 
@@ -86,15 +162,17 @@
       font-size: 32px;
       display: inline-block;
       padding: 3px 0;
-      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.6);
       font-weight: bold;
     }
 
     .profile-points {
+      display: none; /* Ẩn để tránh lặp với stats section */
       color: #fcff32;
       font-size: 22px;
       font-weight: bold;
       margin: 10px 0;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
     }
 
     /* Ẩn bio */
@@ -540,13 +618,15 @@
       align-items: center;
       padding: 6px 15px;
       border-radius: 20px;
-      font-size: 14px;
-      font-weight: bold;
+      font-family: 'Momo Signature', cursive;
+      font-size: 16px;
+      font-weight: normal;
       margin: 8px 0;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
       position: relative;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      text-transform: none;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
     
     /* Premium user badge */
@@ -569,10 +649,35 @@
       color: #fff;
     }
     
+    /* VIP badge */
+    .role-badge.vip {
+      background: linear-gradient(135deg, #ffd700, #ffed4e);
+      color: #1a1a1a;
+      font-size: 18px;
+      box-shadow: 0 4px 8px rgba(255, 215, 0, 0.4);
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Standard badge */
+    .role-badge.standard {
+      background: linear-gradient(135deg, #64b5f6, #42a5f5);
+      color: #fff;
+    }
+    
     /* Role-specific avatar styling */
     .profile-avatar.premium img {
       border-color: #44bd32;
       box-shadow: 0 6px 12px rgba(68, 189, 50, 0.3);
+    }
+    
+    .profile-avatar.vip img {
+      border-color: #ffd700;
+      box-shadow: 0 6px 12px rgba(255, 215, 0, 0.5);
+    }
+    
+    .profile-avatar.standard img {
+      border-color: #42a5f5;
+      box-shadow: 0 6px 12px rgba(66, 165, 245, 0.3);
     }
     
     .profile-avatar.admin img {
@@ -584,10 +689,67 @@
     .profile-avatar.premium::before {
       content: none;
     }
+    
+    /* Rank badge styling */
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 14px;
+      border-radius: 15px;
+      font-family: 'Momo Signature', cursive;
+      font-size: 14px;
+      font-weight: normal;
+      margin: 5px 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      position: relative;
+      text-transform: none;
+      letter-spacing: 0.5px;
+      background: linear-gradient(135deg, var(--rank-color, #666), var(--rank-color-dark, #555));
+      color: white;
+    }
+    
+    /* Progress bar for rank progression */
+    .rank-progress {
+      margin-top: 10px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      height: 6px;
+      overflow: hidden;
+      width: 100%;
+    }
+    
+    .rank-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--rank-color, #4CAF50), var(--next-rank-color, #66BB6A));
+      transition: width 0.3s ease;
+      border-radius: 10px;
+    }
+    
+    /* Activity item points styling */
+    .activity-points {
+      color: #4CAF50;
+      font-weight: bold;
+      font-size: 14px;
+      margin-left: auto;
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- Login Required Page - hiển thị khi chưa đăng nhập -->
+    <div class="login-required-page" id="loginRequiredPage">
+      <div class="login-required-content">
+        <div class="login-required-icon">🔐</div>
+        <h1 class="login-required-title">Đăng nhập cần thiết</h1>
+        <p class="login-required-message">
+          Vui lòng đăng nhập để xem thông tin cá nhân và trải nghiệm đầy đủ tính năng của Ký Ức Việt
+        </p>
+        <button class="login-required-button" onclick="goToLogin()">
+          🔑 Đăng nhập ngay
+        </button>
+      </div>
+    </div>
+
     <!-- User Header -->
     <div class="user-header" id="userHeader">
       <!-- User logged in state -->
@@ -612,8 +774,8 @@
       </div>
     </div>
 
-    <!-- Profile Header -->
-    <div class="profile-header">
+    <!-- Profile Header - Hiển thị khi đã đăng nhập -->
+    <div class="profile-header" id="profileHeader">
       <div class="profile-header-content">
         <div class="profile-avatar">
           <img src="../avatar/default.png" alt="User Avatar" id="profileAvatar">
@@ -621,7 +783,7 @@
         <div class="profile-info">
           <div class="profile-info-top">
             <div class="username-container">
-              <h2 id="profileName">Nguyen Van A</h2>
+              <h2 id="profileName">Loading...</h2>
               <!-- Role badge sẽ được thêm vào bởi JavaScript -->
             </div>
           </div>
@@ -631,92 +793,29 @@
       </div>
     </div>
 
-    <!-- Stats Section -->
-    <div class="stats-section">
-      <div class="stat-card">
-        <div class="stat-number">N/a</div>
-        <div class="stat-label">Điểm</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">N/a</div>
-        <div class="stat-label">Check-ins</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">N/a</div>
-        <div class="stat-label">Bảo tàng</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">#N/a</div>
-        <div class="stat-label">Xếp hạng</div>
-      </div>
+    <!-- Stats Section - Will be populated dynamically -->
+    <div class="stats-section" id="statsSection" style="display: none;">
+      <!-- Stats will be loaded via JavaScript -->
     </div>
 
-    <!-- Achievement Section -->
-    <div class="achievement-section">
+    <!-- Achievement Section - Will be populated dynamically -->
+    <div class="achievement-section" id="achievementSection" style="display: none;">
       <h3>🏅 Thành tích</h3>
-      <div class="achievement-grid">
-        <div class="achievement-card earned">
-          <div class="achievement-icon">🏛️</div>
-          <div class="achievement-name">Khám phá đầu tiên</div>
-          <div class="achievement-desc">Check-in lần đầu</div>
-        </div>
-        <div class="achievement-card earned">
-          <div class="achievement-icon">📍</div>
-          <div class="achievement-name">Thám hiểm</div>
-          <div class="achievement-desc">5 check-ins</div>
-        </div>
-        <div class="achievement-card">
-          <div class="achievement-icon">🎯</div>
-          <div class="achievement-name">Chuyên gia</div>
-          <div class="achievement-desc">10 check-ins</div>
-        </div>
-        <div class="achievement-card">
-          <div class="achievement-icon">👑</div>
-          <div class="achievement-name">Bậc thầy</div>
-          <div class="achievement-desc">Top 3 tuần</div>
-        </div>
+      <div class="achievement-grid" id="achievementGrid">
+        <!-- Achievements will be loaded via JavaScript -->
       </div>
     </div>
 
-    <!-- Recent Activity -->
-    <div class="activity-section">
+    <!-- Recent Activity - Will be populated dynamically -->
+    <div class="activity-section" id="activitySection" style="display: none;">
       <h3>📋 Hoạt động gần đây</h3>
-      <div class="activity-list">
-        <div class="activity-item">
-          <div class="activity-icon">📍</div>
-          <div class="activity-info">
-            <p><strong>Check-in tại Bảo tàng Hồ Chí Minh</strong></p>
-            <p class="activity-time">Hôm nay, 14:30</p>
-          </div>
-          <div class="activity-points">+25</div>
-        </div>
-        <div class="activity-item">
-          <div class="activity-icon">🏆</div>
-          <div class="activity-info">
-            <p><strong>Lên hạng 7</strong></p>
-            <p class="activity-time">Hôm nay, 14:31</p>
-          </div>
-        </div>
-        <div class="activity-item">
-          <div class="activity-icon">📍</div>
-          <div class="activity-info">
-            <p><strong>Check-in tại Bảo tàng Lịch sử Quân sự</strong></p>
-            <p class="activity-time">Hôm qua, 10:15</p>
-          </div>
-          <div class="activity-points">+30</div>
-        </div>
-        <div class="activity-item">
-          <div class="activity-icon">🏅</div>
-          <div class="activity-info">
-            <p><strong>Nhận thành tích "Thám hiểm"</strong></p>
-            <p class="activity-time">Hôm qua, 10:16</p>
-          </div>
-        </div>
+      <div class="activity-list" id="activityList">
+        <!-- Activities will be loaded via JavaScript -->
       </div>
     </div>
 
-    <!-- Settings Section -->
-    <div class="settings-section">
+    <!-- Settings Section - Will be populated dynamically -->
+    <div class="settings-section" id="settingsSection" style="display: none;">
       <h3>⚙️ Cài đặt</h3>
       <div class="settings-list">
         <div class="setting-item" onclick="showEditProfileModal()">
@@ -744,7 +843,6 @@
           </div>
           <div class="setting-arrow">▶</div>
         </div>
-        
         <div class="setting-item logout-item" onclick="logout()">
           <div class="setting-info">
             <div class="setting-name">Đăng xuất</div>
@@ -840,12 +938,14 @@
     // Load user info on page load
     async function loadUserInfo() {
       try {
-        const response = await fetch('getUserInfo.php');
+        const response = await fetch('getUserProfileComplete.php');
         if (response.ok) {
           const data = await response.json();
+          console.log('API Response:', data); // Debug: xem data từ API
           
-          if (data.loggedIn) {
-            showUserLoggedInState(data);
+          if (data.success && data.loggedIn) {
+            console.log('User Stats:', data.profile.stats); // Debug: xem stats data
+            showUserLoggedInState(data.profile); // Truyền data.profile thay vì data
           } else {
             showUserNotLoggedInState();
           }
@@ -863,20 +963,31 @@
     function showUserLoggedInState(userData) {
       const loggedInDiv = document.getElementById('userLoggedIn');
       const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+      const loginRequiredPage = document.getElementById('loginRequiredPage');
+      const profileHeader = document.getElementById('profileHeader');
+      
+      // Ẩn trang đăng nhập, hiện nội dung profile
+      loginRequiredPage.style.display = 'none';
+      profileHeader.style.display = 'block';
       
       // Show logged in state, hide not logged in state
       loggedInDiv.style.display = 'flex';
       notLoggedInDiv.style.display = 'none';
       
-      // Xóa overlay nếu có
-      const overlay = document.querySelector('.container .not-logged-in-overlay');
-      if (overlay) {
-        overlay.remove();
-      }
+      // Hiện tất cả sections
+      document.getElementById('statsSection').style.display = 'block';
+      document.getElementById('achievementSection').style.display = 'block';
+      document.getElementById('activitySection').style.display = 'block';
+      document.getElementById('settingsSection').style.display = 'block';
       
       // Update user avatar
       const avatarElement = document.getElementById('userAvatar');
-      avatarElement.src = userData.avatarRelative || '../avatar/default.png';
+      console.log('Avatar debug - userData.avatar:', userData.avatar);
+      avatarElement.src = userData.avatar || '../avatar/default.png';
+      avatarElement.onerror = function() { 
+        this.src = '../avatar/default.png'; 
+        console.log('Avatar failed to load, using default'); 
+      };
       
       // Update user name
       const nameElement = document.getElementById('userName');
@@ -886,157 +997,133 @@
       const pointsElement = document.getElementById('userPoints');
       pointsElement.textContent = (userData.score || 0) + 'đ';
       
-      // Update profile points - make them larger and more prominent
+      // Update profile points with rank info
       const profilePointsElement = document.getElementById('profilePoints');
       if (profilePointsElement) {
         profilePointsElement.textContent = (userData.score || 0) + ' điểm';
         profilePointsElement.style.textShadow = '0 0 5px rgba(75, 171, 247, 0.5)';
       }
       
-      // Thêm verified badge dựa trên role
-      const userRole = userData.role ? userData.role.toLowerCase() : 'customer';
-      console.log('User role:', userRole);
-      
       // Update profile information
       const profileName = document.getElementById('profileName');
       if (profileName) {
         profileName.textContent = userData.username || 'Guest User';
         // Remove any existing role classes from profile name
-        profileName.classList.remove('admin', 'customerpre', 'customer');
+        profileName.classList.remove('admin', 'vip', 'premium', 'standard', 'free');
         
-        // Thêm badge theo role
+        // Set màu theo role thay vì rank
+        const userRole = userData.role ? userData.role.toLowerCase() : 'standard';
+        if (userRole === 'admin') {
+          profileName.style.color = '#f44336'; // Đỏ
+        } else if (userRole === 'vip') {
+          profileName.style.color = '#ffd700'; // Vàng
+        } else if (userRole === 'premium') {
+          profileName.style.color = '#44bd32'; // Xanh lá
+        } else if (userRole === 'standard') {
+          profileName.style.color = '#42a5f5'; // Xanh dương
+        } else {
+          profileName.style.color = '#ffffff'; // Trắng cho Free
+        }
+        
+        // Thêm badge theo role và rank
         const usernameContainer = document.querySelector('.username-container');
         if (usernameContainer) {
-          // Remove any existing badge
-          const existingBadge = usernameContainer.querySelector('.role-badge');
-          if (existingBadge) existingBadge.remove();
+          // Remove any existing badges
+          const existingBadges = usernameContainer.querySelectorAll('.role-badge, .rank-badge');
+          existingBadges.forEach(badge => badge.remove());
           
-          // Add role-specific badge - now it will appear below the username
+          // Add role-specific badge
+          const userRole = userData.role ? userData.role.toLowerCase() : 'standard';
+          
+          // Map role từ database: Admin, Standard, Premium, VIP
           if (userRole === 'admin') {
             const badge = document.createElement('span');
             badge.className = 'role-badge admin';
             badge.textContent = 'ADMIN';
             usernameContainer.appendChild(badge);
-            
-            // Add admin class to avatar container
-            const avatarContainer = document.querySelector('.profile-avatar');
-            if (avatarContainer) {
-              avatarContainer.classList.add('admin');
-              avatarContainer.classList.remove('premium');
-            }
-          } 
-          else if (userRole === 'customerpre') {
+          } else if (userRole === 'premium') {
             const badge = document.createElement('span');
             badge.className = 'role-badge premium';
-            badge.textContent = 'PREMIUM USER';
+            badge.textContent = 'PREMIUM';
             usernameContainer.appendChild(badge);
-            
-            // Add premium class to avatar container
-            const avatarContainer = document.querySelector('.profile-avatar');
-            if (avatarContainer) {
-              avatarContainer.classList.add('premium');
-              avatarContainer.classList.remove('admin');
-            }
+          } else if (userRole === 'vip') {
+            const badge = document.createElement('span');
+            badge.className = 'role-badge vip';
+            badge.textContent = 'VIP';
+            usernameContainer.appendChild(badge);
+          } else if (userRole === 'standard') {
+            const badge = document.createElement('span');
+            badge.className = 'role-badge standard';
+            badge.textContent = 'STANDARD';
+            usernameContainer.appendChild(badge);
           }
-          else {
-            // Regular user - no badge
-            const avatarContainer = document.querySelector('.profile-avatar');
-            if (avatarContainer) {
-              avatarContainer.classList.remove('admin', 'premium');
-            }
+          // Free không hiển thị badge
+          
+          // Add rank badge
+          if (userData.rank) {
+            const rankBadge = document.createElement('span');
+            rankBadge.className = 'role-badge';
+            rankBadge.style.background = userData.rank.color || '#666';
+            rankBadge.style.color = 'white';
+            rankBadge.textContent = userData.rank.icon + ' ' + userData.rank.nameVi;
+            usernameContainer.appendChild(rankBadge);
           }
         }
       }
       
       const profileAvatar = document.getElementById('profileAvatar');
-      if (profileAvatar) profileAvatar.src = userData.avatarRelative || '../avatar/default.png';
-      
-      // Apply role-based styling
-      // First, remove any existing role classes
-      nameElement.classList.remove('admin', 'customerpre', 'customer');
-      avatarElement.classList.remove('admin', 'customerpre', 'customer');
-      
       if (profileAvatar) {
-        const profileAvatarContainer = document.querySelector('.profile-avatar');
-        if (profileAvatarContainer) {
-          profileAvatarContainer.classList.remove('admin', 'customerpre', 'customer');
-        }
+        console.log('Profile avatar debug - userData.avatar:', userData.avatar);
+        profileAvatar.src = userData.avatar || '../avatar/default.png';
+        profileAvatar.onerror = function() { 
+          this.src = '../avatar/default.png'; 
+          console.log('Profile avatar failed to load, using default'); 
+        };
       }
       
-      // Then apply the appropriate class based on user's role
-      // Add appropriate class based on role
-      nameElement.classList.add(userRole);
-      avatarElement.classList.add(userRole);
-      
-      // Thêm class role vào profileName để có cùng style với userName
-      if (profileName) profileName.classList.add(userRole);
-      
-      if (profileAvatar) {
-        const profileAvatarContainer = document.querySelector('.profile-avatar');
-        if (profileAvatarContainer) {
-          profileAvatarContainer.classList.add(userRole);
-        }
+      // Set custom background if user has one (feature for future)
+      const profileHeaderElement = document.getElementById('profileHeader');
+      if (profileHeaderElement && userData.customBackground) {
+        profileHeaderElement.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('${userData.customBackground}')`;
       }
       
-      console.log('Applied styling for role:', userRole);
+      // Update stats cards with real data (pass both userData and stats)
+      updateStatsCards(userData.stats, userData.score);
+      
+      // Update achievements section with real data
+      updateAchievementsSection(userData.recentAchievements);
+      
+      // Update activities section with real data
+      updateActivitiesSection(userData.recentActivities);
+      
+      // Apply role-based styling for compatibility
+      const userRoleClass = userData.role ? userData.role.toLowerCase() : 'standard';
+      nameElement.classList.add(userRoleClass);
+      avatarElement.classList.add(userRoleClass);
+      if (profileName) profileName.classList.add(userRoleClass);
+      
+      console.log('Profile loaded successfully with ranking data:', userData);
     }
 
     function showUserNotLoggedInState() {
       const loggedInDiv = document.getElementById('userLoggedIn');
       const notLoggedInDiv = document.getElementById('usernotLoggedIn');
+      const loginRequiredPage = document.getElementById('loginRequiredPage');
+      const profileHeader = document.getElementById('profileHeader');
       
       // Show not logged in state, hide logged in state
       loggedInDiv.style.display = 'none';
       notLoggedInDiv.style.display = 'flex';
-
-      // Hiển thị tên người dùng mặc định
-      const profileName = document.getElementById('profileName');
-      if (profileName) {
-        profileName.textContent = 'Khách';
-      }
       
-      // Hiển thị điểm mặc định
-      const profilePoints = document.getElementById('profilePoints');
-      if (profilePoints) {
-        profilePoints.textContent = '0 điểm';
-      }
+      // Hiện trang đăng nhập, ẩn profile header
+      loginRequiredPage.style.display = 'flex';
+      profileHeader.style.display = 'none';
       
-      // Tạo overlay khi chưa đăng nhập
-      const overlay = document.createElement('div');
-      overlay.className = 'not-logged-in-overlay';
-      
-      // Tạo thông báo
-      const message = document.createElement('div');
-      message.className = 'not-logged-in-message';
-      message.textContent = 'Hãy đăng nhập để xem chi tiết thông tin người dùng';
-      
-      // Tạo nút đăng nhập
-      const loginButton = document.createElement('button');
-      loginButton.className = 'login-button';
-      loginButton.onclick = goToLogin;
-      
-      // Thêm biểu tượng cho nút
-      const icon = document.createElement('span');
-      icon.className = 'login-button-icon';
-      icon.textContent = '🔑';
-      
-      // Thêm text cho nút
-      const buttonText = document.createTextNode('Đăng nhập');
-      
-      // Ghép lại nút đăng nhập
-      loginButton.appendChild(icon);
-      loginButton.appendChild(buttonText);
-      
-      // Thêm các phần tử vào overlay
-      overlay.appendChild(message);
-      overlay.appendChild(loginButton);
-      
-      // Thêm overlay vào đầu container để che tất cả nội dung nhưng không che navigation bar
-      const container = document.querySelector('.container');
-      if (container) {
-        // Thêm overlay vào đầu container để nó che tất cả nội dung
-        container.insertBefore(overlay, container.firstChild);
-      }
+      // Ẩn tất cả sections
+      document.getElementById('statsSection').style.display = 'none';
+      document.getElementById('achievementSection').style.display = 'none';
+      document.getElementById('activitySection').style.display = 'none';
+      document.getElementById('settingsSection').style.display = 'none';
     }
 
     function goToLogin() {
@@ -1560,6 +1647,110 @@
       loadUserInfo();
       console.log('Profile page loaded');
     });
+    
+    // Update stats cards with real data
+    function updateStatsCards(stats, userScore) {
+      const statsSection = document.getElementById('statsSection');
+      if (!statsSection) return;
+      
+      console.log('Updating stats:', stats); // Debug log
+      
+      // Create stats cards dynamically - hàng ngang compact
+      statsSection.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-number">${userScore || 0}</div>
+          <div class="stat-label">Điểm</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${stats.totalCheckins || 0}</div>
+          <div class="stat-label">Check-ins</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${stats.museumVisited || 0}</div>
+          <div class="stat-label">Bảo tàng</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">#${stats.leaderboardPosition || 'N/A'}</div>
+          <div class="stat-label">Xếp hạng</div>
+        </div>
+      `;
+    }
+    
+    // Update achievements section with real data
+    function updateAchievementsSection(recentAchievements) {
+      const achievementGrid = document.getElementById('achievementGrid');
+      if (!achievementGrid) return;
+      
+      // Clear existing achievements
+      achievementGrid.innerHTML = '';
+      
+      // Show recent achievements (max 4)
+      const achievementsToShow = recentAchievements.slice(0, 4);
+      
+      achievementsToShow.forEach(achievement => {
+        const achievementCard = document.createElement('div');
+        achievementCard.className = 'achievement-card earned';
+        achievementCard.innerHTML = `
+          <div class="achievement-icon">${achievement.Icon}</div>
+          <div class="achievement-name">${achievement.NameVi}</div>
+          <div class="achievement-desc">+${achievement.Points} điểm</div>
+        `;
+        achievementGrid.appendChild(achievementCard);
+      });
+      
+      // Add placeholder cards if less than 4 achievements
+      while (achievementGrid.children.length < 4) {
+        const placeholderCard = document.createElement('div');
+        placeholderCard.className = 'achievement-card';
+        placeholderCard.innerHTML = `
+          <div class="achievement-icon">🔒</div>
+          <div class="achievement-name">Khóa</div>
+          <div class="achievement-desc">Chưa mở khóa</div>
+        `;
+        achievementGrid.appendChild(placeholderCard);
+      }
+    }
+    
+    // Update activities section with real data
+    function updateActivitiesSection(recentActivities) {
+      const activityList = document.getElementById('activityList');
+      if (!activityList) return;
+      
+      // Clear existing activities
+      activityList.innerHTML = '';
+      
+      if (recentActivities.length === 0) {
+        activityList.innerHTML = `
+          <div class="activity-item">
+            <div class="activity-icon">📋</div>
+            <div class="activity-info">
+              <p><strong>Chưa có hoạt động nào</strong></p>
+              <p class="activity-time">Hãy bắt đầu bằng việc check-in!</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+      
+      recentActivities.forEach(activity => {
+        const activityItem = document.createElement('div');
+        activityItem.className = 'activity-item';
+        
+        const pointsHtml = activity.Points > 0 ? 
+          `<div class="activity-points">+${activity.Points}</div>` : '';
+        
+        activityItem.innerHTML = `
+          <div class="activity-icon">${activity.Icon}</div>
+          <div class="activity-info">
+            <p><strong>${activity.Title}</strong></p>
+            <p class="activity-time">${activity.timeAgo}</p>
+          </div>
+          ${pointsHtml}
+        `;
+        
+        activityList.appendChild(activityItem);
+      });
+    }
   </script>
 
   <!-- Lucky Coin Notification -->
