@@ -25,6 +25,15 @@ INSERT INTO `achievements` (`Name`, `Description`, `Icon`) VALUES
 ('Nhà Khám Phá Văn Hóa', 'Check-in lần đầu tiên', 'uploads/icon/first_checkin.png'),
 ('Lịch sử đẹp đẽ', 'Lần đầu thay đổi avatar', 'uploads/icon/first_avatar.png'),
 
+-- Additional achievements added on 2025-11-03
+('Sống chọn câu truyện I', 'Check-in 5 lần thông qua tính năng định vị trên web', 'uploads/icon/checkin_5.png'),
+('Sống chọn câu truyện II', 'Check-in 10 lần thông qua tính năng định vị trên web', 'uploads/icon/checkin_10.png'),
+('Sống chọn câu truyện III', 'Check-in 20 lần thông qua tính năng định vị trên web', 'uploads/icon/checkin_20.png'),
+('Năng động, tích cực', 'Đạt 100 điểm', 'uploads/icon/points_100.png'),
+('Lịch sử trong tay', 'Đạt 500 điểm', 'uploads/icon/points_500.png'),
+('Bí mật bảo tàng', 'Lần đầu tiên nhặt được xu', 'uploads/icon/first_coin.png'),
+('Anh Hùng Bảo Tàng', 'Đạt toàn bộ thành tựu trên hệ thống', 'uploads/icon/all_achievements.png');
+
 -- Helpful query: list achievements for a user
 -- Replace ? with the user's token
 -- SELECT a.ID, a.Name, a.Description, a.Icon, ua.CreatedAt

@@ -126,75 +126,198 @@ if ($hasChangedAvatar && $firstAvatarId) {
     awardAchievement($conn, $userToken, $firstAvatarId);
 }
 
-// Remove any user achievements that are NOT one of the three tracked achievements
-$keepIds = array_filter([$firstQuizId, $firstCheckinId, $firstAvatarId], function($v){ return is_int($v) || (is_numeric($v) && intval($v)>0); });
-if (!empty($keepIds)) {
-    $keepInts = array_map('intval', $keepIds);
-    $sqlDel = "DELETE FROM user_achievements WHERE UserToken = ? AND AchievementID NOT IN (" . implode(',', $keepInts) . ")";
-    $delStmt = $conn->prepare($sqlDel);
-    if ($delStmt) {
-        $delStmt->bind_param('s', $userToken);
-        $delStmt->execute();
+// --- New achievement checks added (checkin counts, score thresholds, coin placeholder, all-achievements) ---
+// Resolve IDs for newly added achievements (names must match create_achievements.sql)
+$checkin5Name = 'Sống chọn câu truyện I';
+$checkin10Name = 'Sống chọn câu truyện II';
+$checkin20Name = 'Sống chọn câu truyện III';
+$points100Name = 'Năng động, tích cực';
+$points500Name = 'Lịch sử trong tay';
+$firstCoinName = 'Bí mật bảo tàng';
+$heroName = 'Anh Hùng Bảo Tàng';
+
+$checkin5Id = getAchievementIdByName($conn, $checkin5Name);
+$checkin10Id = getAchievementIdByName($conn, $checkin10Name);
+$checkin20Id = getAchievementIdByName($conn, $checkin20Name);
+$points100Id = getAchievementIdByName($conn, $points100Name);
+$points500Id = getAchievementIdByName($conn, $points500Name);
+$firstCoinId = getAchievementIdByName($conn, $firstCoinName);
+$heroId = getAchievementIdByName($conn, $heroName);
+
+// 4) Check checkin counts (count distinct museums visited via checkins)
+// Assumption: a "check-in 5/10/20 bảo tàng" means distinct MuseumID entries. If you prefer counting rows instead, change COUNT(DISTINCT MuseumID) to COUNT(*)
+$checkinCount = 0;
+$cStmt = $conn->prepare("SELECT COUNT(DISTINCT MuseumID) AS cnt FROM checkins WHERE UserToken = ?");
+if ($cStmt) {
+    $cStmt->bind_param('s', $userToken);
+    $cStmt->execute();
+    $cRow = $cStmt->get_result()->fetch_assoc();
+    $checkinCount = isset($cRow['cnt']) ? intval($cRow['cnt']) : 0;
+}
+
+if ($checkinCount >= 5 && $checkin5Id) awardAchievement($conn, $userToken, $checkin5Id);
+if ($checkinCount >= 10 && $checkin10Id) awardAchievement($conn, $userToken, $checkin10Id);
+if ($checkinCount >= 20 && $checkin20Id) awardAchievement($conn, $userToken, $checkin20Id);
+
+// 5) Check user score thresholds
+$userScore = 0;
+$sStmt = $conn->prepare("SELECT COALESCE(Score, Score, 0) AS sc FROM users WHERE UserToken = ? LIMIT 1");
+if ($sStmt) {
+    $sStmt->bind_param('s', $userToken);
+    $sStmt->execute();
+    $sRow = $sStmt->get_result()->fetch_assoc();
+    if ($sRow) $userScore = intval($sRow['sc']);
+}
+
+if ($userScore >= 100 && $points100Id) awardAchievement($conn, $userToken, $points100Id);
+if ($userScore >= 500 && $points500Id) awardAchievement($conn, $userToken, $points500Id);
+
+// 6) Coin pickup: placeholder — per request we skip checking for "Bí mật bảo tàng" here
+// (If you want automatic awarding when a coin pickup event exists, add a query against the appropriate table.)
+
+// 7) Anh Hùng Bảo Tàng: award if user has all other achievements (exclude this hero if user doesn't already have it)
+if ($heroId) {
+    // Total achievements in system
+    $totStmt = $conn->prepare("SELECT COUNT(*) AS total FROM achievements");
+    $totalAchievements = 0;
+    if ($totStmt) {
+        $totStmt->execute();
+        $totRow = $totStmt->get_result()->fetch_assoc();
+        $totalAchievements = isset($totRow['total']) ? intval($totRow['total']) : 0;
     }
-} else {
-    // If none of the three achievements exist in DB, remove all user achievements to keep only controlled set
-    $delAll = $conn->prepare("DELETE FROM user_achievements WHERE UserToken = ?");
-    if ($delAll) {
-        $delAll->bind_param('s', $userToken);
-        $delAll->execute();
+
+    // Count user's achievements
+    $uaStmt = $conn->prepare("SELECT COUNT(*) AS userCount FROM user_achievements WHERE UserToken = ?");
+    $userAchCount = 0;
+    if ($uaStmt) {
+        $uaStmt->bind_param('s', $userToken);
+        $uaStmt->execute();
+        $uaRow = $uaStmt->get_result()->fetch_assoc();
+        $userAchCount = isset($uaRow['userCount']) ? intval($uaRow['userCount']) : 0;
+    }
+
+    // Check if user already has hero
+    $hasHero = false;
+    $hStmt = $conn->prepare("SELECT 1 FROM user_achievements WHERE UserToken = ? AND AchievementID = ? LIMIT 1");
+    if ($hStmt) {
+        $hStmt->bind_param('si', $userToken, $heroId);
+        $hStmt->execute();
+        $hasHero = (bool) $hStmt->get_result()->fetch_assoc();
+    }
+
+    // If user doesn't have hero yet, require userAchCount >= totalAchievements - 1 (i.e., has every other achievement)
+    if (!$hasHero && $totalAchievements > 0) {
+        if ($userAchCount >= ($totalAchievements - 1)) {
+            awardAchievement($conn, $userToken, $heroId);
+        }
     }
 }
 
-// 4) Fetch and render user's achievements (only those present in user_achievements)
-$sql = "SELECT a.ID, a.Name, a.Description, a.Icon, ua.CreatedAt
+// 4) Fetch all achievements with earned flag for this user
+$sql = "SELECT a.ID, a.Name, a.Description, a.Icon, ua.CreatedAt, CASE WHEN ua.UserToken IS NULL THEN 0 ELSE 1 END AS earned
         FROM achievements a
-        JOIN user_achievements ua ON ua.AchievementID = a.ID
-        WHERE ua.UserToken = ?
-        ORDER BY ua.CreatedAt DESC";
+        LEFT JOIN user_achievements ua ON ua.AchievementID = a.ID AND ua.UserToken = ?
+        ORDER BY a.ID ASC";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param('s', $userToken);
-$stmt->execute();
-$result = $stmt->get_result();
-$achievements = $result->fetch_all(MYSQLI_ASSOC);
-
-// Debug: Hiển thị thông tin achievements
-echo "<!-- Debug: Achievement data -->\n";
-foreach ($achievements as $achievement) {
-    echo "<!-- Achievement: " . print_r($achievement, true) . " -->\n";
+$achievements = array();
+if ($stmt) {
+    $stmt->bind_param('s', $userToken);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $achievements = $res->fetch_all(MYSQLI_ASSOC);
 }
 
-// Render HTML fragment
-if (empty($achievements)) {
-    echo '<div class="activity-list"><p>Người dùng chưa có thành tựu.</p></div>';
-    exit;
-}
-
-echo '<div class="activity-list">';
+// Build earned list ordered by CreatedAt desc and a complete list
+$earned = array();
+ $all = array();
 foreach ($achievements as $a) {
+    $a['earned'] = isset($a['earned']) && intval($a['earned']) === 1;
+    $all[] = $a;
+    if ($a['earned']) $earned[] = $a;
+}
+
+// keep $all in the original order returned by the query (ID asc)
+// Sort earned by CreatedAt desc if CreatedAt exists
+usort($earned, function($x, $y){
+    $tx = isset($x['CreatedAt']) ? strtotime($x['CreatedAt']) : 0;
+    $ty = isset($y['CreatedAt']) ? strtotime($y['CreatedAt']) : 0;
+    return $ty - $tx;
+});
+
+// Build top-3 display: prefer earned ones, then fill with next all achievements
+$topThree = array();
+foreach ($earned as $e) {
+    if (count($topThree) >= 3) break;
+    $topThree[] = $e;
+}
+if (count($topThree) < 3) {
+    foreach ($all as $a) {
+        if (count($topThree) >= 3) break;
+        // skip if already in topThree
+        $found = false;
+        foreach ($topThree as $t) if ($t['ID'] == $a['ID']) { $found = true; break; }
+        if ($found) continue;
+        $topThree[] = $a;
+    }
+}
+
+// Render HTML fragment: show top 3 and a toggle to view all achievements
+echo '<div class="achievements-container">';
+echo '<div class="achievement-grid achievement-grid-3">';
+foreach ($topThree as $a) {
     $name = htmlspecialchars($a['Name']);
     $desc = htmlspecialchars($a['Description']);
-    $icon = !empty($a['Icon']) ? '/' . $a['Icon'] : null;
-    
-    echo '<div class="activity-item">';
-    // Activity icon section with icon image or fallback emoji
-    if ($icon) {
-        echo '<div class="activity-icon">';
-        echo '<img src="' . $icon . '" 
-             alt="' . $name . '" 
-             style="width:32px;height:32px;object-fit:cover;border-radius:4px;">';
-        echo '</div>';
-    } else {
-        echo '<div class="activity-icon">🏅</div>';
-    }
-    // Activity info section
-    echo '<div class="activity-info">';
-    echo '<p><strong title="' . $name . '">' . $name . '</strong></p>';
-    if (!empty($desc)) {
-        echo '<p title="' . $desc . '">' . $desc . '</p>';
-    }
+    $icon = !empty($a['Icon']) ? '/' . ltrim($a['Icon'], '/') : '';
+    $cls = $a['earned'] ? 'earned' : 'locked';
+
+    echo '<div class="achievement-card ' . $cls . '">';
+    if ($icon) echo '<img src="' . $icon . '" alt="' . $name . '" class="achievement-icon">';
+    else echo '<div class="achievement-icon">🏅</div>';
+    echo '<div class="achievement-meta">';
+    echo '<div class="achievement-name">' . $name . '</div>';
+    if (!empty($desc)) echo '<div class="achievement-desc">' . $desc . '</div>';
     echo '</div>';
     echo '</div>';
 }
+echo '</div>'; // .achievement-grid-3
+
+// Toggle button and full list (hidden by default)
+// Reduce top margins so the expanded panel appears closer to the achievements header
+// Slightly reduced margins so the expanded panel appears closer to the top-3
+echo '<div class="achievement-actions" style="margin-top:2px;">';
+echo '<button id="showAllAchievementsBtn" class="username-modal-button">Xem tất cả thành tích</button>';
 echo '</div>';
+
+echo '<div id="allAchievementsPanel" class="all-achievements-panel" style="display:none;margin-top:2px;">';
+// Avoid duplicating the top-three items: show only remaining achievements inside the panel
+echo '<div class="achievement-grid">';
+// compute IDs in topThree
+$topThreeIds = array_map(function($i){ return intval($i['ID']); }, $topThree);
+$remaining = array_filter($all, function($a) use ($topThreeIds) {
+    return !in_array(intval($a['ID']), $topThreeIds);
+});
+foreach ($remaining as $a) {
+    $name = htmlspecialchars($a['Name']);
+    $desc = htmlspecialchars($a['Description']);
+    $icon = !empty($a['Icon']) ? '/' . ltrim($a['Icon'], '/') : '';
+    $cls = $a['earned'] ? 'earned' : 'locked';
+
+    echo '<div class="achievement-card ' . $cls . '">';
+    if ($icon) echo '<img src="' . $icon . '" alt="' . $name . '" class="achievement-icon">';
+    else echo '<div class="achievement-icon">🏅</div>';
+    echo '<div class="achievement-meta">';
+    echo '<div class="achievement-name">' . $name . '</div>';
+    if (!empty($desc)) echo '<div class="achievement-desc">' . $desc . '</div>';
+    echo '</div>';
+    echo '</div>';
+}
+echo '</div>'; // .achievement-grid
+// Add bottom hide button inside the panel so it appears after all achievements
+echo '<div style="margin-top:6px; text-align:left;">';
+echo '<button id="hideAllAchievementsBtn" class="username-modal-button">Ẩn bớt</button>';
+echo '</div>';
+echo '</div>'; // #allAchievementsPanel
+
+echo '</div>'; // .achievements-container
 
 ?>

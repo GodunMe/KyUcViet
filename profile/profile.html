@@ -596,6 +596,105 @@
       margin: 0 auto;
     }
 
+    /* Achievement card styles */
+
+    .achievement-card {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      gap: 24px; /* increased spacing between icon and text */
+      transition: all 0.2s ease;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .achievement-card.locked {
+      /* keep same base style as activity-item but gray the inner content */
+      background: #fff;
+      color: #9a9a9a;
+    }
+
+    /* Gray only inner content for locked state to better match activity items */
+    .achievement-card.locked .achievement-meta,
+    .achievement-card.locked .achievement-icon {
+      filter: grayscale(70%);
+      opacity: 0.85;
+    }
+
+    .achievement-card.earned {
+      background: #fff;
+    }
+
+    .achievement-card:hover {
+      background-color: #f8f9fa;
+      border-color: #e0e0e0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      transform: translateY(-1px);
+    }
+
+    .achievement-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #f8f9fa; /* match activity-icon background */
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .achievement-meta {
+      flex: 1;
+      min-width: 0; /* allow text truncation like activity-info */
+      display: flex;
+      flex-direction: column;
+      gap: 2px; /* match activity-info spacing */
+      text-align: left; /* ensure left-aligned text */
+    }
+
+    .achievement-name {
+      font-weight: 700;
+      font-size: 14px;
+      color: #2c3e50; /* match activity strong color */
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
+    }
+
+    .achievement-desc {
+      font-size: 12px;
+      color: #666; /* match activity secondary color */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
+    }
+
+    /* Top-3 grid layout - changed to single-column (one card per row) */
+    .achievement-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr; /* one column so each card is full-width */
+      gap: 8px;
+    }
+
+    /* Tighten vertical spacing between the top-3 summary and the expanded "all achievements" panel */
+    /* This reduces the perceived gap between the 3rd and 4th achievement cards */
+    .achievement-actions { margin-top: 2px !important; }
+    .all-achievements-panel { margin-top: 2px !important; padding-top: 4px; }
+    .all-achievements-panel .achievement-grid { gap: 6px; padding-top: 0; }
+
+    /* Keep option to easily switch to multi-column on wide screens if desired */
+    @media (min-width: 900px) {
+      .achievement-grid-3.multi-col { grid-template-columns: repeat(3, 1fr); }
+    }
+
     .activity-list {
       display: flex;
       flex-direction: column;
@@ -1654,6 +1753,37 @@
         }
         // Render returned HTML
         container.innerHTML = text;
+        // Attach toggle behavior for "Xem tất cả thành tích" button because
+        // scripts inside fragments inserted via innerHTML don't execute in many browsers.
+        try {
+          const btn = container.querySelector('#showAllAchievementsBtn');
+          const panel = container.querySelector('#allAchievementsPanel');
+          if (btn && panel) {
+            const bottomHide = container.querySelector('#hideAllAchievementsBtn');
+            btn.addEventListener('click', function() {
+              panel.style.display = 'block';
+              // hide top button while panel is open
+              btn.style.display = 'none';
+              if (bottomHide) bottomHide.style.display = 'inline-block';
+              // when opening, ensure panel scrolls to top so topThree are visible, then user can scroll down
+              panel.scrollTop = 0;
+            });
+            if (bottomHide) {
+              bottomHide.addEventListener('click', function() {
+                panel.style.display = 'none';
+                // restore top button
+                btn.style.display = 'inline-block';
+                bottomHide.style.display = 'none';
+                // also scroll panel to top so when reopened it starts from top
+                panel.scrollTop = 0;
+              });
+              // initially bottom hide button should be hidden
+              bottomHide.style.display = 'none';
+            }
+          }
+        } catch (e) {
+          console.error('Error attaching achievements toggle:', e);
+        }
       } catch (err) {
         console.error('Error loading achievements:', err);
         container.innerHTML = '<p>Đã xảy ra lỗi khi tải thành tích.</p>';
